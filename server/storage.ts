@@ -8,8 +8,10 @@ import {
   type Transaction, type InsertTransaction,
   type TransactionEvent, type InsertTransactionEvent
 } from '@shared/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, inArray } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
+
+export type VehicleWithImage = Vehicle & { image: string | null };
 
 export interface IStorage {
   // User operations
@@ -20,8 +22,11 @@ export interface IStorage {
   
   // Vehicle operations
   getAllVehicles(): Promise<Vehicle[]>;
+  getAllVehiclesWithImages(): Promise<VehicleWithImage[]>;
   getAvailableVehicles(): Promise<Vehicle[]>;
+  getAvailableVehiclesWithImages(): Promise<VehicleWithImage[]>;
   getFeaturedVehicles(): Promise<Vehicle[]>;
+  getFeaturedVehiclesWithImages(): Promise<VehicleWithImage[]>;
   getVehicle(id: number): Promise<Vehicle | undefined>;
   createVehicle(vehicle: InsertVehicle): Promise<Vehicle>;
   updateVehicle(id: number, vehicle: Partial<InsertVehicle>): Promise<Vehicle | undefined>;
@@ -86,14 +91,90 @@ export class PostgresStorage implements IStorage {
     return await db.select().from(vehicles).orderBy(desc(vehicles.createdAt));
   }
 
+  async getAllVehiclesWithImages(): Promise<VehicleWithImage[]> {
+    const allVehicles = await db.select().from(vehicles).orderBy(desc(vehicles.createdAt));
+    if (allVehicles.length === 0) return [];
+    
+    const vehicleIds = allVehicles.map(v => v.id);
+    const relevantImages = await db.select().from(vehicleImages)
+      .where(inArray(vehicleImages.vehicleId, vehicleIds))
+      .orderBy(vehicleImages.displayOrder);
+    
+    const imagesByVehicleId = new Map<number, VehicleImage[]>();
+    for (const img of relevantImages) {
+      if (!imagesByVehicleId.has(img.vehicleId)) {
+        imagesByVehicleId.set(img.vehicleId, []);
+      }
+      imagesByVehicleId.get(img.vehicleId)!.push(img);
+    }
+    
+    return allVehicles.map((vehicle: Vehicle) => {
+      const vehicleImagesList = imagesByVehicleId.get(vehicle.id) || [];
+      const primaryImage = vehicleImagesList.find((img: VehicleImage) => img.isPrimary) || vehicleImagesList[0];
+      return { ...vehicle, image: primaryImage?.imageUrl || null };
+    });
+  }
+
   async getAvailableVehicles(): Promise<Vehicle[]> {
     return await db.select().from(vehicles).where(eq(vehicles.available, true)).orderBy(desc(vehicles.createdAt));
+  }
+
+  async getAvailableVehiclesWithImages(): Promise<VehicleWithImage[]> {
+    const availableVehicles = await db.select().from(vehicles)
+      .where(eq(vehicles.available, true))
+      .orderBy(desc(vehicles.createdAt));
+    if (availableVehicles.length === 0) return [];
+    
+    const vehicleIds = availableVehicles.map(v => v.id);
+    const relevantImages = await db.select().from(vehicleImages)
+      .where(inArray(vehicleImages.vehicleId, vehicleIds))
+      .orderBy(vehicleImages.displayOrder);
+    
+    const imagesByVehicleId = new Map<number, VehicleImage[]>();
+    for (const img of relevantImages) {
+      if (!imagesByVehicleId.has(img.vehicleId)) {
+        imagesByVehicleId.set(img.vehicleId, []);
+      }
+      imagesByVehicleId.get(img.vehicleId)!.push(img);
+    }
+    
+    return availableVehicles.map((vehicle: Vehicle) => {
+      const vehicleImagesList = imagesByVehicleId.get(vehicle.id) || [];
+      const primaryImage = vehicleImagesList.find((img: VehicleImage) => img.isPrimary) || vehicleImagesList[0];
+      return { ...vehicle, image: primaryImage?.imageUrl || null };
+    });
   }
 
   async getFeaturedVehicles(): Promise<Vehicle[]> {
     return await db.select().from(vehicles)
       .where(and(eq(vehicles.featured, true), eq(vehicles.available, true)))
       .orderBy(desc(vehicles.createdAt));
+  }
+
+  async getFeaturedVehiclesWithImages(): Promise<VehicleWithImage[]> {
+    const featuredVehicles = await db.select().from(vehicles)
+      .where(and(eq(vehicles.featured, true), eq(vehicles.available, true)))
+      .orderBy(desc(vehicles.createdAt));
+    if (featuredVehicles.length === 0) return [];
+    
+    const vehicleIds = featuredVehicles.map(v => v.id);
+    const relevantImages = await db.select().from(vehicleImages)
+      .where(inArray(vehicleImages.vehicleId, vehicleIds))
+      .orderBy(vehicleImages.displayOrder);
+    
+    const imagesByVehicleId = new Map<number, VehicleImage[]>();
+    for (const img of relevantImages) {
+      if (!imagesByVehicleId.has(img.vehicleId)) {
+        imagesByVehicleId.set(img.vehicleId, []);
+      }
+      imagesByVehicleId.get(img.vehicleId)!.push(img);
+    }
+    
+    return featuredVehicles.map((vehicle: Vehicle) => {
+      const vehicleImagesList = imagesByVehicleId.get(vehicle.id) || [];
+      const primaryImage = vehicleImagesList.find((img: VehicleImage) => img.isPrimary) || vehicleImagesList[0];
+      return { ...vehicle, image: primaryImage?.imageUrl || null };
+    });
   }
 
   async getVehicle(id: number): Promise<Vehicle | undefined> {

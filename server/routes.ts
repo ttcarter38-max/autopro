@@ -106,7 +106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all available vehicles
   app.get('/api/vehicles', async (req, res) => {
     try {
-      const vehicles = await storage.getAvailableVehicles();
+      const vehicles = await storage.getAvailableVehiclesWithImages();
       res.json({ vehicles });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -116,7 +116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get featured vehicles
   app.get('/api/vehicles/featured', async (req, res) => {
     try {
-      const vehicles = await storage.getFeaturedVehicles();
+      const vehicles = await storage.getFeaturedVehiclesWithImages();
       res.json({ vehicles });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -147,7 +147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all vehicles (including unavailable)
   app.get('/api/admin/vehicles', isAdmin, async (req, res) => {
     try {
-      const vehicles = await storage.getAllVehicles();
+      const vehicles = await storage.getAllVehiclesWithImages();
       res.json({ vehicles });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -438,7 +438,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const events = await storage.getTransactionEvents(transaction.id);
-      const vehicle = await storage.getVehicle(transaction.vehicleId);
+      const vehicle = transaction.vehicleId 
+        ? await storage.getVehicle(transaction.vehicleId)
+        : null;
       
       res.json({ transaction, events, vehicle });
     } catch (error: any) {

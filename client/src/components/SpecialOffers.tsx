@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import VehicleCard from './VehicleCard';
 
 export default function SpecialOffers() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<{ vehicles: any[] }>({
     queryKey: ['/api/vehicles/featured'],
   });
 
