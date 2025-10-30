@@ -1,8 +1,31 @@
+import { useState } from 'react';
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Footer() {
+  const [email, setEmail] = useState('');
+  const { toast } = useToast();
+
+  const handleSubscribe = () => {
+    if (!email) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log('Newsletter subscription:', email);
+    toast({
+      title: "Subscribed!",
+      description: "Thank you for subscribing to our newsletter.",
+    });
+    setEmail('');
+  };
+
   return (
     <footer className="bg-black text-white pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -67,9 +90,12 @@ export default function Footer() {
                 type="email"
                 placeholder="Your email"
                 className="bg-gray-900 border-gray-800"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSubscribe()}
                 data-testid="input-email"
               />
-              <Button variant="default" data-testid="button-subscribe">Subscribe</Button>
+              <Button variant="default" onClick={handleSubscribe} data-testid="button-subscribe">Subscribe</Button>
             </div>
           </div>
         </div>

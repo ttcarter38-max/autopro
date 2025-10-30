@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -7,8 +8,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { getMakes, getModels } from '@/data/vehicles';
 
-export default function VehicleSearchBar() {
+interface VehicleSearchBarProps {
+  onSearch?: (filters: {
+    make?: string;
+    model?: string;
+    priceRange?: string;
+  }) => void;
+}
+
+export default function VehicleSearchBar({ onSearch }: VehicleSearchBarProps) {
+  const [make, setMake] = useState<string>('');
+  const [model, setModel] = useState<string>('');
+  const [priceRange, setPriceRange] = useState<string>('');
+
+  const makes = getMakes();
+  const models = getModels(make);
+
+  const handleSearch = () => {
+    console.log('Search triggered:', { make, model, priceRange });
+    if (onSearch) {
+      onSearch({ make, model, priceRange });
+    }
+  };
+
   return (
     <div className="bg-background py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -18,32 +42,32 @@ export default function VehicleSearchBar() {
 
         <div className="bg-card border border-card-border rounded-md p-6 shadow-lg">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Select>
+            <Select value={make} onValueChange={(value) => {
+              setMake(value);
+              setModel('');
+            }}>
               <SelectTrigger data-testid="select-make">
                 <SelectValue placeholder="Make" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="porsche">Porsche</SelectItem>
-                <SelectItem value="lamborghini">Lamborghini</SelectItem>
-                <SelectItem value="ferrari">Ferrari</SelectItem>
-                <SelectItem value="bmw">BMW</SelectItem>
-                <SelectItem value="mercedes">Mercedes-Benz</SelectItem>
+                {makes.map((m) => (
+                  <SelectItem key={m} value={m}>{m}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
-            <Select>
+            <Select value={model} onValueChange={setModel} disabled={!make}>
               <SelectTrigger data-testid="select-model">
                 <SelectValue placeholder="Model" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="911">911 Carrera</SelectItem>
-                <SelectItem value="cayenne">Cayenne</SelectItem>
-                <SelectItem value="panamera">Panamera</SelectItem>
-                <SelectItem value="macan">Macan</SelectItem>
+                {models.map((m) => (
+                  <SelectItem key={m} value={m}>{m}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
-            <Select>
+            <Select value={priceRange} onValueChange={setPriceRange}>
               <SelectTrigger data-testid="select-price">
                 <SelectValue placeholder="Price Range" />
               </SelectTrigger>
@@ -55,7 +79,7 @@ export default function VehicleSearchBar() {
               </SelectContent>
             </Select>
 
-            <Button className="w-full" data-testid="button-search-vehicles">
+            <Button className="w-full" onClick={handleSearch} data-testid="button-search-vehicles">
               <Search className="w-4 h-4 mr-2" />
               SEARCH VEHICLES
             </Button>
