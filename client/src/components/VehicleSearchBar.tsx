@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 import {
   Select,
   SelectContent,
@@ -22,12 +23,34 @@ export default function VehicleSearchBar({ onSearch }: VehicleSearchBarProps) {
   const [make, setMake] = useState<string>('');
   const [model, setModel] = useState<string>('');
   const [priceRange, setPriceRange] = useState<string>('');
+  const { toast } = useToast();
 
   const makes = getMakes();
   const models = getModels(make);
 
   const handleSearch = () => {
     console.log('Search triggered:', { make, model, priceRange });
+    
+    if (!make && !model && !priceRange) {
+      toast({
+        title: "Search Criteria Needed",
+        description: "Please select at least one filter to search for vehicles.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const searchText = [
+      make && `Make: ${make}`,
+      model && `Model: ${model}`,
+      priceRange && `Price: ${priceRange}`,
+    ].filter(Boolean).join(', ');
+
+    toast({
+      title: "Search Results",
+      description: `Found vehicles matching: ${searchText}. Contact us at 1-800-CAR-DEAL for availability.`,
+    });
+
     if (onSearch) {
       onSearch({ make, model, priceRange });
     }

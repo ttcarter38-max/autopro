@@ -2,6 +2,7 @@ import { Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 interface VehicleCardProps {
   id: number;
@@ -32,6 +33,15 @@ export default function VehicleCard({
   color,
   topSpeed,
 }: VehicleCardProps) {
+  const { toast } = useToast();
+
+  const handleOrder = () => {
+    toast({
+      title: "Order Placed!",
+      description: `Thank you for your interest in the ${name}. Our team will contact you shortly to discuss financing options.`,
+    });
+  };
+
   return (
     <Card className="overflow-hidden hover-elevate transition-all hover:shadow-xl" data-testid={`card-vehicle-${id}`}>
       <div className="relative aspect-square bg-white p-8">
@@ -92,7 +102,12 @@ export default function VehicleCard({
       </CardContent>
 
       <CardFooter className="p-6 pt-0">
-        <Button className="w-full" variant="default" data-testid={`button-order-${id}`}>
+        <Button 
+          className="w-full" 
+          variant="default" 
+          onClick={handleOrder}
+          data-testid={`button-order-${id}`}
+        >
           ORDER NOW
         </Button>
       </CardFooter>

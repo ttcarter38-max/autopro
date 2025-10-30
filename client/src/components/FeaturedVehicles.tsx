@@ -1,17 +1,26 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
 import VehicleCard from './VehicleCard';
 import { vehicles } from '@/data/vehicles';
 
 export default function FeaturedVehicles() {
   const [activeTab, setActiveTab] = useState('all');
+  const { toast } = useToast();
 
   const getVehiclesByTab = (tab: string) => {
     if (tab === 'all') return vehicles.filter(v => v.featured).slice(0, 3);
     if (tab === 'new') return vehicles.filter(v => v.featured && v.condition === 'New').slice(0, 3);
     if (tab === 'used') return vehicles.filter(v => v.featured && v.condition === 'Used').slice(0, 3);
     return [];
+  };
+
+  const handleViewAll = () => {
+    toast({
+      title: "Full Inventory",
+      description: "Browse our complete collection of premium vehicles. Contact us at 1-800-CAR-DEAL for more details.",
+    });
   };
 
   return (
@@ -39,7 +48,12 @@ export default function FeaturedVehicles() {
                 ))}
               </div>
               <div className="text-center">
-                <Button variant="default" size="lg" data-testid="button-view-all">
+                <Button 
+                  variant="default" 
+                  size="lg" 
+                  onClick={handleViewAll}
+                  data-testid="button-view-all"
+                >
                   VIEW ALL
                 </Button>
               </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 import heroImage from '@assets/generated_images/Red_luxury_sports_car_hero_5badd28f.png';
 
 interface Slide {
@@ -41,6 +42,7 @@ const slides: Slide[] = [
 
 export default function HeroSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const { toast } = useToast();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -59,6 +61,20 @@ export default function HeroSlider() {
 
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  };
+
+  const handleOrderNow = () => {
+    toast({
+      title: "Order Inquiry",
+      description: `Thank you for your interest in the ${slides[currentSlide].model}! Our sales team will contact you shortly.`,
+    });
+  };
+
+  const handleTestDrive = () => {
+    toast({
+      title: "Test Drive Request",
+      description: `Test drive scheduled for the ${slides[currentSlide].model}. We'll call you to confirm the time.`,
+    });
   };
 
   return (
@@ -89,10 +105,21 @@ export default function HeroSlider() {
                   {slide.price}
                 </p>
                 <div className="flex gap-4">
-                  <Button variant="default" size="lg" data-testid={`button-order-${index}`}>
+                  <Button 
+                    variant="default" 
+                    size="lg" 
+                    onClick={handleOrderNow}
+                    data-testid={`button-order-${index}`}
+                  >
                     ORDER NOW
                   </Button>
-                  <Button variant="outline" size="lg" className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20" data-testid={`button-testdrive-${index}`}>
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20" 
+                    onClick={handleTestDrive}
+                    data-testid={`button-testdrive-${index}`}
+                  >
                     TEST DRIVE
                   </Button>
                 </div>
