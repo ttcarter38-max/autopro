@@ -53,7 +53,7 @@ export default function Escrow() {
 
   const createCustomEscrowMutation = useMutation({
     mutationFn: async (data: CustomEscrowForm) => {
-      const response = await apiRequest('/api/transactions/custom', 'POST', {
+      const response = await apiRequest('POST', '/api/transactions/custom', {
         customVehicleDescription: data.vehicleDescription,
         amount: data.price,
         buyerName: data.buyerName,
@@ -64,7 +64,8 @@ export default function Escrow() {
         sellerEmail: data.sellerEmail || null,
         sellerName: data.sellerName || null,
       });
-      return response;
+      const result = await response.json();
+      return result as { id: number; guestToken: string };
     },
     onSuccess: (data) => {
       toast({

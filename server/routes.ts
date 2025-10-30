@@ -7,6 +7,7 @@ import passport from "./auth";
 import { isAuthenticated, isAdmin } from "./auth";
 import { storage } from "./storage";
 import { insertVehicleSchema, insertVehicleOfferSchema, insertTransactionSchema } from "@shared/schema";
+import { sendBuyerTransactionInitiated, sendSellerTransactionNotification, sendTransactionStatusUpdate } from "./email";
 
 // Configure multer for file uploads
 const uploadStorage = multer.diskStorage({
@@ -312,6 +313,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ transaction, guestToken });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Initiate custom escrow transaction (for private sales)
+  app.post('/api/transactions/custom', async (req, res) => {
+    try {
+      const {
+        customVehicleDescription,
+        amount,
+        buyerName,
+        buyerEmail,
+        buyerPhone,
+        shippingAddress,
+        inspectionDays,
+        sellerEmail,
+        sellerName,
+      } = req.body;
+
+      // Validate required fields
+      if (!customVehicleDescription || !amount || !buyerName || !buyerEmail || !buyerPhone || !shippingAddress) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      // Generate guest token
+      const guestToken = randomUUID();
+
+      const transaction = await storage.createTransaction({
+        vehicleId: null, // null for custom/private sales
+        buyerId: req.isAuthenticated() ? (req.user as any).id : null,
+        buyerName,
+        buyerEmail,
+        buyerPhone,
+        shippingAddress,
+        amount: amount.toString(),
+        status: 'initiated',
+        inspectionDays: inspectionDays || 3,
+        guestToken,
+        customVehicleDescription,
+        sellerEmail: sellerEmail || null,
+        sellerName: sellerName || null,
+        bankInfo: null,
+        paymentProof: null,
+        notes: 'Custom escrow transaction for private sale',
+      });
+
+      // Create initial event
+      await storage.addTransactionEvent({
+        transactionId: transaction.id,
+        status: 'initiated',
+        notes: 'Custom escrow transaction initiated by buyer',
+        createdBy: req.isAuthenticated() ? (req.user as any).id : null,
+      });
+
+      // Send email notifications
+      try {
+        // Send email to buyer
+        await sendBuyerTransactionInitiated({
+          id: transaction.id,
+          buyerName: transaction.buyerName,
+          buyerEmail: transaction.buyerEmail,
+          guestToken: transaction.guestToken!,
+          customVehicleDescription: transaction.customVehicleDescription,
+          amount: transaction.amount,
+          inspectionDays: transaction.inspectionDays,
+        });
+
+        // Send email to seller if provided
+        if (sellerEmail) {
+          await sendSellerTransactionNotification({
+            id: transaction.id,
+            sellerName: transaction.sellerName,
+            sellerEmail,
+            buyerName: transaction.buyerName,
+            customVehicleDescription: transaction.customVehicleDescription,
+            amount: transaction.amount,
+          });
+        }
+      } catch (emailError) {
+        console.error('Email notification error:', emailError);
+        // Don't fail the transaction if email fails
+      }
+
+      res.json({ 
+        id: transaction.id,
+        guestToken: transaction.guestToken,
+        message: 'Custom escrow transaction created successfully. Check your email for details.'
+      });
+    } catch (error: any) {
+      console.error('Custom transaction error:', error);
+      res.status(400).json({ error: error.message || 'Failed to create custom transaction' });
     }
   });
   
