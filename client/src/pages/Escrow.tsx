@@ -1,20 +1,97 @@
 import { useState } from 'react';
-import { Link } from 'wouter';
-import { Shield, CheckCircle, Clock, Lock, FileText, Search } from 'lucide-react';
+import { Link, useLocation } from 'wouter';
+import { Shield, CheckCircle, Clock, Lock, FileText, Search, Plus } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
+const customEscrowSchema = z.object({
+  vehicleDescription: z.string().min(10, 'Please provide a detailed vehicle description (at least 10 characters)'),
+  price: z.string().min(1, 'Price is required'),
+  buyerName: z.string().min(2, 'Your name is required'),
+  buyerEmail: z.string().email('Valid email is required'),
+  buyerPhone: z.string().min(10, 'Valid phone number is required'),
+  shippingAddress: z.string().min(10, 'Complete shipping address is required'),
+  inspectionDays: z.string().min(1, 'Please select an inspection period'),
+  sellerEmail: z.string().email('Valid seller email is required').optional().or(z.literal('')),
+  sellerName: z.string().optional(),
+});
+
+type CustomEscrowForm = z.infer<typeof customEscrowSchema>;
+
 export default function Escrow() {
   const [trackingInput, setTrackingInput] = useState('');
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+
+  const form = useForm<CustomEscrowForm>({
+    resolver: zodResolver(customEscrowSchema),
+    defaultValues: {
+      vehicleDescription: '',
+      price: '',
+      buyerName: '',
+      buyerEmail: '',
+      buyerPhone: '',
+      shippingAddress: '',
+      inspectionDays: '3',
+      sellerEmail: '',
+      sellerName: '',
+    },
+  });
+
+  const createCustomEscrowMutation = useMutation({
+    mutationFn: async (data: CustomEscrowForm) => {
+      const response = await apiRequest('/api/transactions/custom', 'POST', {
+        customVehicleDescription: data.vehicleDescription,
+        amount: data.price,
+        buyerName: data.buyerName,
+        buyerEmail: data.buyerEmail,
+        buyerPhone: data.buyerPhone,
+        shippingAddress: data.shippingAddress,
+        inspectionDays: parseInt(data.inspectionDays),
+        sellerEmail: data.sellerEmail || null,
+        sellerName: data.sellerName || null,
+      });
+      return response;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Escrow Transaction Initiated!',
+        description: `Your transaction ID is ${data.id}. Check your email for details.`,
+      });
+      form.reset();
+      // Redirect to tracking page
+      setLocation(`/track/${data.guestToken}`);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create escrow transaction',
+        variant: 'destructive',
+      });
+    },
+  });
 
   const handleTrackTransaction = () => {
     if (trackingInput.trim()) {
-      window.location.href = `/track/${trackingInput.trim()}`;
+      setLocation(`/track/${trackingInput.trim()}`);
     }
+  };
+
+  const onSubmit = (data: CustomEscrowForm) => {
+    createCustomEscrowMutation.mutate(data);
   };
 
   return (
@@ -36,13 +113,266 @@ export default function Escrow() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" asChild data-testid="button-browse-vehicles">
-                <Link href="/">Browse Vehicles</Link>
+                <Link href="/">Browse Dealership Vehicles</Link>
               </Button>
-              <Button size="lg" variant="outline" asChild data-testid="button-learn-more">
-                <a href="#how-it-works">Learn How It Works</a>
+              <Button size="lg" variant="outline" asChild data-testid="button-start-custom-escrow">
+                <a href="#start-escrow">Start Custom Escrow</a>
               </Button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Start Custom Escrow Form */}
+      <div id="start-escrow" className="py-20 bg-background">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <Plus className="w-12 h-12 text-primary mx-auto mb-4" />
+            <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">
+              Start a Custom Escrow Transaction
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Buying or selling a vehicle privately? Use our secure escrow service to protect both parties.
+            </p>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Escrow Transaction Details</CardTitle>
+              <CardDescription>
+                Fill out this form to initiate a secure escrow transaction. Both buyer and seller will receive email notifications.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  {/* Vehicle Information */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Vehicle Information</h3>
+                    
+                    <FormField
+                      control={form.control}
+                      name="vehicleDescription"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Vehicle Description</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="e.g., 2020 Honda Civic EX, Blue, 45,000 miles, automatic transmission..."
+                              className="min-h-24"
+                              data-testid="input-vehicle-description"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Provide detailed information about the vehicle being purchased
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="price"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Purchase Price ($)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="25000"
+                              data-testid="input-price"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Buyer Information */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Buyer Information</h3>
+                    
+                    <FormField
+                      control={form.control}
+                      name="buyerName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Your Full Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="John Smith"
+                              data-testid="input-buyer-name"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="buyerEmail"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Your Email</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="email"
+                                placeholder="john@example.com"
+                                data-testid="input-buyer-email"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="buyerPhone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Your Phone</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="tel"
+                                placeholder="(555) 123-4567"
+                                data-testid="input-buyer-phone"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Seller Information (Optional) */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Seller Information (Optional)</h3>
+                    <p className="text-sm text-muted-foreground">
+                      If you're buying from a private seller, provide their contact information. They'll be notified via email.
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="sellerName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Seller Name (Optional)</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Jane Doe"
+                                data-testid="input-seller-name"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="sellerEmail"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Seller Email (Optional)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="email"
+                                placeholder="seller@example.com"
+                                data-testid="input-seller-email"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Seller will receive email notifications about the transaction
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Delivery Details */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Delivery Details</h3>
+                    
+                    <FormField
+                      control={form.control}
+                      name="shippingAddress"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Shipping Address</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="123 Main St, Apt 4B, New York, NY 10001"
+                              className="min-h-20"
+                              data-testid="input-shipping-address"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Complete address where the vehicle will be delivered
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="inspectionDays"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Inspection Period</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-inspection-days">
+                                <SelectValue placeholder="Select inspection period" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="1">1 Day</SelectItem>
+                              <SelectItem value="2">2 Days</SelectItem>
+                              <SelectItem value="3">3 Days (Recommended)</SelectItem>
+                              <SelectItem value="4">4 Days</SelectItem>
+                              <SelectItem value="5">5 Days</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>
+                            Time period to inspect the vehicle after delivery
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    size="lg" 
+                    className="w-full"
+                    disabled={createCustomEscrowMutation.isPending}
+                    data-testid="button-submit-escrow"
+                  >
+                    {createCustomEscrowMutation.isPending ? 'Creating Transaction...' : 'Start Secure Escrow Transaction'}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
@@ -102,9 +432,9 @@ export default function Escrow() {
                     <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                       <span className="text-xl font-bold text-primary">1</span>
                     </div>
-                    <h3 className="font-semibold mb-2">Select Vehicle</h3>
+                    <h3 className="font-semibold mb-2">Start Escrow</h3>
                     <p className="text-sm text-muted-foreground">
-                      Browse our inventory and select the vehicle you want to purchase.
+                      Browse dealership inventory or start a custom escrow for private sales.
                     </p>
                   </CardContent>
                 </Card>
@@ -114,9 +444,9 @@ export default function Escrow() {
                     <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                       <span className="text-xl font-bold text-primary">2</span>
                     </div>
-                    <h3 className="font-semibold mb-2">Initiate Escrow</h3>
+                    <h3 className="font-semibold mb-2">Submit Details</h3>
                     <p className="text-sm text-muted-foreground">
-                      Fill out the purchase form with your details and inspection period preference.
+                      Fill out vehicle description, price, delivery details, and inspection period.
                     </p>
                   </CardContent>
                 </Card>
@@ -140,7 +470,7 @@ export default function Escrow() {
                     </div>
                     <h3 className="font-semibold mb-2">Secure Payment</h3>
                     <p className="text-sm text-muted-foreground">
-                      Receive bank details and transfer funds to our secure escrow account.
+                      Receive bank details via email and transfer funds to our escrow account.
                     </p>
                   </CardContent>
                 </Card>
@@ -164,7 +494,7 @@ export default function Escrow() {
                     </div>
                     <h3 className="font-semibold mb-2">Inspection Period</h3>
                     <p className="text-sm text-muted-foreground">
-                      Inspect the vehicle for 1-5 days (your choice) to ensure it meets expectations.
+                      Inspect the vehicle for your selected period (1-5 days) to ensure satisfaction.
                     </p>
                   </CardContent>
                 </Card>
@@ -207,7 +537,7 @@ export default function Escrow() {
                         <div>
                           <h3 className="font-semibold mb-2">1. List Your Vehicle</h3>
                           <p className="text-sm text-muted-foreground">
-                            Contact our admin team to list your vehicle in our inventory with photos and details.
+                            Contact our admin team to list your vehicle in our inventory, or the buyer can create a custom escrow with your details.
                           </p>
                         </div>
                       </div>
@@ -217,9 +547,9 @@ export default function Escrow() {
                           <Clock className="w-6 h-6 text-primary" />
                         </div>
                         <div>
-                          <h3 className="font-semibold mb-2">2. Wait for Buyer</h3>
+                          <h3 className="font-semibold mb-2">2. Buyer Initiates Escrow</h3>
                           <p className="text-sm text-muted-foreground">
-                            When a buyer initiates escrow for your vehicle, we'll notify you and hold the funds securely.
+                            When a buyer starts escrow, you'll receive an email notification. Funds are held securely.
                           </p>
                         </div>
                       </div>
@@ -243,7 +573,7 @@ export default function Escrow() {
                         <div>
                           <h3 className="font-semibold mb-2">4. Receive Payment</h3>
                           <p className="text-sm text-muted-foreground">
-                            Once the buyer approves, we release the full payment to you. Safe, secure, guaranteed.
+                            Once the buyer approves, we release the full payment to you via email notification. Safe, secure, guaranteed.
                           </p>
                         </div>
                       </div>
@@ -312,11 +642,16 @@ export default function Escrow() {
             Ready to Start Your Secure Purchase?
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            Browse our premium vehicle inventory and buy with complete confidence using our escrow service.
+            Browse our premium vehicle inventory or start a custom escrow transaction for private sales.
           </p>
-          <Button size="lg" variant="secondary" asChild data-testid="button-start-browsing">
-            <Link href="/">Start Browsing Vehicles</Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" variant="secondary" asChild data-testid="button-start-browsing">
+              <Link href="/">Browse Dealership Vehicles</Link>
+            </Button>
+            <Button size="lg" variant="outline" className="bg-transparent border-white text-white hover:bg-white/10" asChild>
+              <a href="#start-escrow">Start Custom Escrow</a>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -342,6 +677,18 @@ export default function Escrow() {
 
             <Card>
               <CardHeader>
+                <CardTitle className="text-lg">Can I use escrow for private sales?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Yes! You can start a custom escrow transaction for any vehicle purchase, whether from our dealership or a private seller. 
+                  Both parties will receive email notifications throughout the process.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
                 <CardTitle className="text-lg">How long does the process take?</CardTitle>
               </CardHeader>
               <CardContent>
@@ -360,18 +707,6 @@ export default function Escrow() {
                 <p className="text-muted-foreground">
                   During your inspection period, you can report any issues. If the vehicle doesn't match the description or has undisclosed problems, 
                   we can cancel the transaction and return your payment in full.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Is my payment information secure?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Yes! We use bank-level security and never store your payment information. 
-                  All bank details are password-protected and encrypted.
                 </p>
               </CardContent>
             </Card>

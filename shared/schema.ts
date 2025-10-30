@@ -102,7 +102,7 @@ export type VehicleOffer = typeof vehicleOffers.$inferSelect;
 // Transactions table (escrow purchases)
 export const transactions = pgTable('transactions', {
   id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
-  vehicleId: integer('vehicle_id').notNull().references(() => vehicles.id),
+  vehicleId: integer('vehicle_id').references(() => vehicles.id), // null if custom/private sale
   buyerId: integer('buyer_id').references(() => users.id), // null if guest
   buyerName: text('buyer_name').notNull(),
   buyerEmail: text('buyer_email').notNull(),
@@ -115,6 +115,11 @@ export const transactions = pgTable('transactions', {
   bankInfo: text('bank_info'), // admin-provided bank details
   paymentProof: text('payment_proof'), // customer upload or reference
   notes: text('notes'),
+  // Custom/Private Sale Fields
+  customVehicleDescription: text('custom_vehicle_description'), // for non-inventory vehicles
+  sellerEmail: text('seller_email'), // private seller email
+  sellerName: text('seller_name'), // private seller name
+  sellerPhone: text('seller_phone'), // private seller phone
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
