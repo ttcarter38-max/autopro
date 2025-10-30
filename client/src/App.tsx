@@ -4,6 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Home from "@/pages/Home";
+import VehicleDetail from "@/pages/VehicleDetail";
+import TransactionTracking from "@/pages/TransactionTracking";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminVehicles from "@/pages/admin/Vehicles";
@@ -15,6 +17,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home}/>
+      <Route path="/vehicle/:id" component={VehicleDetail}/>
+      <Route path="/track/:idOrToken" component={TransactionTracking}/>
       <Route path="/admin/login" component={AdminLogin}/>
       <Route path="/admin/dashboard" component={AdminDashboard}/>
       <Route path="/admin/vehicles" component={AdminVehicles}/>

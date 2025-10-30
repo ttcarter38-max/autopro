@@ -1,8 +1,12 @@
+import { useQuery } from '@tanstack/react-query';
 import VehicleCard from './VehicleCard';
-import { vehicles } from '@/data/vehicles';
 
 export default function SpecialOffers() {
-  const specialOffers = vehicles.filter(v => v.special).slice(0, 4);
+  const { data, isLoading } = useQuery({
+    queryKey: ['/api/vehicles/featured'],
+  });
+
+  const specialOffers = data?.vehicles?.slice(0, 4) || [];
 
   return (
     <div className="bg-muted py-20">
@@ -16,11 +20,35 @@ export default function SpecialOffers() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {specialOffers.map((vehicle) => (
-            <VehicleCard key={vehicle.id} {...vehicle} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Loading vehicles...</p>
+          </div>
+        ) : specialOffers.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">No special offers at the moment. Check back soon!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {specialOffers.map((vehicle: any) => (
+              <VehicleCard 
+                key={vehicle.id} 
+                id={vehicle.id}
+                name={vehicle.name}
+                image={vehicle.image || '/placeholder-car.png'}
+                price={parseFloat(vehicle.price)}
+                originalPrice={vehicle.originalPrice ? parseFloat(vehicle.originalPrice) : undefined}
+                rating={4.5}
+                ratingCount={2136}
+                condition={vehicle.condition === 'new' ? 'New' : 'Used'}
+                year={vehicle.year}
+                transmission={vehicle.transmission}
+                color={vehicle.color}
+                topSpeed={vehicle.topSpeed || 'N/A'}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
