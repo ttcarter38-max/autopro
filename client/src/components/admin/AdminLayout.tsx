@@ -38,7 +38,7 @@ const menuItems = [
     icon: Car,
   },
   {
-    title: 'Transactions',
+    title: 'Escrow Transactions',
     url: '/admin/transactions',
     icon: Receipt,
   },
