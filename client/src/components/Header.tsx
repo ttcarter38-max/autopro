@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Phone, Search, Menu, X, ChevronDown } from 'lucide-react';
+import { Phone, Search, Menu, X } from 'lucide-react';
+import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
@@ -27,47 +28,35 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
-            <h1 className="text-2xl font-heading font-bold tracking-wider" data-testid="text-logo">
-              AUTOPRO
-            </h1>
+            <Link href="/">
+              <h1 className="text-2xl font-heading font-bold tracking-wider cursor-pointer" data-testid="text-logo">
+                AUTOPRO
+              </h1>
+            </Link>
 
             <nav className="hidden md:flex items-center gap-6">
-              <div className="relative group">
-                <button 
-                  className="flex items-center gap-1 text-sm font-medium hover-elevate px-3 py-2 rounded-md" 
-                  onClick={() => handleNavClick('Home')}
-                  data-testid="button-home-menu"
-                >
-                  HOME <ChevronDown className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="relative group">
-                <button 
-                  className="flex items-center gap-1 text-sm font-medium hover-elevate px-3 py-2 rounded-md" 
-                  onClick={() => handleNavClick('Vehicles')}
-                  data-testid="button-vehicles-menu"
-                >
-                  VEHICLES <ChevronDown className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="relative group">
-                <button 
-                  className="flex items-center gap-1 text-sm font-medium hover-elevate px-3 py-2 rounded-md" 
-                  onClick={() => handleNavClick('Blogs')}
-                  data-testid="button-blogs-menu"
-                >
-                  BLOGS <ChevronDown className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="relative group">
-                <button 
-                  className="flex items-center gap-1 text-sm font-medium hover-elevate px-3 py-2 rounded-md" 
-                  onClick={() => handleNavClick('Pages')}
-                  data-testid="button-pages-menu"
-                >
-                  PAGES <ChevronDown className="w-4 h-4" />
-                </button>
-              </div>
+              <Link href="/">
+                <span className="text-sm font-medium hover-elevate px-3 py-2 rounded-md cursor-pointer" data-testid="button-home-menu">
+                  HOME
+                </span>
+              </Link>
+              <Link href="/">
+                <span className="text-sm font-medium hover-elevate px-3 py-2 rounded-md cursor-pointer" data-testid="button-vehicles-menu">
+                  VEHICLES
+                </span>
+              </Link>
+              <Link href="/escrow">
+                <span className="text-sm font-medium hover-elevate px-3 py-2 rounded-md cursor-pointer" data-testid="button-escrow-menu">
+                  ESCROW
+                </span>
+              </Link>
+              <button 
+                className="text-sm font-medium hover-elevate px-3 py-2 rounded-md" 
+                onClick={() => handleNavClick('Contact')}
+                data-testid="button-contact-menu"
+              >
+                CONTACT
+              </button>
             </nav>
           </div>
 
@@ -99,33 +88,39 @@ export default function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden bg-black border-t border-gray-800">
           <nav className="px-4 py-4 space-y-2">
+            <Link href="/">
+              <span 
+                className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md" 
+                onClick={() => setMobileMenuOpen(false)}
+                data-testid="button-mobile-home"
+              >
+                HOME
+              </span>
+            </Link>
+            <Link href="/">
+              <span 
+                className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md" 
+                onClick={() => setMobileMenuOpen(false)}
+                data-testid="button-mobile-vehicles"
+              >
+                VEHICLES
+              </span>
+            </Link>
+            <Link href="/escrow">
+              <span 
+                className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md" 
+                onClick={() => setMobileMenuOpen(false)}
+                data-testid="button-mobile-escrow"
+              >
+                ESCROW
+              </span>
+            </Link>
             <button 
               className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md" 
-              onClick={() => handleNavClick('Home')}
-              data-testid="button-mobile-home"
+              onClick={() => handleNavClick('Contact')}
+              data-testid="button-mobile-contact"
             >
-              HOME
-            </button>
-            <button 
-              className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md" 
-              onClick={() => handleNavClick('Vehicles')}
-              data-testid="button-mobile-vehicles"
-            >
-              VEHICLES
-            </button>
-            <button 
-              className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md" 
-              onClick={() => handleNavClick('Blogs')}
-              data-testid="button-mobile-blogs"
-            >
-              BLOGS
-            </button>
-            <button 
-              className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md" 
-              onClick={() => handleNavClick('Pages')}
-              data-testid="button-mobile-pages"
-            >
-              PAGES
+              CONTACT
             </button>
           </nav>
         </div>
