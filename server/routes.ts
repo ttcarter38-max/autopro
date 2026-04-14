@@ -12,6 +12,7 @@ import {
   sendSellerTransactionNotification,
   sendTransactionStatusUpdate,
   sendBuyerPaymentInstructions,
+  sendBuyerPaymentReceived,
   sendAdminPaymentConfirmation,
   sendSellerPaymentReceived,
   sendSellerFundsReleased,
@@ -599,7 +600,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updated = await storage.updateTransaction(transaction.id, updateData);
 
-      // Notify admin
+      // Notify admin, buyer, and seller
       try {
         await sendAdminPaymentConfirmation({
           id: transaction.id,
@@ -608,6 +609,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           amount: transaction.amount,
           bankRef: bankRef || null,
           hasProofFile: !!req.file,
+        });
+        // Confirm to buyer that their payment proof was received
+        await sendBuyerPaymentReceived({
+          id: transaction.id,
+          buyerName: transaction.buyerName,
+          buyerEmail: transaction.buyerEmail,
+          amount: transaction.amount,
+          guestToken: transaction.guestToken,
         });
         // Notify seller if they have an email
         if (transaction.sellerEmail) {

@@ -242,7 +242,42 @@ export async function sendAdminPaymentConfirmation(transaction: {
   });
 }
 
-// ── 5. Seller: payment received (buyer confirmed) ────────────────────────────
+// ── 5. Buyer: payment proof received confirmation ────────────────────────────
+export async function sendBuyerPaymentReceived(transaction: {
+  id: number; buyerName: string; buyerEmail: string;
+  amount: string; guestToken: string | null;
+}) {
+  const base = getBaseUrl();
+  const trackUrl = transaction.guestToken ? `${base}/track/${transaction.guestToken}` : `${base}/track/${transaction.id}`;
+  const html = emailWrapper(`
+    <h2 style="color:#111;margin-top:0;">We Received Your Payment Proof</h2>
+    <p>Dear ${transaction.buyerName},</p>
+    <p>Thank you — your payment proof has been successfully submitted. Our team is now reviewing it and will verify your payment shortly.</p>
+    ${infoBox([
+      ['Transaction ID', `#${transaction.id}`],
+      ['Amount', `$${parseFloat(transaction.amount).toLocaleString()}`],
+      ['Status', 'Payment Under Review'],
+    ])}
+    <h3>What Happens Next</h3>
+    <ol style="line-height:1.9;">
+      <li>Our team verifies your payment (usually within a few hours)</li>
+      <li>Once confirmed, we notify the seller to ship the vehicle</li>
+      <li>You will receive a shipping confirmation email</li>
+      <li>Your inspection period begins upon delivery</li>
+    </ol>
+    ${ctaButton('Track Your Transaction', trackUrl)}
+    <div style="background:#e8f4fd;border-left:4px solid #1976d2;padding:14px 18px;border-radius:4px;">
+      <p style="margin:0;font-size:13px;">Your funds are held securely in AutoPro's escrow account until the transaction completes.</p>
+    </div>`);
+
+  return sendEmail({
+    to: transaction.buyerEmail,
+    subject: `Payment Proof Received - Transaction #${transaction.id} - AutoPro`,
+    html,
+  });
+}
+
+// ── 6. Seller: payment received (buyer confirmed) ────────────────────────────
 export async function sendSellerPaymentReceived(transaction: {
   id: number; sellerName?: string | null; sellerEmail: string;
   buyerName: string; amount: string;
