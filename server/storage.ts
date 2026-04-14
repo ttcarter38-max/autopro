@@ -259,7 +259,8 @@ export class PostgresStorage implements IStorage {
 
   // Transaction operations
   async getAllTransactions(): Promise<Transaction[]> {
-    return await db.select().from(transactions).orderBy(desc(transactions.createdAt));
+    const result = await db.select().from(transactions).orderBy(desc(transactions.createdAt));
+    return result ?? [];
   }
 
   async getTransaction(id: number): Promise<Transaction | undefined> {

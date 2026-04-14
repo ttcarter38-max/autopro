@@ -110,10 +110,24 @@ export default function VehicleForm() {
         : '/api/admin/vehicles';
       const method = isEdit ? 'PATCH' : 'POST';
 
-      return await apiRequest(url, {
-        method,
-        body: JSON.stringify(data),
+      // Must use FormData (not JSON) because the route uses multer for image uploads
+      const formData = new FormData();
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, String(value));
+        }
       });
+
+      const response = await fetch(url, {
+        method,
+        body: formData,
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to save vehicle');
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/vehicles'] });
