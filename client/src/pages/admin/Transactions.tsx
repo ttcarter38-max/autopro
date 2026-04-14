@@ -18,7 +18,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { FileText, ExternalLink, Bitcoin, Building2, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { FileText, ExternalLink, Bitcoin, Building2, CheckCircle, XCircle, Clock, Trash2 } from 'lucide-react';
 
 const STATUS_COLORS: Record<string, 'default' | 'secondary' | 'destructive'> = {
   initiated: 'secondary',
@@ -43,6 +43,8 @@ export default function AdminTransactions() {
   const { toast } = useToast();
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('bank');
   const [bankInfo, setBankInfo] = useState('');
@@ -76,6 +78,21 @@ export default function AdminTransactions() {
       setBankInfo('');
       setCryptoAddress('');
       setNotes('');
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return await apiRequest('DELETE', `/api/admin/transactions/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/transactions'] });
+      toast({ title: 'Transaction deleted', description: 'The transaction has been permanently deleted.' });
+      setDeleteDialogOpen(false);
+      setDeleteTarget(null);
     },
     onError: (error: any) => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -210,14 +227,24 @@ export default function AdminTransactions() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openDialog(transaction)}
-                          data-testid={`button-manage-${transaction.id}`}
-                        >
-                          Manage
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openDialog(transaction)}
+                            data-testid={`button-manage-${transaction.id}`}
+                          >
+                            Manage
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => { setDeleteTarget(transaction); setDeleteDialogOpen(true); }}
+                            data-testid={`button-delete-${transaction.id}`}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -418,6 +445,46 @@ export default function AdminTransactions() {
             </Button>
             <Button onClick={handleUpdateTransaction} disabled={updateMutation.isPending} data-testid="button-update">
               {updateMutation.isPending ? 'Updating...' : 'Update Transaction'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="w-5 h-5" />
+              Delete Transaction
+            </DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. The transaction and all its history will be permanently removed.
+            </DialogDescription>
+          </DialogHeader>
+          {deleteTarget && (
+            <div className="p-4 bg-muted rounded-md text-sm space-y-1">
+              <p><strong>ID:</strong> #{deleteTarget.id}</p>
+              <p><strong>Buyer:</strong> {deleteTarget.buyerName} ({deleteTarget.buyerEmail})</p>
+              <p><strong>Amount:</strong> ${parseFloat(deleteTarget.amount).toLocaleString()}</p>
+              <p><strong>Status:</strong> {deleteTarget.status.replace(/_/g, ' ')}</p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => { setDeleteDialogOpen(false); setDeleteTarget(null); }}
+              data-testid="button-cancel-delete"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+              disabled={deleteMutation.isPending}
+              data-testid="button-confirm-delete"
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete Permanently'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -40,6 +40,7 @@ export interface IStorage {
   
   // Vehicle offer operations
   getActiveOffer(vehicleId: number): Promise<VehicleOffer | undefined>;
+  getAllOffers(): Promise<VehicleOffer[]>;
   createOffer(offer: InsertVehicleOffer): Promise<VehicleOffer>;
   updateOffer(id: number, offer: Partial<InsertVehicleOffer>): Promise<VehicleOffer | undefined>;
   deleteOffer(id: number): Promise<boolean>;
@@ -48,9 +49,11 @@ export interface IStorage {
   getAllTransactions(): Promise<Transaction[]>;
   getTransaction(id: number): Promise<Transaction | undefined>;
   getTransactionByToken(token: string): Promise<Transaction | undefined>;
+  getTransactionBySellerToken(token: string): Promise<Transaction | undefined>;
   getUserTransactions(buyerId: number): Promise<Transaction[]>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   updateTransaction(id: number, transaction: Partial<InsertTransaction>): Promise<Transaction | undefined>;
+  deleteTransaction(id: number): Promise<boolean>;
   
   // Transaction event operations
   getTransactionEvents(transactionId: number): Promise<TransactionEvent[]>;
@@ -235,6 +238,10 @@ export class PostgresStorage implements IStorage {
     return result[0];
   }
 
+  async getAllOffers(): Promise<VehicleOffer[]> {
+    return await db.select().from(vehicleOffers).orderBy(desc(vehicleOffers.createdAt));
+  }
+
   async createOffer(offer: InsertVehicleOffer): Promise<VehicleOffer> {
     const result = await db.insert(vehicleOffers).values(offer).returning();
     return result[0];
@@ -313,7 +320,15 @@ export class PostgresStorage implements IStorage {
       .set({ ...transaction, updatedAt: new Date() })
       .where(eq(transactions.id, id))
       .returning();
-    return result[0];
+    if (result[0]) return result[0];
+    // Neon HTTP driver fallback — returning() can be empty after UPDATE
+    const [existing] = await db.select().from(transactions).where(eq(transactions.id, id)).limit(1);
+    return existing;
+  }
+
+  async deleteTransaction(id: number): Promise<boolean> {
+    const result = await db.delete(transactions).where(eq(transactions.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
   }
 
   // Transaction event operations

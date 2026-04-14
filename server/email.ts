@@ -286,13 +286,62 @@ export async function sendSellerFundsReleased(transaction: {
   });
 }
 
-// ── 7. Buyer: general status update ──────────────────────────────────────────
+// ── 7. General status update — buyer OR seller ───────────────────────────────
 export async function sendTransactionStatusUpdate(transaction: {
-  id: number; buyerName: string; buyerEmail: string; status: string;
-  bankInfo?: string | null; guestToken?: string | null;
+  id: number;
+  status: string;
+  forSeller?: boolean;
+  // buyer fields
+  buyerName?: string;
+  buyerEmail?: string;
+  guestToken?: string | null;
+  bankInfo?: string | null;
+  // seller fields
+  sellerName?: string | null;
+  sellerEmail?: string;
+  amount?: string;
 }) {
-  const statusMessages: Record<string, { title: string; message: string }> = {
-    awaiting_admin_approval: { title: 'Transaction Under Review', message: 'Our team is reviewing your transaction.' },
+  const base = getBaseUrl();
+  const statusLabel = transaction.status.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+
+  // ── Seller variant ──
+  if (transaction.forSeller && transaction.sellerEmail) {
+    const sellerDisplay = transaction.sellerName || 'Seller';
+    const sellerMessages: Record<string, { title: string; message: string }> = {
+      awaiting_admin_approval: { title: 'Transaction Under Review', message: 'The transaction is currently being reviewed by our team.' },
+      awaiting_payment_confirmation: { title: 'Payment Instructions Sent to Buyer', message: 'Payment instructions have been provided to the buyer. We are awaiting their payment.' },
+      in_transit: { title: 'Vehicle Shipping Confirmed', message: 'Payment has been confirmed. The vehicle is now being shipped to the buyer.' },
+      inspection: { title: 'Buyer Inspection Period Started', message: "The buyer has received the vehicle and their inspection period has begun." },
+      approved: { title: 'Buyer Approved the Vehicle', message: 'The buyer has approved the vehicle. Funds will be released to you shortly.' },
+      released: { title: 'Funds Released to You', message: 'Payment has been released to your account. Transaction complete!' },
+      cancelled: { title: 'Transaction Cancelled', message: 'This transaction has been cancelled. Contact us if you have questions.' },
+    };
+    const info = sellerMessages[transaction.status] || { title: 'Transaction Update', message: `Status changed to: ${statusLabel}` };
+
+    const html = emailWrapper(`
+      <h2 style="color:#111;margin-top:0;">${info.title}</h2>
+      <p>Dear ${sellerDisplay},</p>
+      <p>${info.message}</p>
+      ${infoBox([
+        ['Transaction ID', `#${transaction.id}`],
+        ['Buyer', transaction.buyerName || '—'],
+        ['Amount', transaction.amount ? `$${parseFloat(transaction.amount).toLocaleString()}` : '—'],
+        ['Status', statusLabel],
+      ])}
+      <div style="background:#e8f5e9;border-left:4px solid #388e3c;padding:14px 18px;border-radius:4px;margin-top:16px;">
+        <p style="margin:0;font-size:13px;">Your funds are protected in AutoPro's secure escrow account until the transaction completes.</p>
+      </div>`);
+
+    return sendEmail({
+      to: transaction.sellerEmail,
+      subject: `${info.title} — Transaction #${transaction.id} — AutoPro`,
+      html,
+    });
+  }
+
+  // ── Buyer variant ──
+  const buyerMessages: Record<string, { title: string; message: string }> = {
+    awaiting_admin_approval: { title: 'Transaction Under Review', message: 'Our team is reviewing your transaction. You will hear from us within 24 hours.' },
     awaiting_payment_confirmation: { title: 'Payment Instructions Ready', message: 'Bank or crypto payment details are now available in your tracking page.' },
     in_transit: { title: 'Vehicle Is On Its Way', message: 'Payment confirmed! The vehicle is being shipped to your address.' },
     inspection: { title: 'Inspection Period Started', message: 'The vehicle has been delivered. Your inspection period has begun.' },
@@ -301,22 +350,21 @@ export async function sendTransactionStatusUpdate(transaction: {
     cancelled: { title: 'Transaction Cancelled', message: 'This transaction has been cancelled. Contact us if you have questions.' },
   };
 
-  const base = getBaseUrl();
   const trackUrl = transaction.guestToken ? `${base}/track/${transaction.guestToken}` : `${base}/track/${transaction.id}`;
-  const statusInfo = statusMessages[transaction.status] || { title: 'Transaction Updated', message: `Status: ${transaction.status.replace(/_/g, ' ')}` };
+  const statusInfo = buyerMessages[transaction.status] || { title: 'Transaction Updated', message: `Status: ${statusLabel}` };
 
   const html = emailWrapper(`
     <h2 style="color:#111;margin-top:0;">${statusInfo.title}</h2>
-    <p>Dear ${transaction.buyerName},</p>
+    <p>Dear ${transaction.buyerName || 'Buyer'},</p>
     <p>${statusInfo.message}</p>
     ${infoBox([
       ['Transaction ID', `#${transaction.id}`],
-      ['Status', transaction.status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())],
+      ['Status', statusLabel],
     ])}
     ${ctaButton('View Transaction Details', trackUrl)}`);
 
   return sendEmail({
-    to: transaction.buyerEmail,
+    to: transaction.buyerEmail!,
     subject: `${statusInfo.title} — Transaction #${transaction.id}`,
     html,
   });

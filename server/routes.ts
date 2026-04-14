@@ -125,7 +125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const vehicle = await storage.getVehicle(id);
       if (!vehicle) return res.status(404).json({ error: 'Vehicle not found' });
       const images = await storage.getVehicleImages(id);
-      const offer = await storage.getVehicleOffer(id);
+      const offer = await storage.getActiveOffer(id);
       res.json({ vehicle, images, offer });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -235,7 +235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/vehicles/:id/offer', async (req, res) => {
     try {
-      const offer = await storage.getVehicleOffer(parseInt(req.params.id));
+      const offer = await storage.getActiveOffer(parseInt(req.params.id));
       res.json({ offer });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -618,6 +618,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete transaction (admin)
+  app.delete('/api/admin/transactions/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteTransaction(id);
+      if (!success) return res.status(404).json({ error: 'Transaction not found' });
+      res.json({ message: 'Transaction deleted successfully' });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Update transaction (admin)
   app.patch('/api/admin/transactions/:id', isAdmin, async (req, res) => {
     try {
@@ -647,45 +659,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Trigger emails based on status change
       try {
-        if (status === 'awaiting_payment_confirmation') {
-          await sendBuyerPaymentInstructions({
-            id: transaction.id,
-            buyerName: transaction.buyerName,
-            buyerEmail: transaction.buyerEmail,
-            guestToken: transaction.guestToken,
-            amount: transaction.amount,
-            paymentMethod: transaction.paymentMethod || 'bank',
-            bankInfo: transaction.bankInfo,
-            cryptoAddress: transaction.cryptoAddress,
-            cryptoCoin: transaction.cryptoCoin,
-          });
-        } else if (status === 'released') {
-          if (transaction.sellerEmail) {
-            await sendSellerFundsReleased({
+        if (status && status !== previousTransaction.status) {
+          if (status === 'awaiting_payment_confirmation') {
+            // Buyer gets payment instructions
+            await sendBuyerPaymentInstructions({
               id: transaction.id,
-              sellerName: transaction.sellerName,
-              sellerEmail: transaction.sellerEmail,
               buyerName: transaction.buyerName,
+              buyerEmail: transaction.buyerEmail,
+              guestToken: transaction.guestToken,
               amount: transaction.amount,
-              customVehicleDescription: transaction.customVehicleDescription,
+              paymentMethod: transaction.paymentMethod || 'bank',
+              bankInfo: transaction.bankInfo,
+              cryptoAddress: transaction.cryptoAddress,
+              cryptoCoin: transaction.cryptoCoin,
             });
+            // Seller notified that payment details were sent
+            if (transaction.sellerEmail) {
+              await sendTransactionStatusUpdate({
+                id: transaction.id,
+                sellerName: transaction.sellerName,
+                sellerEmail: transaction.sellerEmail,
+                buyerName: transaction.buyerName,
+                amount: transaction.amount,
+                status,
+                forSeller: true,
+              });
+            }
+          } else if (status === 'released') {
+            // Buyer notified of completion
+            await sendTransactionStatusUpdate({
+              id: transaction.id,
+              buyerName: transaction.buyerName,
+              buyerEmail: transaction.buyerEmail,
+              guestToken: transaction.guestToken,
+              status: 'released',
+            });
+            // Seller gets funds released email
+            if (transaction.sellerEmail) {
+              await sendSellerFundsReleased({
+                id: transaction.id,
+                sellerName: transaction.sellerName,
+                sellerEmail: transaction.sellerEmail,
+                buyerName: transaction.buyerName,
+                amount: transaction.amount,
+                customVehicleDescription: transaction.customVehicleDescription,
+              });
+            }
+          } else {
+            // All other status changes — notify buyer
+            await sendTransactionStatusUpdate({
+              id: transaction.id,
+              buyerName: transaction.buyerName,
+              buyerEmail: transaction.buyerEmail,
+              guestToken: transaction.guestToken,
+              status,
+              bankInfo: transaction.bankInfo,
+            });
+            // Also notify seller of every step
+            if (transaction.sellerEmail) {
+              await sendTransactionStatusUpdate({
+                id: transaction.id,
+                sellerName: transaction.sellerName,
+                sellerEmail: transaction.sellerEmail,
+                buyerName: transaction.buyerName,
+                amount: transaction.amount,
+                status,
+                forSeller: true,
+              });
+            }
           }
-          await sendTransactionStatusUpdate({
-            id: transaction.id,
-            buyerName: transaction.buyerName,
-            buyerEmail: transaction.buyerEmail,
-            guestToken: transaction.guestToken,
-            status: 'released',
-          });
-        } else if (status && status !== previousTransaction.status) {
-          await sendTransactionStatusUpdate({
-            id: transaction.id,
-            buyerName: transaction.buyerName,
-            buyerEmail: transaction.buyerEmail,
-            guestToken: transaction.guestToken,
-            status,
-            bankInfo: transaction.bankInfo,
-          });
         }
       } catch (emailError) {
         console.error('Email error:', emailError);
