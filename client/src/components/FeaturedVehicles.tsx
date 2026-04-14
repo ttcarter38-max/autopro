@@ -2,12 +2,11 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
+import { Link } from 'wouter';
 import VehicleCard from './VehicleCard';
 
 export default function FeaturedVehicles() {
   const [activeTab, setActiveTab] = useState('all');
-  const { toast } = useToast();
 
   const { data, isLoading } = useQuery({
     queryKey: ['/api/vehicles/featured'],
@@ -19,13 +18,6 @@ export default function FeaturedVehicles() {
     if (tab === 'new') return vehicles.filter((v: any) => v.condition === 'new').slice(0, 3);
     if (tab === 'used') return vehicles.filter((v: any) => v.condition === 'used').slice(0, 3);
     return [];
-  };
-
-  const handleViewAll = () => {
-    toast({
-      title: "Full Inventory",
-      description: "Browse our complete collection of premium vehicles. Contact us at 1-800-CAR-DEAL for more details.",
-    });
   };
 
   const displayVehicles = getVehiclesByTab(activeTab);
@@ -82,10 +74,10 @@ export default function FeaturedVehicles() {
                     <Button 
                       variant="default" 
                       size="lg" 
-                      onClick={handleViewAll}
+                      asChild
                       data-testid="button-view-all"
                     >
-                      VIEW ALL
+                      <Link href="/inventory">VIEW ALL VEHICLES</Link>
                     </Button>
                   </div>
                 </>

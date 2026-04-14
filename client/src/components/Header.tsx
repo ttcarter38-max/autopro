@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Phone, Search, Menu, X } from 'lucide-react';
+import { Phone, Menu, X } from 'lucide-react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -8,17 +8,10 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { toast } = useToast();
 
-  const handleSearch = () => {
-    toast({
-      title: "Search",
-      description: "Search functionality coming soon! Use the vehicle search bar below to find your dream car.",
-    });
-  };
-
   const handleNavClick = (section: string) => {
     toast({
-      title: `Navigate to ${section}`,
-      description: `The ${section} page is under construction. Please contact us at 1-800-CAR-DEAL for assistance.`,
+      title: `${section}`,
+      description: `Contact us at 1-800-CAR-DEAL for assistance.`,
     });
     setMobileMenuOpen(false);
   };
@@ -40,7 +33,7 @@ export default function Header() {
                   HOME
                 </span>
               </Link>
-              <Link href="/">
+              <Link href="/inventory">
                 <span className="text-sm font-medium hover-elevate px-3 py-2 rounded-md cursor-pointer" data-testid="button-vehicles-menu">
                   VEHICLES
                 </span>
@@ -61,13 +54,8 @@ export default function Header() {
           </div>
 
           <div className="hidden md:flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={handleSearch}
-              data-testid="button-search"
-            >
-              <Search className="w-5 h-5" />
+            <Button variant="default" size="sm" asChild data-testid="button-search">
+              <Link href="/inventory">Browse All</Link>
             </Button>
             <div className="flex items-center gap-2 text-sm">
               <Phone className="w-4 h-4" />
@@ -97,7 +85,7 @@ export default function Header() {
                 HOME
               </span>
             </Link>
-            <Link href="/">
+            <Link href="/inventory">
               <span 
                 className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md" 
                 onClick={() => setMobileMenuOpen(false)}

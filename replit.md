@@ -1,237 +1,119 @@
 # AutoPro - Car Dealership & Escrow Platform
 
 ## Project Overview
-A full-featured car dealership and escrow platform similar to escrow.com. Includes an admin backend for managing inventory and a customer-facing storefront with secure escrow services for both dealership and private vehicle sales. Built with React, TypeScript, Express, and PostgreSQL.
-
-## Features
-- **Hero Slider**: Auto-rotating carousel showcasing featured vehicles
-- **Vehicle Search**: Filter by make, model, and price range
-- **Special Offers**: Highlighted vehicles with sale pricing
-- **Featured Vehicles**: Tabbed interface for All Cars, New Cars, and Used Cars
-- **Custom Escrow**: Private sale escrow for buyer-seller deals not in inventory
-- **Seller Accept/Reject**: Seller receives email with token link → password-protected page to accept or reject
-- **Admin Payment Entry**: Admin sets bank transfer OR cryptocurrency (BTC/ETH/USDT/etc.) per transaction
-- **Payment Proof Upload**: Buyer uploads screenshot or PDF on tracking page; admin gets notified
-- **Rich Email Chain**: 7 distinct email templates via Resend (buyer initiated, seller notification, payment instructions, payment proof received, seller funds released, etc.)
-- **Statistics Section**: Dealership metrics and call-to-action
-- **Mobile Responsive**: Optimized for all device sizes
-
-## Key Credentials & Secrets
-- Admin: admin@autopro.com / admin123
-- Seller action password: `escrow2024` (configurable via `SELLER_PASSWORD` env var)
-- Email: Resend SDK using `RESEND_API_KEY` secret; sender `onboarding@resend.dev`
-
-## Key Routes
-- `/seller/:token` — Seller accept/reject page (token from email)
-- `/track/:idOrToken` — Buyer transaction tracking + payment proof upload
-- `/admin/transactions` — Admin manages transactions, sets bank/crypto payment details
-
-## Technology Stack
-- **Frontend**: React 18, TypeScript, Wouter (routing)
-- **Styling**: Tailwind CSS, Shadcn UI components
-- **Build Tool**: Vite
-- **Backend**: Express.js (for development server)
-
-## Project Structure
-```
-client/
-├── src/
-│   ├── components/       # Reusable UI components
-│   │   ├── Header.tsx
-│   │   ├── HeroSlider.tsx
-│   │   ├── VehicleCard.tsx
-│   │   ├── VehicleSearchBar.tsx
-│   │   ├── FeaturedVehicles.tsx
-│   │   ├── SpecialOffers.tsx
-│   │   ├── StatisticsSection.tsx
-│   │   └── Footer.tsx
-│   ├── data/
-│   │   └── vehicles.ts   # Vehicle inventory data
-│   ├── pages/
-│   │   └── Home.tsx      # Main page
-│   └── App.tsx
-```
-
-## Updating Vehicle Inventory
-
-To add, edit, or remove vehicles from the website, edit the `client/src/data/vehicles.ts` file:
-
-```typescript
-export const vehicles: Vehicle[] = [
-  {
-    id: 1,
-    name: 'Cayenne Turbo',
-    make: 'Porsche',
-    model: 'Cayenne',
-    image: whiteSUV,  // Import your image
-    price: 67200,
-    originalPrice: 70000,  // Optional - for sale pricing
-    rating: 4.5,
-    ratingCount: 2136,
-    condition: 'New',  // 'New' or 'Used'
-    year: 2024,
-    transmission: 'Automatic',
-    color: 'White',
-    topSpeed: '159 mph',
-    featured: true,    // Shows in Featured Vehicles section
-    special: true,     // Shows in Special Offers section
-  },
-  // Add more vehicles here...
-];
-```
-
-### Adding Vehicle Images
-1. Place your car images in `attached_assets/` folder
-2. Import them at the top of `vehicles.ts`:
-   ```typescript
-   import myCarImage from '@assets/my-car-image.png';
-   ```
-3. Use the imported variable in the vehicle object
-
-## Customization
-
-### Updating Contact Information
-Edit the following files:
-- **Phone Number**: `client/src/components/Header.tsx` and `Footer.tsx`
-- **Address**: `client/src/components/Footer.tsx`
-- **Email**: `client/src/components/Footer.tsx`
-
-### Changing Colors
-The primary red accent color can be changed in `client/src/index.css`:
-```css
---primary: 0 72% 51%;  /* HSL format: Hue Saturation% Lightness% */
-```
-
-### Updating Statistics
-Edit the stats array in `client/src/components/StatisticsSection.tsx`
-
-## Deployment to Web Hosting
-
-### Building for Production
-This website can be built as a static site and deployed to any hosting service like Namecheap, GoDaddy, or others:
-
-1. **Build the production files**:
-   ```bash
-   npm run build
-   ```
-   This creates optimized files in the `dist/` folder.
-
-2. **Upload to your hosting**:
-   - Upload all files from the `dist/` folder to your hosting's public_html or www directory
-   - Make sure the server is configured to serve the index.html file
-
-3. **Configure your domain**:
-   - Point your domain to your hosting service
-   - Ensure the hosting supports Single Page Applications (SPA)
-   - If needed, configure URL rewrites to redirect all requests to index.html
-
-### Recommended Hosting Services
-- **Namecheap**: Shared hosting with cPanel
-- **Netlify**: Free tier with automatic deployments
-- **Vercel**: Optimized for React applications
-- **GitHub Pages**: Free static site hosting
-
-## Development
-
-### Running Locally
-```bash
-npm run dev
-```
-Access the site at http://localhost:5000
-
-### Project Dependencies
-- React, React DOM
-- Tailwind CSS
-- Shadcn UI Components
-- Lucide React (icons)
-- Wouter (routing)
-
-## Key Features
-
-### Customer Features
-- **Browse Dealership Inventory**: View and filter available vehicles
-- **Vehicle Detail Pages**: Comprehensive vehicle information with image galleries
-- **Custom Escrow Transactions**: Start escrow for private vehicle sales
-- **Transaction Tracking**: Track escrow status with guest tokens
-- **Escrow Information Page**: Complete guide on how escrow works
-- **Email Notifications**: Automated notifications for buyers and sellers
-
-### Admin Features
-- **Dashboard**: Overview of inventory and transactions
-- **Vehicle Management**: Full CRUD operations for vehicle inventory
-- **Image Upload**: Multi-image support with primary image selection
-- **Special Offers**: Create promotional pricing
-- **Transaction Management**: 7-step escrow workflow management
-- **Bank Info Sharing**: Password-protected bank details for buyers
-
-## Escrow Process (7 Steps)
-1. **Initiated** - Customer submits purchase (dealership or custom)
-2. **Awaiting Admin Approval** - Admin reviews and approves
-3. **Awaiting Payment Confirmation** - Bank info shared, buyer pays
-4. **In Transit** - Vehicle shipped to buyer's address
-5. **Inspection** - Buyer inspects vehicle (1-5 days)
-6. **Approved** - Buyer approves purchase
-7. **Released** - Payment released to seller
-
-## Email Integration
-
-### Current Status
-Email notifications are implemented but currently in **console log mode** for development/testing.
-
-### Email Events
-- **Transaction Initiated**: Sent to buyer with tracking token
-- **Seller Notification**: Sent to private seller when escrow starts
-- **Status Updates**: Sent to buyer when transaction status changes
-- **Bank Info Available**: Includes password-protected bank details
-
-### To Enable Real Emails
-1. **Option A - Resend Integration** (Recommended):
-   - Set up the Resend connector in Replit integrations
-   - No code changes needed - integration auto-configures
-
-2. **Option B - Manual SMTP Setup**:
-   - Add credentials as secrets: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
-   - Update `server/email.ts` to use nodemailer with SMTP
-   
-3. **Option C - SendGrid/Other**:
-   - Add API key as secret
-   - Update `server/email.ts` with appropriate SDK
-
-For now, all emails are logged to console so you can see what would be sent.
+A full-featured car dealership and escrow platform. Includes an admin backend for managing inventory and a customer-facing storefront with secure escrow services for both dealership and private vehicle sales. Built with React, TypeScript, Express, and PostgreSQL (Neon).
 
 ## Admin Access
 - **URL**: `/admin/login`
 - **Email**: `admin@autopro.com`
 - **Password**: `admin123`
 
-## Database Schema
+## Technology Stack
+- **Frontend**: React 18, TypeScript, Wouter (routing), TanStack Query v5
+- **Styling**: Tailwind CSS, Shadcn UI components
+- **Build Tool**: Vite
+- **Backend**: Express.js
+- **Database**: PostgreSQL via Neon (neon-serverless WebSocket driver + Drizzle ORM)
+- **Email**: Gmail via Replit connector SDK
 
-### Tables
+## Key Routes (Customer)
+- `/` — Home page with hero, featured vehicles, statistics
+- `/inventory` — Full vehicle inventory with search/filter/sort
+- `/vehicle/:id` — Vehicle detail page + escrow purchase dialog
+- `/escrow` — Custom escrow for private vehicle sales
+- `/track/:guestToken` — Buyer transaction tracking + payment proof upload
+- `/seller/:token` — Seller accept/reject via one-click email link
+
+## Key Routes (Admin)
+- `/admin/login` — Admin login
+- `/admin/dashboard` — Overview
+- `/admin/vehicles` — Manage inventory
+- `/admin/vehicles/new` — Add vehicle (FormData upload with multer)
+- `/admin/vehicles/:id/edit` — Edit vehicle + manage images
+- `/admin/transactions` — Manage escrow transactions (set bank/crypto payment, update status)
+
+## Database Schema
 - **users**: Admin and customer accounts
-- **vehicles**: Dealership inventory
-- **vehicle_images**: Multiple images per vehicle
-- **vehicle_offers**: Special pricing/discounts
-- **transactions**: Escrow purchases (dealership + private sales)
-  - Supports both inventory vehicles and custom descriptions
-  - Seller info fields for private sales
-  - Guest checkout with tracking tokens
+- **vehicles**: Dealership inventory (available, featured, condition, price, etc.)
+- **vehicle_images**: Multiple images per vehicle (primary + gallery)
+- **vehicle_offers**: Promotional pricing/discounts
+- **transactions**: Escrow purchases (guest checkout, seller info, payment fields)
 - **transaction_events**: Audit trail for status changes
 
-## Recent Changes (Oct 30, 2024)
-- ✅ Complete escrow platform with admin backend
-- ✅ Custom escrow form for private vehicle sales
-- ✅ Database schema extended for seller information
-- ✅ Email notification system (console mode for development)
-- ✅ Dedicated `/escrow` page with transaction tracking
-- ✅ 7-step escrow workflow with admin controls
-- ✅ Password-protected bank information sharing
-- ✅ Guest checkout with unique tracking tokens
-- ✅ Sample data: 5 vehicles with images and offers
+## Escrow Process (7 Steps)
+1. **Initiated** — Customer submits purchase form
+2. **Awaiting Admin Approval** — Admin reviews
+3. **Awaiting Payment Confirmation** — Admin sets bank/crypto info, buyer gets payment instructions email
+4. **In Transit** — Vehicle shipped
+5. **Inspection** — Buyer inspects (1–5 days, buyer-selected)
+6. **Approved** — Buyer approves
+7. **Released** — Payment released to seller
 
-## User Preferences
-- Full-stack escrow platform similar to escrow.com
-- Manual escrow process with admin approval
-- Email notifications for buyers and sellers
-- Shipping-only delivery (no in-person pickup)
-- 1-5 day customer-selectable inspection periods
-- Support for both dealership and private seller transactions
+## Email Integration
+Uses Gmail via Replit connector (connection ID: `conn_google-mail_01KP5JM9NKTQ18FP2T2Z6SNGM4`).
+Sends base64url-encoded RFC 2822 messages via `connectors.proxy('google-mail', ...)`.
+
+Email events:
+- Transaction initiated → buyer confirmation with tracking link
+- Seller notification → one-click accept/reject link (GET route, branded HTML page)
+- Payment instructions → bank details or crypto address to buyer
+- Buyer payment received → confirmation when proof submitted
+- Status updates → various stages
+
+## Key Technical Notes
+
+### DB Driver
+Using `drizzle-orm/neon-serverless` with `Pool` (WebSocket). **Do NOT switch back to `neon-http`** — the HTTP driver has a known bug where it misreads PostgreSQL boolean (`t`/`f`) as `false` and timestamps as `null`.
+
+### Vehicle Image Upload
+Admin vehicle form uses `FormData` (not JSON) for submission, because the route uses `multer` middleware (`upload.array('images', 10)`) for image handling. The route is at `POST /api/admin/vehicles`.
+
+### Guest Token Model
+Buyers don't need an account. They get a `guestToken` UUID after initiating a transaction, which is used to track their escrow at `/track/:guestToken`.
+
+### Seller Token Model
+Sellers get a `sellerToken` UUID in their notification email. The `/seller/:token/accept` and `/seller/:token/reject` routes (GET) show branded HTML confirmation pages — no password required.
+
+### URL Resolution
+`getBaseUrl()` in `server/email.ts` uses `process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN` for constructing email links.
+
+### Null Safety
+Several storage methods have `?? []` or `(result ?? [])[0]` guards for the Neon driver occasionally returning null instead of empty arrays.
+
+## Project Structure
+```
+client/src/
+  pages/
+    Home.tsx              # Landing page
+    Inventory.tsx         # Full vehicle browse with search/filter
+    VehicleDetail.tsx     # Car detail + purchase escrow dialog
+    TransactionTracking.tsx  # Buyer tracking page
+    SellerAction.tsx      # Seller accept/reject (redirect to GET API)
+    AdminLogin.tsx
+    adminEscrow.tsx       # Custom escrow form
+    admin/
+      Dashboard.tsx
+      Vehicles.tsx
+      VehicleForm.tsx     # Add/edit vehicle (FormData submission)
+      Transactions.tsx    # Admin transaction management
+  components/
+    Header.tsx            # Nav: HOME, VEHICLES (/inventory), ESCROW, CONTACT
+    Footer.tsx
+    HeroSlider.tsx
+    FeaturedVehicles.tsx  # Shows featured vehicles, "VIEW ALL" → /inventory
+    VehicleCard.tsx       # Links to /vehicle/:id
+    VehicleSearchBar.tsx
+    SpecialOffers.tsx
+    StatisticsSection.tsx
+    admin/AdminLayout.tsx
+
+server/
+  routes.ts   # All API routes
+  storage.ts  # PostgresStorage class (IStorage interface)
+  db.ts       # Neon WebSocket Pool connection
+  email.ts    # Gmail email sending
+  index.ts
+
+shared/
+  schema.ts   # Drizzle schema + Zod insert schemas
+```

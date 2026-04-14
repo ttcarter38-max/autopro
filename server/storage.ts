@@ -235,11 +235,12 @@ export class PostgresStorage implements IStorage {
   async getActiveOffer(vehicleId: number): Promise<VehicleOffer | undefined> {
     const result = await db.select().from(vehicleOffers)
       .where(and(eq(vehicleOffers.vehicleId, vehicleId), eq(vehicleOffers.active, true)));
-    return result[0];
+    return (result ?? [])[0];
   }
 
   async getAllOffers(): Promise<VehicleOffer[]> {
-    return await db.select().from(vehicleOffers).orderBy(desc(vehicleOffers.createdAt));
+    const result = await db.select().from(vehicleOffers).orderBy(desc(vehicleOffers.createdAt));
+    return result ?? [];
   }
 
   async createOffer(offer: InsertVehicleOffer): Promise<VehicleOffer> {
