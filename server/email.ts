@@ -1,12 +1,7 @@
-import { Resend } from 'resend';
+// Gmail integration via Replit connectors SDK
+import { ReplitConnectors } from '@replit/connectors-sdk';
 
-function getResend(): Resend | null {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return null;
-  return new Resend(key);
-}
-
-const FROM_ADDRESS = process.env.RESEND_FROM_EMAIL || 'AutoPro Escrow <onboarding@resend.dev>';
+const connectors = new ReplitConnectors();
 
 function getBaseUrl(): string {
   return process.env.REPL_DOMAINS
@@ -16,25 +11,38 @@ function getBaseUrl(): string {
 
 interface EmailData { to: string; subject: string; html: string; }
 
+function buildRawEmail(to: string, subject: string, html: string): string {
+  const lines = [
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    'MIME-Version: 1.0',
+    'Content-Type: text/html; charset=UTF-8',
+    '',
+    html,
+  ];
+  const raw = lines.join('\r\n');
+  // base64url encode (Gmail requires base64url, not standard base64)
+  return Buffer.from(raw).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
 export async function sendEmail(data: EmailData): Promise<boolean> {
-  const resend = getResend();
-  if (!resend) {
-    console.log('📧 EMAIL (no RESEND_API_KEY — logging only):');
-    console.log('To:', data.to, '| Subject:', data.subject);
-    return true;
-  }
   try {
-    const result = await resend.emails.send({
-      from: FROM_ADDRESS,
-      to: data.to,
-      subject: data.subject,
-      html: data.html,
+    const rawMessage = buildRawEmail(data.to, data.subject, data.html);
+    const response = await connectors.proxy('google-mail', '/gmail/v1/users/me/messages/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ raw: rawMessage }),
     });
-    if (result.error) { console.error('Resend error:', result.error); return false; }
-    console.log(`📧 Email sent via Resend to ${data.to} (id: ${result.data?.id})`);
+    if (!response.ok) {
+      const err = await response.text();
+      console.error('Gmail send error:', err);
+      return false;
+    }
+    const result = await response.json() as any;
+    console.log(`📧 Email sent via Gmail to ${data.to} (id: ${result.id})`);
     return true;
   } catch (err) {
-    console.error('Failed to send email:', err);
+    console.error('Failed to send email via Gmail:', err);
     return false;
   }
 }
