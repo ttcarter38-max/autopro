@@ -203,9 +203,9 @@ export default function TransactionTracking() {
                       <div className="flex-1 pt-1">
                         <p className={`font-semibold ${isCurrent ? 'text-primary' : ''}`}>{step.label}</p>
 
-                        {/* Payment instructions when awaiting payment */}
+                        {/* Payment instructions + proof upload when awaiting payment */}
                         {isCurrent && isPaymentStep && hasPaymentDetails && (
-                          <div className="mt-3 space-y-3">
+                          <div className="mt-3 space-y-4">
                             {transaction.paymentMethod === 'crypto' && transaction.cryptoAddress ? (
                               <div className="p-4 bg-amber-50 dark:bg-amber-950 border border-amber-300 dark:border-amber-700 rounded-md">
                                 <div className="flex items-center gap-2 mb-2">
@@ -229,9 +229,6 @@ export default function TransactionTracking() {
                                     <Copy className="w-4 h-4" />
                                   </Button>
                                 </div>
-                                <p className="text-xs text-amber-700 dark:text-amber-300 mt-2">
-                                  After sending, upload a screenshot or transaction hash as proof below.
-                                </p>
                               </div>
                             ) : transaction.bankInfo ? (
                               <div className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md">
@@ -242,11 +239,91 @@ export default function TransactionTracking() {
                                 <pre className="text-sm text-blue-800 dark:text-blue-200 whitespace-pre-wrap font-mono bg-white dark:bg-black/30 p-3 rounded border border-blue-200 dark:border-blue-700">
                                   {transaction.bankInfo}
                                 </pre>
-                                <p className="text-xs text-blue-700 dark:text-blue-300 mt-2">
-                                  After transferring, upload your receipt or provide a reference number below.
-                                </p>
                               </div>
                             ) : null}
+
+                            {/* Submit Payment Proof — directly below payment instructions */}
+                            <div className="border rounded-md p-4 space-y-3">
+                              <div className="flex items-center gap-2">
+                                <Upload className="w-4 h-4 text-muted-foreground" />
+                                <p className="font-semibold text-sm">Submit Payment Proof</p>
+                              </div>
+                              {alreadySubmittedProof ? (
+                                <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md">
+                                  <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                                  <div>
+                                    <p className="font-semibold text-sm text-green-900 dark:text-green-100">Payment proof submitted</p>
+                                    {transaction.bankRef && (
+                                      <p className="text-xs text-green-800 dark:text-green-200">Ref: {transaction.bankRef}</p>
+                                    )}
+                                    {transaction.paymentProofFile && (
+                                      <a
+                                        href={transaction.paymentProofFile}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1 text-xs text-primary hover:underline mt-1"
+                                      >
+                                        <FileText className="w-3 h-3" /> View uploaded proof
+                                      </a>
+                                    )}
+                                    <p className="text-xs text-green-700 dark:text-green-300 mt-1">Our team is verifying your payment.</p>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <p className="text-xs text-muted-foreground">
+                                    After making your payment, provide your reference number and/or upload a screenshot or PDF receipt.
+                                  </p>
+                                  <div className="space-y-1">
+                                    <Label htmlFor="bankRef" className="text-xs">Bank Reference / Transaction Hash (optional)</Label>
+                                    <Input
+                                      id="bankRef"
+                                      placeholder="e.g. TRX-1234567 or 0x123abc..."
+                                      value={bankRef}
+                                      onChange={(e) => setBankRef(e.target.value)}
+                                      data-testid="input-bank-ref"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label htmlFor="proofFile" className="text-xs">Upload Proof File (image or PDF, max 16MB)</Label>
+                                    <input
+                                      ref={fileInputRef}
+                                      id="proofFile"
+                                      type="file"
+                                      accept="image/*,.pdf"
+                                      className="hidden"
+                                      onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                                      data-testid="input-proof-file"
+                                    />
+                                    <div className="flex items-center gap-3">
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        data-testid="button-choose-file"
+                                      >
+                                        <Upload className="w-4 h-4 mr-2" />
+                                        {proofFile ? proofFile.name : 'Choose File'}
+                                      </Button>
+                                      {proofFile && (
+                                        <span className="text-xs text-muted-foreground">
+                                          {(proofFile.size / 1024 / 1024).toFixed(2)} MB
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <Button
+                                    onClick={handleProofUpload}
+                                    disabled={uploading || (!proofFile && !bankRef)}
+                                    className="w-full"
+                                    data-testid="button-submit-proof"
+                                  >
+                                    {uploading ? 'Uploading...' : 'Submit Payment Proof'}
+                                  </Button>
+                                </>
+                              )}
+                            </div>
                           </div>
                         )}
 
@@ -278,94 +355,6 @@ export default function TransactionTracking() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Payment Proof Upload — only when awaiting payment confirmation */}
-          {isPaymentStep && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Upload className="w-5 h-5" />
-                  Submit Payment Proof
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {alreadySubmittedProof ? (
-                  <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md">
-                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
-                    <div>
-                      <p className="font-semibold text-green-900 dark:text-green-100">Payment proof submitted</p>
-                      {transaction.bankRef && (
-                        <p className="text-sm text-green-800 dark:text-green-200">Ref: {transaction.bankRef}</p>
-                      )}
-                      {transaction.paymentProofFile && (
-                        <a
-                          href={transaction.paymentProofFile}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-sm text-primary hover:underline mt-1"
-                        >
-                          <FileText className="w-3 h-3" /> View uploaded proof
-                        </a>
-                      )}
-                      <p className="text-xs text-green-700 dark:text-green-300 mt-1">Our team is verifying your payment.</p>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-sm text-muted-foreground">
-                      After making your payment, provide your transaction reference and/or upload a screenshot or PDF receipt.
-                    </p>
-                    <div className="space-y-2">
-                      <Label htmlFor="bankRef">Bank Reference / Transaction Hash (optional)</Label>
-                      <Input
-                        id="bankRef"
-                        placeholder="e.g. TRX-1234567 or 0x123abc..."
-                        value={bankRef}
-                        onChange={(e) => setBankRef(e.target.value)}
-                        data-testid="input-bank-ref"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="proofFile">Upload Proof File (image or PDF, max 16MB)</Label>
-                      <input
-                        ref={fileInputRef}
-                        id="proofFile"
-                        type="file"
-                        accept="image/*,.pdf"
-                        className="hidden"
-                        onChange={(e) => setProofFile(e.target.files?.[0] || null)}
-                        data-testid="input-proof-file"
-                      />
-                      <div className="flex items-center gap-3">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => fileInputRef.current?.click()}
-                          data-testid="button-choose-file"
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          {proofFile ? proofFile.name : 'Choose File'}
-                        </Button>
-                        {proofFile && (
-                          <span className="text-sm text-muted-foreground">
-                            {(proofFile.size / 1024 / 1024).toFixed(2)} MB
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <Button
-                      onClick={handleProofUpload}
-                      disabled={uploading || (!proofFile && !bankRef)}
-                      className="w-full"
-                      data-testid="button-submit-proof"
-                    >
-                      {uploading ? 'Uploading...' : 'Submit Payment Proof'}
-                    </Button>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          )}
 
           {/* Buyer Info */}
           <Card>
