@@ -273,7 +273,34 @@ export class PostgresStorage implements IStorage {
 
   async createTransaction(transaction: InsertTransaction): Promise<Transaction> {
     const result = await db.insert(transactions).values(transaction).returning();
-    return result[0];
+    if (result[0]) return result[0];
+
+    // Fallback: Drizzle/Neon HTTP returning() can return empty when using defaults.
+    // Re-fetch by guestToken (always set for unauthenticated) or latest by id.
+    if (transaction.guestToken) {
+      const [existing] = await db
+        .select()
+        .from(transactions)
+        .where(eq(transactions.guestToken, transaction.guestToken))
+        .limit(1);
+      if (existing) return existing;
+    }
+    if (transaction.buyerId) {
+      const [existing] = await db
+        .select()
+        .from(transactions)
+        .where(eq(transactions.buyerId, transaction.buyerId as number))
+        .orderBy(desc(transactions.id))
+        .limit(1);
+      if (existing) return existing;
+    }
+    // Last resort: newest row
+    const [latest] = await db
+      .select()
+      .from(transactions)
+      .orderBy(desc(transactions.id))
+      .limit(1);
+    return latest;
   }
 
   async updateTransaction(id: number, transaction: Partial<InsertTransaction>): Promise<Transaction | undefined> {
@@ -292,8 +319,21 @@ export class PostgresStorage implements IStorage {
   }
 
   async addTransactionEvent(event: InsertTransactionEvent): Promise<TransactionEvent> {
-    const result = await db.insert(transactionEvents).values(event).returning();
-    return result[0];
+    // Strip null integer FK columns — Neon HTTP driver serializes null as '' for integers
+    const insertValues: any = { ...event };
+    if (insertValues.createdBy == null) delete insertValues.createdBy;
+
+    const result = await db.insert(transactionEvents).values(insertValues).returning();
+    if (result[0]) return result[0];
+
+    // Fallback: Drizzle/Neon returning() returns empty when columns use DEFAULT
+    const [existing] = await db
+      .select()
+      .from(transactionEvents)
+      .where(eq(transactionEvents.transactionId, event.transactionId))
+      .orderBy(desc(transactionEvents.id))
+      .limit(1);
+    return existing;
   }
 }
 

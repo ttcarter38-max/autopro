@@ -294,13 +294,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Generate guest token if not logged in
       const guestToken = req.isAuthenticated() ? null : randomUUID();
-      
-      const transaction = await storage.createTransaction({
+
+      // Build insert data - omit nullable integer FK columns when null
+      const insertData: any = {
         ...transactionData,
-        buyerId: req.isAuthenticated() ? (req.user as any).id : null,
         guestToken,
         status: 'initiated',
-      });
+      };
+
+      // Only include buyerId if authenticated (avoids Neon null-as-'' bug for integer FK)
+      if (req.isAuthenticated()) {
+        const rawId = (req.user as any).id;
+        const parsedId = parseInt(String(rawId), 10);
+        if (!isNaN(parsedId)) {
+          insertData.buyerId = parsedId;
+        }
+      }
+      
+      const transaction = await storage.createTransaction(insertData);
       
       // Create initial event
       await storage.addTransactionEvent({
@@ -336,27 +347,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Missing required fields' });
       }
 
+      // Parse and validate numeric fields
+      const parsedAmount = parseFloat(String(amount));
+      if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        return res.status(400).json({ error: 'Invalid price amount' });
+      }
+
+      const parsedInspectionDays = parseInt(String(inspectionDays), 10);
+      const safeInspectionDays = (!isNaN(parsedInspectionDays) && parsedInspectionDays >= 1 && parsedInspectionDays <= 5)
+        ? parsedInspectionDays
+        : 3;
+
+      // Resolve buyerId - only if authenticated and id is a valid integer
+      const rawBuyerId = req.isAuthenticated() ? (req.user as any)?.id : null;
+      const safeBuyerId = rawBuyerId !== null && rawBuyerId !== undefined && !isNaN(parseInt(String(rawBuyerId)))
+        ? parseInt(String(rawBuyerId))
+        : null;
+
       // Generate guest token
       const guestToken = randomUUID();
 
-      const transaction = await storage.createTransaction({
-        vehicleId: null, // null for custom/private sales
-        buyerId: req.isAuthenticated() ? (req.user as any).id : null,
-        buyerName,
-        buyerEmail,
-        buyerPhone,
-        shippingAddress,
-        amount: amount.toString(),
+      // Build transaction data - omit nullable integer FK columns when null
+      // (Neon driver serializes null as '' for integer columns, causing DB errors)
+      const transactionData: any = {
+        buyerName: String(buyerName).trim(),
+        buyerEmail: String(buyerEmail).trim(),
+        buyerPhone: String(buyerPhone).trim(),
+        shippingAddress: String(shippingAddress).trim(),
+        amount: parsedAmount.toFixed(2),
         status: 'initiated',
-        inspectionDays: inspectionDays || 3,
+        inspectionDays: safeInspectionDays,
         guestToken,
-        customVehicleDescription,
-        sellerEmail: sellerEmail || null,
-        sellerName: sellerName || null,
-        bankInfo: null,
-        paymentProof: null,
+        customVehicleDescription: String(customVehicleDescription).trim(),
+        sellerEmail: sellerEmail && String(sellerEmail).trim() ? String(sellerEmail).trim() : null,
+        sellerName: sellerName && String(sellerName).trim() ? String(sellerName).trim() : null,
         notes: 'Custom escrow transaction for private sale',
-      });
+      };
+
+      // Only include integer FK columns when they have valid values
+      if (safeBuyerId !== null) {
+        transactionData.buyerId = safeBuyerId;
+      }
+      // vehicleId intentionally omitted for custom/private sales (defaults to NULL in DB)
+
+      const transaction = await storage.createTransaction(transactionData);
 
       // Create initial event
       await storage.addTransactionEvent({
