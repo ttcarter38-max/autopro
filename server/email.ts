@@ -4,9 +4,8 @@ import { ReplitConnectors } from '@replit/connectors-sdk';
 const connectors = new ReplitConnectors();
 
 function getBaseUrl(): string {
-  return process.env.REPL_DOMAINS
-    ? `https://${process.env.REPL_DOMAINS.split(',')[0]}`
-    : 'http://localhost:5000';
+  const domain = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN;
+  return domain ? `https://${domain.split(',')[0]}` : 'http://localhost:5000';
 }
 
 interface EmailData { to: string; subject: string; html: string; }
