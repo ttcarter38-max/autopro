@@ -186,11 +186,16 @@ export async function sendBuyerPaymentInstructions(transaction: {
         <p style="margin:12px 0 0;font-size:12px;color:#92400e;"><strong>Important:</strong> After sending, upload your transaction screenshot as payment proof.</p>
       </div>`;
   } else if (transaction.bankInfo) {
+    const bankLines = transaction.bankInfo.split('\n').map((l: string) =>
+      `<p style="margin:6px 0;">${l}</p>`).join('');
     paymentSection = `
       <div style="background:#fff8e1;border:2px solid #f59e0b;padding:20px;border-radius:8px;margin:20px 0;">
         <h3 style="color:#92400e;margin-top:0;">Bank Transfer Instructions</h3>
-        <p>Log in to your transaction tracking page to view the full bank details (password-protected).</p>
-        <p style="font-size:12px;color:#92400e;"><strong>Important:</strong> After transferring, upload your receipt as payment proof.</p>
+        <p style="margin:0 0 12px;"><strong>Please transfer $${parseFloat(transaction.amount).toLocaleString()} to the following account:</strong></p>
+        <div style="background:#fff;padding:16px;border-radius:6px;border:1px solid #e5e7eb;font-size:14px;line-height:1.8;">
+          ${bankLines}
+        </div>
+        <p style="margin:12px 0 0;font-size:12px;color:#92400e;"><strong>Important:</strong> Use your Transaction ID <strong>#${transaction.id}</strong> as the payment reference. After transferring, upload your receipt as payment proof on your tracking page.</p>
       </div>`;
   }
 
