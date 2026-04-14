@@ -1,48 +1,45 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import heroImage from '@assets/generated_images/Red_luxury_sports_car_hero_5badd28f.png';
 
 interface Slide {
   id: number;
   image: string;
   eyebrow: string;
-  model: string;
-  year: string;
-  price: string;
+  heading: string;
+  sub: string;
+  cta: string;
 }
 
 const slides: Slide[] = [
   {
     id: 1,
-    image: heroImage,
-    eyebrow: 'FIND YOUR DREAM CAR',
-    model: 'LAMBORGHINI AVENTADOR',
-    year: 'MODEL 2015',
-    price: '$486,868',
+    image: 'https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=1920&q=80',
+    eyebrow: 'NATIONWIDE VEHICLE TRANSPORT',
+    heading: 'YOUR CAR. DELIVERED.',
+    sub: 'Secure door-to-door auto transport across the country',
+    cta: 'START ESCROW',
   },
   {
     id: 2,
-    image: heroImage,
-    eyebrow: 'LUXURY REDEFINED',
-    model: 'PORSCHE 911 CARRERA',
-    year: 'MODEL 2024',
-    price: '$125,000',
+    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=80',
+    eyebrow: 'TRUSTED ESCROW SERVICE',
+    heading: 'BUY & SELL WITH CONFIDENCE',
+    sub: 'Our escrow protects both buyer and seller every step of the way',
+    cta: 'HOW IT WORKS',
   },
   {
     id: 3,
-    image: heroImage,
-    eyebrow: 'PERFORMANCE UNLEASHED',
-    model: 'FERRARI 488 GTB',
-    year: 'MODEL 2023',
-    price: '$330,000',
+    image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1920&q=80',
+    eyebrow: 'PREMIUM INVENTORY',
+    heading: 'FIND YOUR DREAM CAR',
+    sub: 'Browse our curated selection of luxury and performance vehicles',
+    cta: 'VIEW INVENTORY',
   },
 ];
 
 export default function HeroSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const { toast } = useToast();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -63,18 +60,10 @@ export default function HeroSlider() {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   };
 
-  const handleOrderNow = () => {
-    toast({
-      title: "Order Inquiry",
-      description: `Thank you for your interest in the ${slides[currentSlide].model}! Our sales team will contact you shortly.`,
-    });
-  };
-
-  const handleTestDrive = () => {
-    toast({
-      title: "Test Drive Request",
-      description: `Test drive scheduled for the ${slides[currentSlide].model}. We'll call you to confirm the time.`,
-    });
+  const ctaLinks: Record<string, string> = {
+    'START ESCROW': '/escrow',
+    'HOW IT WORKS': '/escrow',
+    'VIEW INVENTORY': '/inventory',
   };
 
   return (
@@ -89,38 +78,35 @@ export default function HeroSlider() {
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${slide.image})`,
+              backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.65) 100%), url(${slide.image})`,
             }}
           >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
               <div className="text-white max-w-2xl">
-                <p className="text-sm font-semibold tracking-widest mb-4 text-primary" data-testid={`text-eyebrow-${index}`}>
+                <p className="text-xs font-bold tracking-[0.25em] mb-4 text-primary uppercase" data-testid={`text-eyebrow-${index}`}>
                   {slide.eyebrow}
                 </p>
-                <h2 className="text-5xl md:text-7xl font-heading font-extrabold tracking-wide mb-4" data-testid={`text-model-${index}`}>
-                  {slide.model}
+                <h2 className="text-5xl md:text-7xl font-heading font-extrabold tracking-wide mb-4 leading-tight" data-testid={`text-heading-${index}`}>
+                  {slide.heading}
                 </h2>
-                <p className="text-lg mb-2" data-testid={`text-year-${index}`}>{slide.year}</p>
-                <p className="text-3xl md:text-4xl font-bold mb-8 bg-primary inline-block px-4 py-2" data-testid={`text-price-${index}`}>
-                  {slide.price}
-                </p>
-                <div className="flex gap-4">
-                  <Button 
-                    variant="default" 
-                    size="lg" 
-                    onClick={handleOrderNow}
-                    data-testid={`button-order-${index}`}
+                <p className="text-lg text-white/80 mb-8" data-testid={`text-sub-${index}`}>{slide.sub}</p>
+                <div className="flex gap-4 flex-wrap">
+                  <Button
+                    variant="default"
+                    size="lg"
+                    asChild
+                    data-testid={`button-cta-${index}`}
                   >
-                    ORDER NOW
+                    <a href={ctaLinks[slide.cta] || '/'}>{slide.cta}</a>
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
-                    className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20" 
-                    onClick={handleTestDrive}
-                    data-testid={`button-testdrive-${index}`}
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="bg-white/10 backdrop-blur-sm border-white/40 text-white"
+                    asChild
+                    data-testid={`button-inventory-${index}`}
                   >
-                    TEST DRIVE
+                    <a href="/inventory">BROWSE VEHICLES</a>
                   </Button>
                 </div>
               </div>

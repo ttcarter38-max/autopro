@@ -1,20 +1,10 @@
 import { useState } from 'react';
-import { Phone, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { toast } = useToast();
-
-  const handleNavClick = (section: string) => {
-    toast({
-      title: `${section}`,
-      description: `Contact us at 1-800-CAR-DEAL for assistance.`,
-    });
-    setMobileMenuOpen(false);
-  };
 
   return (
     <header className="sticky top-0 z-50 bg-black text-white">
@@ -43,13 +33,13 @@ export default function Header() {
                   ESCROW
                 </span>
               </Link>
-              <button 
-                className="text-sm font-medium hover-elevate px-3 py-2 rounded-md" 
-                onClick={() => handleNavClick('Contact')}
+              <a
+                href="#footer-contact"
+                className="text-sm font-medium hover-elevate px-3 py-2 rounded-md"
                 data-testid="button-contact-menu"
               >
                 CONTACT
-              </button>
+              </a>
             </nav>
           </div>
 
@@ -57,10 +47,6 @@ export default function Header() {
             <Button variant="default" size="sm" asChild data-testid="button-search">
               <Link href="/inventory">Browse All</Link>
             </Button>
-            <div className="flex items-center gap-2 text-sm">
-              <Phone className="w-4 h-4" />
-              <span className="font-semibold" data-testid="text-phone">1-800-CAR-DEAL</span>
-            </div>
           </div>
 
           <button
@@ -77,8 +63,8 @@ export default function Header() {
         <div className="md:hidden bg-black border-t border-gray-800">
           <nav className="px-4 py-4 space-y-2">
             <Link href="/">
-              <span 
-                className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md" 
+              <span
+                className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md"
                 onClick={() => setMobileMenuOpen(false)}
                 data-testid="button-mobile-home"
               >
@@ -86,8 +72,8 @@ export default function Header() {
               </span>
             </Link>
             <Link href="/inventory">
-              <span 
-                className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md" 
+              <span
+                className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md"
                 onClick={() => setMobileMenuOpen(false)}
                 data-testid="button-mobile-vehicles"
               >
@@ -95,21 +81,22 @@ export default function Header() {
               </span>
             </Link>
             <Link href="/escrow">
-              <span 
-                className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md" 
+              <span
+                className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md"
                 onClick={() => setMobileMenuOpen(false)}
                 data-testid="button-mobile-escrow"
               >
                 ESCROW
               </span>
             </Link>
-            <button 
-              className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md" 
-              onClick={() => handleNavClick('Contact')}
+            <a
+              href="#footer-contact"
+              className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md"
+              onClick={() => setMobileMenuOpen(false)}
               data-testid="button-mobile-contact"
             >
               CONTACT
-            </button>
+            </a>
           </nav>
         </div>
       )}

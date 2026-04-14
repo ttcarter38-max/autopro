@@ -15,6 +15,28 @@ import AdminVehicles from "@/pages/admin/Vehicles";
 import VehicleForm from "@/pages/admin/VehicleForm";
 import AdminTransactions from "@/pages/admin/Transactions";
 import NotFound from "@/pages/not-found";
+import { SiWhatsapp } from "react-icons/si";
+
+// ── Change this to your real WhatsApp number (international format, no + or spaces) ──
+const WHATSAPP_NUMBER = "1234567890";
+const WHATSAPP_MESSAGE = "Hello! I'm interested in your vehicles.";
+
+function WhatsAppButton() {
+  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Chat on WhatsApp"
+      data-testid="button-whatsapp"
+      className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-transform hover:scale-110 active:scale-95"
+      style={{ backgroundColor: '#25D366' }}
+    >
+      <SiWhatsapp className="w-7 h-7 text-white" />
+    </a>
+  );
+}
 
 function Router() {
   return (
@@ -42,6 +64,7 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <Router />
+        <WhatsAppButton />
       </TooltipProvider>
     </QueryClientProvider>
   );
