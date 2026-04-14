@@ -11,10 +11,15 @@ function getBaseUrl(): string {
 
 interface EmailData { to: string; subject: string; html: string; }
 
+function mimeEncodeSubject(subject: string): string {
+  // MIME encoded-word format for UTF-8 subjects (handles em dashes, special chars)
+  return `=?UTF-8?B?${Buffer.from(subject).toString('base64')}?=`;
+}
+
 function buildRawEmail(to: string, subject: string, html: string): string {
   const lines = [
     `To: ${to}`,
-    `Subject: ${subject}`,
+    `Subject: ${mimeEncodeSubject(subject)}`,
     'MIME-Version: 1.0',
     'Content-Type: text/html; charset=UTF-8',
     '',
@@ -125,8 +130,8 @@ export async function sendSellerTransactionNotification(transaction: {
   const base = getBaseUrl();
   const sellerDisplay = transaction.sellerName || 'Seller';
   const vehicleInfo = transaction.customVehicleDescription || 'Your vehicle';
-  const acceptUrl = `${base}/seller/${transaction.sellerToken}?action=accept`;
-  const rejectUrl = `${base}/seller/${transaction.sellerToken}?action=reject`;
+  const acceptUrl = `${base}/api/seller/${transaction.sellerToken}/accept`;
+  const rejectUrl = `${base}/api/seller/${transaction.sellerToken}/reject`;
 
   const html = emailWrapper(`
     <h2 style="color:#111;margin-top:0;">A Buyer Has Started Escrow for Your Vehicle</h2>
@@ -148,7 +153,7 @@ export async function sendSellerTransactionNotification(transaction: {
       </a>
     </div>
     <div style="background:#fff8e1;border:1px solid #ffc107;padding:14px 18px;border-radius:4px;margin-top:16px;">
-      <p style="margin:0;font-size:13px;"><strong>Note:</strong> You will need the access password to complete your response. Contact the buyer if you don't have it.</p>
+      <p style="margin:0;font-size:13px;"><strong>Note:</strong> Each link can only be used once. If you have already responded, the link will confirm your previous action.</p>
     </div>
     <div style="background:#e8f5e9;border-left:4px solid #388e3c;padding:14px 18px;border-radius:4px;margin-top:16px;">
       <p style="margin:0;font-weight:bold;color:#1b5e20;">Your payment is fully protected in AutoPro's secure escrow account.</p>

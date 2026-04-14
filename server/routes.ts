@@ -20,6 +20,44 @@ import {
 // Seller action password (configurable via env var)
 const SELLER_PASSWORD = process.env.SELLER_PASSWORD || 'escrow2024';
 
+// HTML page returned after seller clicks Accept/Reject in email
+function sellerResponsePage(type: 'success' | 'rejected' | 'info' | 'error', title: string, message: string): string {
+  const colors = {
+    success: { bg: '#16a34a', icon: '&#10003;' },
+    rejected: { bg: '#dc2626', icon: '&#10007;' },
+    info: { bg: '#2563eb', icon: '&#8505;' },
+    error: { bg: '#9ca3af', icon: '&#33;' },
+  };
+  const { bg, icon } = colors[type];
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title} — AutoPro Escrow</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f4f4f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .card { background: #fff; border-radius: 12px; padding: 48px 40px; max-width: 500px; width: 90%; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+    .icon { width: 72px; height: 72px; border-radius: 50%; background: ${bg}; color: #fff; font-size: 36px; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+    .header { background: #111; color: #fff; font-size: 14px; font-weight: bold; letter-spacing: 2px; padding: 10px 20px; border-radius: 6px; display: inline-block; margin-bottom: 32px; }
+    h1 { font-size: 24px; color: #111; margin-bottom: 16px; }
+    p { font-size: 15px; color: #555; line-height: 1.7; }
+    .footer { margin-top: 32px; font-size: 12px; color: #999; border-top: 1px solid #e5e7eb; padding-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">AUTOPRO ESCROW</div>
+    <div class="icon">${icon}</div>
+    <h1>${title}</h1>
+    <p>${message}</p>
+    <div class="footer">Questions? Contact us: escrow@autopro.com &nbsp;|&nbsp; 1-800-CAR-DEAL</div>
+  </div>
+</body>
+</html>`;
+}
+
 // Configure multer for vehicle image uploads (images only)
 const imageStorage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, 'uploads/'),
@@ -452,20 +490,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Seller accepts transaction
-  app.post('/api/seller/:token/accept', async (req, res) => {
+  // Seller accepts transaction (one-click GET from email link)
+  app.get('/api/seller/:token/accept', async (req, res) => {
     try {
-      const { password } = req.body;
-      if (password !== SELLER_PASSWORD) {
-        return res.status(403).json({ error: 'Incorrect password' });
+      let transaction = null;
+      try { transaction = await storage.getTransactionBySellerToken(req.params.token); } catch (_) {}
+
+      if (!transaction) {
+        return res.send(sellerResponsePage('error', 'Invalid Link', 'This link is invalid or has expired. Please contact support.'));
       }
-      const transaction = await storage.getTransactionBySellerToken(req.params.token);
-      if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
       if (transaction.sellerStatus !== 'pending') {
-        return res.status(400).json({ error: 'This transaction has already been responded to' });
+        const msg = transaction.sellerStatus === 'accepted'
+          ? 'You have already accepted this transaction. Our team will be in touch shortly.'
+          : 'You have already rejected this transaction.';
+        return res.send(sellerResponsePage('info', 'Already Responded', msg));
       }
 
-      const updated = await storage.updateTransaction(transaction.id, {
+      await storage.updateTransaction(transaction.id, {
         sellerStatus: 'accepted',
         status: 'awaiting_admin_approval',
       });
@@ -473,43 +514,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.addTransactionEvent({
         transactionId: transaction.id,
         status: 'awaiting_admin_approval',
-        notes: 'Seller accepted the transaction',
+        notes: 'Seller accepted the transaction via email link',
       });
 
-      res.json({ message: 'Transaction accepted successfully', transaction: updated });
+      // Notify buyer that seller accepted
+      try {
+        await sendTransactionStatusUpdate({
+          id: transaction.id,
+          status: 'awaiting_admin_approval',
+          buyerName: transaction.buyerName,
+          buyerEmail: transaction.buyerEmail,
+          guestToken: transaction.guestToken,
+        });
+      } catch (e) { console.error('Email error:', e); }
+
+      return res.send(sellerResponsePage('success', 'Transaction Accepted', `Thank you! You have accepted the escrow transaction for <strong>${transaction.customVehicleDescription || 'the vehicle'}</strong> ($${parseFloat(transaction.amount).toLocaleString()}). Our team will now review the transaction and send payment instructions to the buyer. We will keep you updated by email throughout the process.`));
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      res.send(sellerResponsePage('error', 'Error', 'Something went wrong. Please try again or contact support.'));
     }
   });
 
-  // Seller rejects transaction
-  app.post('/api/seller/:token/reject', async (req, res) => {
+  // Seller rejects transaction (one-click GET from email link)
+  app.get('/api/seller/:token/reject', async (req, res) => {
     try {
-      const { password, reason } = req.body;
-      if (password !== SELLER_PASSWORD) {
-        return res.status(403).json({ error: 'Incorrect password' });
+      let transaction = null;
+      try { transaction = await storage.getTransactionBySellerToken(req.params.token); } catch (_) {}
+
+      if (!transaction) {
+        return res.send(sellerResponsePage('error', 'Invalid Link', 'This link is invalid or has expired. Please contact support.'));
       }
-      const transaction = await storage.getTransactionBySellerToken(req.params.token);
-      if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
       if (transaction.sellerStatus !== 'pending') {
-        return res.status(400).json({ error: 'This transaction has already been responded to' });
+        const msg = transaction.sellerStatus === 'accepted'
+          ? 'You have already accepted this transaction.'
+          : 'You have already rejected this transaction.';
+        return res.send(sellerResponsePage('info', 'Already Responded', msg));
       }
 
-      const updated = await storage.updateTransaction(transaction.id, {
+      await storage.updateTransaction(transaction.id, {
         sellerStatus: 'rejected',
         status: 'cancelled',
-        notes: reason ? `Seller rejected: ${reason}` : 'Seller rejected the transaction',
       });
 
       await storage.addTransactionEvent({
         transactionId: transaction.id,
         status: 'cancelled',
-        notes: reason ? `Seller rejected: ${reason}` : 'Seller rejected the transaction',
+        notes: 'Seller rejected the transaction via email link',
       });
 
-      res.json({ message: 'Transaction rejected', transaction: updated });
+      // Notify buyer that seller rejected
+      try {
+        await sendTransactionStatusUpdate({
+          id: transaction.id,
+          status: 'cancelled',
+          buyerName: transaction.buyerName,
+          buyerEmail: transaction.buyerEmail,
+          guestToken: transaction.guestToken,
+        });
+      } catch (e) { console.error('Email error:', e); }
+
+      return res.send(sellerResponsePage('rejected', 'Transaction Rejected', `You have rejected the escrow transaction for <strong>${transaction.customVehicleDescription || 'the vehicle'}</strong>. The buyer will be notified. If this was a mistake, please contact our support team immediately.`));
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      res.send(sellerResponsePage('error', 'Error', 'Something went wrong. Please try again or contact support.'));
     }
   });
 
