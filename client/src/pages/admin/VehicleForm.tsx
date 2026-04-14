@@ -11,7 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -28,7 +27,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, ImagePlus, Star } from 'lucide-react';
 
 const vehicleFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -54,7 +53,9 @@ export default function VehicleForm() {
   const vehicleId = params?.id ? parseInt(params.id) : null;
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [uploadedImages, setUploadedImages] = useState<any[]>([]);
+  const [savedImages, setSavedImages] = useState<any[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
 
   const { data: vehicleData } = useQuery({
@@ -99,18 +100,51 @@ export default function VehicleForm() {
         featured: v.featured || false,
         available: v.available ?? true,
       });
-      setUploadedImages(vehicleData.images || []);
+      setSavedImages(vehicleData.images || []);
     }
   }, [vehicleData, form]);
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const newFiles = Array.from(files);
+    setPendingFiles(prev => [...prev, ...newFiles]);
+    const newPreviews = newFiles.map(f => URL.createObjectURL(f));
+    setPendingPreviews(prev => [...prev, ...newPreviews]);
+    e.target.value = '';
+  };
+
+  const removePending = (index: number) => {
+    URL.revokeObjectURL(pendingPreviews[index]);
+    setPendingFiles(prev => prev.filter((_, i) => i !== index));
+    setPendingPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadPendingImages = async (vid: number) => {
+    for (const file of pendingFiles) {
+      const formData = new FormData();
+      formData.append('image', file);
+      const response = await fetch(`/api/admin/vehicles/${vid}/images`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Image upload failed');
+      }
+      const data = await response.json();
+      setSavedImages(prev => [...prev, data.image]);
+    }
+    setPendingFiles([]);
+    setPendingPreviews([]);
+  };
+
   const saveMutation = useMutation({
     mutationFn: async (data: VehicleFormData) => {
-      const url = isEdit
-        ? `/api/admin/vehicles/${vehicleId}`
-        : '/api/admin/vehicles';
+      const url = isEdit ? `/api/admin/vehicles/${vehicleId}` : '/api/admin/vehicles';
       const method = isEdit ? 'PATCH' : 'POST';
 
-      // Must use FormData (not JSON) because the route uses multer for image uploads
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
@@ -129,77 +163,56 @@ export default function VehicleForm() {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
+      const vid = data.vehicle?.id || vehicleId;
+      if (pendingFiles.length > 0 && vid) {
+        setUploading(true);
+        try {
+          await uploadPendingImages(vid);
+        } catch (err: any) {
+          toast({ title: 'Image upload failed', description: err.message, variant: 'destructive' });
+        }
+        setUploading(false);
+      }
       queryClient.invalidateQueries({ queryKey: ['/api/admin/vehicles'] });
       toast({
         title: isEdit ? 'Vehicle updated' : 'Vehicle created',
-        description: `The vehicle has been successfully ${isEdit ? 'updated' : 'added'}.`,
+        description: `The vehicle has been successfully ${isEdit ? 'updated' : 'created'}.`,
       });
       setLocation('/admin/vehicles');
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     },
   });
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0 || !vehicleId) return;
-
-    setUploading(true);
-    
-    for (const file of Array.from(files)) {
-      try {
-        const formData = new FormData();
-        formData.append('image', file);
-
-        const response = await fetch(`/api/admin/vehicles/${vehicleId}/images`, {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) throw new Error('Upload failed');
-
-        const data = await response.json();
-        setUploadedImages(prev => [...prev, data.image]);
-      } catch (error) {
-        toast({
-          title: 'Upload failed',
-          description: 'Failed to upload image',
-          variant: 'destructive',
-        });
-      }
+  const handleDeleteSavedImage = async (imageId: number) => {
+    try {
+      await apiRequest('DELETE', `/api/admin/vehicles/images/${imageId}`);
+      setSavedImages(prev => prev.filter(img => img.id !== imageId));
+      toast({ title: 'Image removed' });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     }
-    
-    setUploading(false);
   };
 
-  const handleDeleteImage = async (imageId: number) => {
+  const handleSetPrimary = async (imageId: number) => {
+    if (!vehicleId) return;
     try {
-      await apiRequest(`/api/admin/vehicles/images/${imageId}`, {
-        method: 'DELETE',
-      });
-      setUploadedImages(prev => prev.filter(img => img.id !== imageId));
-      toast({
-        title: 'Image deleted',
-        description: 'The image has been removed.',
-      });
+      await apiRequest('PATCH', `/api/admin/vehicles/${vehicleId}/images/${imageId}/primary`);
+      setSavedImages(prev => prev.map(img => ({ ...img, isPrimary: img.id === imageId })));
+      toast({ title: 'Primary image updated' });
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     }
   };
 
   const onSubmit = (data: VehicleFormData) => {
     saveMutation.mutate(data);
   };
+
+  const isBusy = saveMutation.isPending || uploading;
+  const totalImages = savedImages.length + pendingFiles.length;
 
   return (
     <AdminLayout>
@@ -209,7 +222,7 @@ export default function VehicleForm() {
             {isEdit ? 'Edit Vehicle' : 'Add New Vehicle'}
           </h2>
           <p className="text-muted-foreground">
-            {isEdit ? 'Update vehicle information' : 'Add a new vehicle to your inventory'}
+            {isEdit ? 'Update vehicle information and images' : 'Add a new vehicle to your inventory'}
           </p>
         </div>
 
@@ -227,7 +240,7 @@ export default function VehicleForm() {
                     <FormItem>
                       <FormLabel>Vehicle Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Cayenne Turbo" {...field} data-testid="input-name" />
+                        <Input placeholder="e.g., 2024 BMW M3 Competition" {...field} data-testid="input-name" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -242,13 +255,12 @@ export default function VehicleForm() {
                       <FormItem>
                         <FormLabel>Make</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., Porsche" {...field} data-testid="input-make" />
+                          <Input placeholder="e.g., BMW" {...field} data-testid="input-make" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="model"
@@ -256,7 +268,7 @@ export default function VehicleForm() {
                       <FormItem>
                         <FormLabel>Model</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., Cayenne" {...field} data-testid="input-model" />
+                          <Input placeholder="e.g., M3 Competition" {...field} data-testid="input-model" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -278,7 +290,6 @@ export default function VehicleForm() {
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="condition"
@@ -300,7 +311,6 @@ export default function VehicleForm() {
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="price"
@@ -308,7 +318,7 @@ export default function VehicleForm() {
                       <FormItem>
                         <FormLabel>Price ($)</FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} data-testid="input-price" />
+                          <Input type="number" placeholder="0" {...field} data-testid="input-price" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -324,35 +334,42 @@ export default function VehicleForm() {
                       <FormItem>
                         <FormLabel>Color</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., White" {...field} data-testid="input-color" />
+                          <Input placeholder="e.g., Alpine White" {...field} data-testid="input-color" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="transmission"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Transmission</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., Automatic" {...field} data-testid="input-transmission" />
-                        </FormControl>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-transmission">
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Automatic">Automatic</SelectItem>
+                            <SelectItem value="Manual">Manual</SelectItem>
+                            <SelectItem value="CVT">CVT</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="mileage"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Mileage (optional)</FormLabel>
+                        <FormLabel>Mileage</FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} data-testid="input-mileage" />
+                          <Input type="number" placeholder="0" {...field} data-testid="input-mileage" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -367,7 +384,7 @@ export default function VehicleForm() {
                     <FormItem>
                       <FormLabel>Top Speed (optional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., 159 mph" {...field} data-testid="input-topspeed" />
+                        <Input placeholder="e.g., 180 mph" {...field} data-testid="input-topspeed" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -400,30 +417,21 @@ export default function VehicleForm() {
                     render={({ field }) => (
                       <FormItem className="flex items-center gap-2 space-y-0">
                         <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            data-testid="switch-featured"
-                          />
+                          <Switch checked={field.value} onCheckedChange={field.onChange} data-testid="switch-featured" />
                         </FormControl>
-                        <FormLabel className="cursor-pointer">Featured</FormLabel>
+                        <FormLabel className="cursor-pointer">Featured on homepage</FormLabel>
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="available"
                     render={({ field }) => (
                       <FormItem className="flex items-center gap-2 space-y-0">
                         <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            data-testid="switch-available"
-                          />
+                          <Switch checked={field.value} onCheckedChange={field.onChange} data-testid="switch-available" />
                         </FormControl>
-                        <FormLabel className="cursor-pointer">Available</FormLabel>
+                        <FormLabel className="cursor-pointer">Available for sale</FormLabel>
                       </FormItem>
                     )}
                   />
@@ -431,61 +439,111 @@ export default function VehicleForm() {
               </CardContent>
             </Card>
 
-            {isEdit && vehicleId && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Images</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handleImageUpload}
-                        disabled={uploading}
-                        data-testid="input-upload-images"
-                      />
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Upload multiple vehicle images (max 5MB each)
-                      </p>
-                    </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Vehicle Photos</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <label
+                  htmlFor="image-upload-input"
+                  className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-border rounded-md cursor-pointer hover-elevate transition-colors"
+                  data-testid="label-image-upload"
+                >
+                  <ImagePlus className="w-8 h-8 text-muted-foreground mb-2" />
+                  <span className="text-sm font-medium">Click to select photos</span>
+                  <span className="text-xs text-muted-foreground mt-1">JPG, PNG, WEBP — up to 5 MB each</span>
+                  <Input
+                    id="image-upload-input"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleFileSelect}
+                    data-testid="input-upload-images"
+                  />
+                </label>
 
-                    {uploadedImages.length > 0 && (
-                      <div className="grid grid-cols-4 gap-4">
-                        {uploadedImages.map((image) => (
-                          <div key={image.id} className="relative group">
-                            <img
-                              src={image.imageUrl}
-                              alt="Vehicle"
-                              className="w-full aspect-square object-cover rounded-md"
-                            />
+                {totalImages === 0 && (
+                  <p className="text-sm text-muted-foreground text-center">No photos added yet</p>
+                )}
+
+                {(savedImages.length > 0 || pendingFiles.length > 0) && (
+                  <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                    {savedImages.map((image) => (
+                      <div key={image.id} className="relative group aspect-square">
+                        <img
+                          src={image.imageUrl}
+                          alt="Vehicle"
+                          className="w-full h-full object-cover rounded-md"
+                        />
+                        {image.isPrimary && (
+                          <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
+                            <Star className="w-3 h-3" /> Primary
+                          </span>
+                        )}
+                        <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {!image.isPrimary && isEdit && (
                             <Button
                               type="button"
-                              variant="destructive"
+                              variant="secondary"
                               size="icon"
-                              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={() => handleDeleteImage(image.id)}
+                              className="h-7 w-7"
+                              title="Set as primary"
+                              onClick={() => handleSetPrimary(image.id)}
                             >
-                              <X className="w-4 h-4" />
+                              <Star className="w-3 h-3" />
                             </Button>
-                          </div>
-                        ))}
+                          )}
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => handleDeleteSavedImage(image.id)}
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
                       </div>
-                    )}
+                    ))}
+
+                    {pendingPreviews.map((preview, index) => (
+                      <div key={`pending-${index}`} className="relative group aspect-square">
+                        <img
+                          src={preview}
+                          alt="Pending upload"
+                          className="w-full h-full object-cover rounded-md opacity-80"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-md">
+                          <span className="text-white text-xs font-medium">Pending</span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => removePending(index)}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                )}
+
+                {pendingFiles.length > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    {pendingFiles.length} photo{pendingFiles.length !== 1 ? 's' : ''} will be uploaded when you save
+                  </p>
+                )}
+              </CardContent>
+            </Card>
 
             <div className="flex gap-4">
-              <Button
-                type="submit"
-                disabled={saveMutation.isPending}
-                data-testid="button-save"
-              >
-                {saveMutation.isPending ? 'Saving...' : isEdit ? 'Update Vehicle' : 'Create Vehicle'}
+              <Button type="submit" disabled={isBusy} data-testid="button-save">
+                {isBusy
+                  ? uploading ? 'Uploading photos...' : 'Saving...'
+                  : isEdit ? 'Update Vehicle' : 'Create Vehicle'}
               </Button>
               <Button
                 type="button"

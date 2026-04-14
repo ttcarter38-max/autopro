@@ -248,6 +248,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/admin/vehicles/:vehicleId/images', isAdmin, upload.single('image'), async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.vehicleId);
+      const file = req.file as Express.Multer.File | undefined;
+      if (!file) return res.status(400).json({ error: 'No image file provided' });
+      const existingImages = await storage.getVehicleImages(vehicleId);
+      const isPrimary = existingImages.length === 0;
+      const image = await storage.addVehicleImage({
+        vehicleId,
+        imageUrl: `/uploads/${file.filename}`,
+        isPrimary,
+        displayOrder: existingImages.length,
+      });
+      res.status(201).json({ image });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.delete('/api/admin/vehicles/:vehicleId/images/:imageId', isAdmin, async (req, res) => {
     try {
       const imageId = parseInt(req.params.imageId);
