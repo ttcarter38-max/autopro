@@ -1,0 +1,366 @@
+ Project Request
+Build a flexible escrow marketplace platform called SuperCarTrust with the following specifications:
+
+Core Concept
+A secure bank transfer-based escrow platform for high-value items (vehicles, real estate, art, collectibles). Features a professional AutoPro-inspired automotive dealership design with a clean white/light background, green/white/blue color scheme similar to Escrow.com. Includes a full-width hero image slider, premium car listings, a dedicated "How Escrow Works" explanation page, and a complete 5-step escrow transaction workflow.
+
+Revolutionary Features
+No Seller Registration Required - Sellers receive email notifications with secure token links to accept/reject transactions without creating accounts
+Manual Product Entry - Buyers manually enter any product details (not limited to predefined items)
+Password-Protected Seller Actions - Seller acceptance form requires password: crocodilu123
+Unique Bank Accounts per Transaction - Each seller provides their own bank details when accepting
+Payment Proof Upload - Buyers can upload documents (receipts, screenshots) when confirming payment
+Complete Email Notification Chain
+1. Buyer Initiates Transaction:
+
+Seller receives "New Escrow Transaction" email
+Includes: product details, buyer info (name, email, address), amount
+Two buttons: "Accept & Enter Bank Details" and "Reject Transaction"
+Uses secure token links (no login required)
+2. Seller Accepts:
+
+Buyer receives "Payment Instructions" email
+Includes: seller's unique bank account details (bank name, account name, account number, routing number, SWIFT code)
+Reference number and exact amount to transfer
+Instructions to upload payment proof
+3. Buyer Confirms Payment:
+
+Admin receives "Payment Confirmation Awaiting Verification" email with transaction details and bank reference
+Seller receives "Payment Received" email notifying them buyer has paid, admin verification in progress
+4. Admin Releases Funds:
+
+Seller receives "Funds Released - Transaction Completed" email
+Includes: final summary, bank account confirmation, delivery coordination details with buyer contact info
+Transaction Flow
+Transaction Statuses:
+
+Pending Seller Acceptance - Initial state
+Awaiting Payment - Seller accepted with bank details
+Payment Submitted - Buyer confirmed with optional payment proof
+Completed - Admin verified and released funds
+Rejected - Seller rejected
+Technical Requirements
+Stack:
+
+Backend: Flask, Flask-Login, Flask-SQLAlchemy, Flask-WTF (CSRF), Requests
+Database: SQLite with SQLAlchemy ORM
+Frontend: TailwindCSS (CDN), Jinja2 templates
+Email: Replit Mail integration
+Fonts: Google Fonts - Orbitron (headings), Rajdhani (body)
+Database Models:
+
+User Table:
+
+id (Integer, primary key)
+username (String, unique)
+email (String, unique)
+password_hash (String) - use Werkzeug password hashing
+role (String, default='user') - 'user' or 'admin'
+Relationships: buyer_transactions, seller_transactions
+Car Table:
+
+id, name, price, description, image (String - filename of car image)
+Transaction Table:
+
+id (Integer, primary key)
+buyer_id (Integer, foreign key to User) - required
+seller_id (Integer, foreign key to User, nullable) - seller doesn't need account
+car_id (Integer, nullable) - optional reference
+product_name (String) - manually entered product name
+product_description (Text, nullable) - optional description
+amount (Numeric 12,2) - decimal for currency
+buyer_name (String) - buyer's full name
+buyer_email (String) - buyer's email
+buyer_address (String) - buyer's address
+seller_email (String) - seller's email (can be unregistered)
+delivery_address (String) - delivery location
+secure_token (String) - 32-byte URL-safe token for email links
+bank_name (String, nullable) - seller's bank
+account_name (String, nullable) - seller's account name
+account_number (String, nullable) - seller's account number
+routing_number (String, nullable) - seller's routing number
+swift_code (String, nullable) - international transfers
+bank_ref (String, nullable) - buyer's bank reference after payment
+payment_proof_file (String, nullable) - filename of uploaded payment proof
+status (String) - transaction status
+created_at (DateTime)
+Relationships: buyer, seller
+Routes & Features:
+
+Authentication:
+
+/register - User registration with password hashing
+/login - Login with Flask-Login session management
+/logout - Logout
+Public Pages:
+
+/ - Home page (AutoPro-inspired, see UI/UX Design below)
+/cars - Premium car listings page
+/how-escrow-works - Detailed escrow explanation page
+Transaction Management:
+
+/escrow/start - Start escrow form (buyer enters: product name, description, price, seller email, buyer name, buyer email, buyer address, delivery address)
+/escrow/list - View transactions (buyer's and seller's)
+/escrow/accept/<id>?token=<token> - Seller acceptance page (password-protected)
+First step: Password verification (password: crocodilu123)
+Second step: Enter bank details form (bank_name, account_name, account_number, routing_number, swift_code)
+/escrow/reject/<id>?token=<token> - Reject transaction (POST with token verification)
+/escrow/invoice/<id> - Payment invoice with bank transfer instructions
+/escrow/confirm/<id> - Confirm payment (POST with bank_ref and optional file upload)
+File Upload:
+
+/uploads/<filename> - Serve payment proof files (authorization check: only buyer, seller, or admin)
+Config: UPLOAD_FOLDER='uploads/', MAX_CONTENT_LENGTH=16MB
+Allowed extensions: png, jpg, jpeg, gif, pdf, doc, docx
+Secure filename with transaction ID: payment_proof_{transaction_id}_{random_token}_{original_filename}
+Admin:
+
+/admin - Admin dashboard showing pending verifications
+/admin/release/<id> - Release funds (POST, changes status to Completed, sends seller completion email)
+Security Implementation:
+
+CSRF protection on all POST routes using Flask-WTF
+Password hashing with Werkzeug generate_password_hash/check_password_hash
+Session secret from environment variable SESSION_SECRET
+Secure token generation using secrets.token_urlsafe(32)
+Authorization checks on sensitive routes
+Input validation on forms
+Email Integration (email_utils.py):
+
+Create separate email functions:
+
+send_transaction_notification_to_seller(transaction) - When buyer initiates
+send_bank_details_to_buyer(transaction) - When seller accepts
+send_admin_payment_notification(transaction) - When buyer confirms payment (to admin@supercartrust.com)
+send_seller_payment_notification(transaction) - When buyer confirms payment (to seller)
+send_seller_completion_notification(transaction) - When admin releases funds (to seller)
+Use Replit Mail API:
+
+Endpoint: https://connectors.replit.com/api/v2/mailer/send
+Header: X_REPLIT_TOKEN (use REPL_IDENTITY or WEB_REPL_RENEWAL env var)
+Include both HTML and plain text versions of emails
+Professional templates with color-coded status boxes
+Color scheme: green (#16a34a) for success, yellow for pending
+UI/UX Design - AutoPro Inspired
+Overall Color Scheme
+Primary green: #16a34a / #15803d
+White backgrounds with light gray sections (#f9fafb)
+Dark text: #111827
+Accent blue for trust indicators
+Fonts: Orbitron for headings (via Google Fonts), Rajdhani for body
+base.html - Navigation
+Professional sticky white navbar with:
+
+Logo left: green car SVG icon + "SuperCarTrust" in Orbitron font
+Nav links: Home | Escrow | Cars (then auth links)
+"Escrow" links to /how-escrow-works
+If logged in: Home | Escrow | Cars | My Transactions | Admin (if admin) | Logout
+If not logged in: Home | Escrow | Cars | Login | Register (green button)
+Mobile hamburger menu
+Bottom border with green accent
+Include Tawk.to live chat widget at bottom of base template (user should replace YOUR_TAWK_PROPERTY_ID with their own ID from tawk.to)
+
+index.html - Home Page (AutoPro Style)
+1. Hero Section - Full Width Image Slider
+
+Full-width hero with JavaScript auto-sliding carousel (4 slides, 5-second interval)
+Each slide: full-width car background image with dark overlay gradient
+Overlay text per slide:
+Slide 1 (Lamborghini Aventador image): "Experience Pure Luxury" / "The world's most exclusive supercars, protected by our secure escrow service"
+Slide 2 (Ferrari SF90 image): "Ferrari SF90 Stradale" / "1,000HP hybrid hypercar - secure your dream car today"
+Slide 3 (Bugatti Chiron image): "Bugatti Chiron" / "The pinnacle of automotive engineering, protected by SuperCarTrust"
+Slide 4 (Porsche 911 image): "Porsche 911 GT3" / "Track-bred performance for the discerning enthusiast"
+Each slide has: "Secure This Vehicle" button (links to /escrow/start) and "View All Cars" button
+Dot navigation indicators at bottom
+Previous/Next arrow buttons on sides
+Green gradient progress indicator
+Car images stored in static/images/:
+lamborghini_aventador.jpg
+ferrari_sf90.jpg
+bugatti_chiron.jpg
+porsche_911_gt3.jpg (Download professional stock car images from Unsplash or Pexels for these)
+2. Statistics Bar White background bar with 4 stats in a row:
+
+🔒 100% Secure Escrow
+🚗 [Number] Cars Listed
+✓ [Number] Completed Deals
+📞 24/7 Support
+3. Search Section Light gray background with centered search bar:
+
+"Find Your Dream Car" heading
+Search input with green search button
+Filters: Make dropdown, Price Range dropdown, Type dropdown
+4. Featured Vehicles Grid
+
+"Featured Vehicles" heading with "View All" link
+4-column responsive grid of car cards
+Each card:
+Image with green "VERIFIED ESCROW" badge overlay (top-left)
+On hover: image scales up, "Secure Purchase" button slides up from bottom
+Price badge overlay (bottom-right, dark background)
+Car name, truncated description
+Two buttons: "View Details" and "Secure Purchase" (links to /escrow/start)
+5. How Escrow Works Section (Brief) Green gradient background strip with 5-step horizontal process: Step 1: Agreement → Step 2: Payment to Escrow → Step 3: Seller Ships → Step 4: Inspection → Step 5: Funds Released "Learn More" button linking to /how-escrow-works
+
+6. Trust & Security Section White background, 3 columns:
+
+🔒 Bank-Grade Security: 256-bit SSL, funds held in regulated accounts
+🛡️ Buyer Protection: Full refund if item not as described
+⚡ Fast Release: Funds released within 24 hours of approval
+7. Footer Dark background with:
+
+Logo and tagline
+Quick Links, Services, Contact columns
+Copyright notice
+cars.html - Premium Car Listings
+Page header with title and subtitle
+Filter bar (Make, Price, Type dropdowns)
+2-column grid of premium car cards (luxury dealership style):
+Large image (aspect-video) with overflow-hidden
+On hover: image scales to 110%, "SECURE PURCHASE" overlay button appears
+Dark price badge overlay on image (bottom-right): "FROM $X,XXX,XXX"
+Green "VERIFIED" badge (top-left)
+"ESCROW PROTECTED" badge (top-right, blue)
+Below image: car name in large bold font, 2-3 feature badges (Certified Pre-Owned, Escrow Protected, Insured Delivery)
+Description text
+Two buttons: "View Details" (outline) and "Secure Purchase →" (solid green)
+Trust indicators bar at bottom: Verified Sellers | Escrow Protected | Insured Delivery | Expert Support
+how_escrow_works.html - Escrow Explanation Page
+Comprehensive page explaining the escrow process:
+
+Hero: Green gradient header "How Our Escrow Service Works" with subtitle
+
+5-Step Process (numbered cards):
+
+📋 Agreement - Buyer and seller agree on terms, buyer initiates transaction on platform
+💰 Secure Payment - Buyer transfers funds to SuperCarTrust escrow account via bank transfer
+📦 Seller Ships - SuperCarTrust notifies seller, seller ships item and provides tracking
+🔍 Inspection Period - Buyer inspects item (typically 5 business days to approve/dispute)
+✅ Funds Released - Upon buyer approval, funds released to seller immediately
+Why Choose Us Section (3 columns):
+
+🏦 Bank Transfer Security
+🌍 International Transactions
+📱 24/7 Support
+FAQ Section:
+
+How long does it take? (3-7 business days typical)
+What fees do you charge? (Small percentage of transaction value)
+What if item doesn't match description? (Full buyer protection, dispute resolution)
+Are international transactions supported? (Yes, SWIFT/international wire transfers)
+What items can be escrowed? (Any high-value item)
+CTA Section: "Ready to Make a Secure Transaction?" with Start Escrow button
+
+accept_escrow.html - Seller Acceptance Page
+Two-step form:
+
+Password Gate: Clean form asking for access password (crocodilu123), with hint text "Contact the buyer for the access password"
+Bank Details Form: After password verified, show form for:
+Bank Name
+Account Name
+Account Number
+Routing Number (US)
+SWIFT Code (International)
+With transaction summary shown alongside
+invoice.html - Payment Invoice
+Professional invoice layout:
+
+"PAYMENT INVOICE" header
+Transaction reference number
+Product details table
+Amount breakdown
+Seller's bank transfer details in highlighted box
+Upload payment proof section (file upload input)
+Confirm Payment button (submits bank_ref + optional file)
+admin.html - Admin Dashboard
+Statistics cards: Total Transactions, Pending, Completed, Revenue
+Table of transactions awaiting verification (status = 'Payment Submitted')
+Each row: Transaction ID, Product, Buyer, Amount, Bank Ref, Payment Proof link, Release button
+Separate table of all recent transactions
+Database Seeding
+On first run (if tables empty), create:
+
+Admin user: username=admin, password=admin123, role=admin, email=admin@supercartrust.com
+
+4 luxury cars:
+
+Lamborghini Aventador SVJ - $450,000 - "The Lamborghini Aventador SVJ represents the pinnacle of naturally-aspirated V12 performance. 770 HP, 0-60 in 2.8 seconds." - image: lamborghini_aventador.jpg
+Ferrari SF90 Stradale - $500,000 - "Ferrari's most powerful road car ever. 986 HP hybrid V8 powertrain, 0-60 in 2.5 seconds." - image: ferrari_sf90.jpg
+Bugatti Chiron Super Sport - $3,200,000 - "The Bugatti Chiron Super Sport pushes boundaries with its 1,600 HP W16 engine. Top speed: 273 mph." - image: bugatti_chiron.jpg
+Porsche 911 GT3 - $180,000 - "The Porsche 911 GT3 is the purest expression of the 911. Naturally-aspirated flat-six, 502 HP, PDK or manual." - image: porsche_911_gt3.jpg
+File Structure
+/
+├── app.py                      # Main Flask application
+├── email_utils.py              # Email notification functions  
+├── uploads/                    # Payment proof uploads directory
+├── static/
+│   └── images/                 # Car images (download 4 professional supercar photos)
+│       ├── lamborghini_aventador.jpg
+│       ├── ferrari_sf90.jpg
+│       ├── bugatti_chiron.jpg
+│       └── porsche_911_gt3.jpg
+├── instance/
+│   └── database.db            # SQLite database (auto-created)
+└── templates/
+    ├── base.html              # Base template with nav + Tawk.to
+    ├── index.html             # Home page (AutoPro hero slider + sections)
+    ├── register.html          # Registration
+    ├── login.html             # Login
+    ├── cars.html              # Premium car listings (2-column luxury grid)
+    ├── how_escrow_works.html  # Escrow explanation (5 steps, FAQ, CTA)
+    ├── start_escrow.html      # Create transaction form
+    ├── list_escrow.html       # View my transactions
+    ├── accept_escrow.html     # Seller: password gate → bank details
+    ├── transaction_success.html # Success confirmation page
+    ├── invoice.html           # Bank transfer invoice + payment proof upload
+    └── admin.html             # Admin dashboard
+
+Environment Variables Required
+SESSION_SECRET - Flask session secret key (add in Replit Secrets)
+Workflow Configuration
+Name: SuperCarTrust
+Command: python app.py
+App binds to: 0.0.0.0:5000
+Important Implementation Details
+Seller Acceptance Flow:
+
+GET /escrow/accept/<id>?token=<token> verifies token, shows password form
+POST password → verify crocodilu123, store session['seller_verified'] = transaction.id
+Redirect back to GET → now show bank details form
+POST bank details → update transaction, status='Awaiting Payment', send buyer email
+Payment Confirmation:
+
+Buyer uploads optional payment proof file
+Save with secure filename in uploads/ directory
+Update transaction: bank_ref, payment_proof_file (if uploaded), status='Payment Submitted'
+Send notifications to both admin and seller
+Admin Release:
+
+Verify status is 'Payment Submitted'
+Update status to 'Completed'
+Send completion email to seller with delivery coordination info
+Token Security:
+
+All seller action links include ?token=<secure_token>
+Always verify token matches transaction.secure_token before proceeding
+Return 403 if token mismatch
+Email Templates:
+
+Use HTML with inline CSS
+Include action buttons with full URLs
+Color-coded status boxes (yellow for pending, green for success)
+Include all relevant transaction details
+Both HTML and plain text versions
+Testing Checklist
+Register new user → verify registration works
+Start escrow transaction with manual product entry and seller email
+Check seller receives email with secure accept/reject links
+Click accept link → enter password (crocodilu123) → enter bank details
+Check buyer receives payment instructions email with bank details
+Buyer clicks invoice → confirms payment with bank reference + optional file upload
+Check admin receives verification request email
+Check seller receives payment notification email
+Admin logs in → releases funds from admin dashboard
+Check seller receives completion email with delivery details
+Verify transaction shows "Completed" status in /escrow/list
+Build this complete platform with all features, proper error handling, and professional AutoPro-inspired UI. Ensure all email notifications work correctly with proper HTML formatting.
