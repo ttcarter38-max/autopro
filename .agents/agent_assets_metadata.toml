@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "K3saQmT5_FNkCX_4DhfY2"
+uri = "file://REBUILD_PROMPT.md"
+type = "text"
+title = "AutoPro — Full Rebuild Prompt"
