@@ -20,17 +20,14 @@ export const transactionStatusEnum = pgEnum('transaction_status', [
 export const users = pgTable('users', {
   id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
   email: text('email').notNull().unique(),
-  password: text('password').notNull(), // bcrypt hash
+  password: text('password').notNull(),
   name: text('name').notNull(),
   role: userRoleEnum('role').notNull().default('customer'),
   phone: text('phone'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  createdAt: true,
-});
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
@@ -54,15 +51,11 @@ export const vehicles = pgTable('vehicles', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-export const insertVehicleSchema = createInsertSchema(vehicles).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
+export const insertVehicleSchema = createInsertSchema(vehicles).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertVehicle = z.infer<typeof insertVehicleSchema>;
 export type Vehicle = typeof vehicles.$inferSelect;
 
-// Vehicle Images table (multiple images per vehicle)
+// Vehicle Images table
 export const vehicleImages = pgTable('vehicle_images', {
   id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
   vehicleId: integer('vehicle_id').notNull().references(() => vehicles.id, { onDelete: 'cascade' }),
@@ -72,14 +65,11 @@ export const vehicleImages = pgTable('vehicle_images', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-export const insertVehicleImageSchema = createInsertSchema(vehicleImages).omit({
-  id: true,
-  createdAt: true,
-});
+export const insertVehicleImageSchema = createInsertSchema(vehicleImages).omit({ id: true, createdAt: true });
 export type InsertVehicleImage = z.infer<typeof insertVehicleImageSchema>;
 export type VehicleImage = typeof vehicleImages.$inferSelect;
 
-// Vehicle Offers table (discounts/special pricing)
+// Vehicle Offers table
 export const vehicleOffers = pgTable('vehicle_offers', {
   id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
   vehicleId: integer('vehicle_id').notNull().references(() => vehicles.id, { onDelete: 'cascade' }),
@@ -92,18 +82,15 @@ export const vehicleOffers = pgTable('vehicle_offers', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-export const insertVehicleOfferSchema = createInsertSchema(vehicleOffers).omit({
-  id: true,
-  createdAt: true,
-});
+export const insertVehicleOfferSchema = createInsertSchema(vehicleOffers).omit({ id: true, createdAt: true });
 export type InsertVehicleOffer = z.infer<typeof insertVehicleOfferSchema>;
 export type VehicleOffer = typeof vehicleOffers.$inferSelect;
 
 // Transactions table (escrow purchases)
 export const transactions = pgTable('transactions', {
   id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
-  vehicleId: integer('vehicle_id').references(() => vehicles.id), // null if custom/private sale
-  buyerId: integer('buyer_id').references(() => users.id), // null if guest
+  vehicleId: integer('vehicle_id').references(() => vehicles.id),
+  buyerId: integer('buyer_id').references(() => users.id),
   buyerName: text('buyer_name').notNull(),
   buyerEmail: text('buyer_email').notNull(),
   buyerPhone: text('buyer_phone').notNull(),
@@ -111,24 +98,35 @@ export const transactions = pgTable('transactions', {
   amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
   status: transactionStatusEnum('status').notNull().default('initiated'),
   inspectionDays: integer('inspection_days').notNull().default(3),
-  guestToken: text('guest_token'), // for guest tracking
-  bankInfo: text('bank_info'), // admin-provided bank details
-  paymentProof: text('payment_proof'), // customer upload or reference
+  guestToken: text('guest_token'),
+
+  // Seller fields
+  sellerEmail: text('seller_email'),
+  sellerName: text('seller_name'),
+  sellerPhone: text('seller_phone'),
+  sellerToken: text('seller_token'),       // unique token for seller email links
+  sellerStatus: text('seller_status').default('pending'), // pending / accepted / rejected
+
+  // Payment fields (admin-set)
+  paymentMethod: text('payment_method').default('bank'), // 'bank' or 'crypto'
+  bankInfo: text('bank_info'),             // bank details text (existing)
+  cryptoAddress: text('crypto_address'),   // crypto wallet address
+  cryptoCoin: text('crypto_coin'),         // BTC / ETH / USDT / BNB / SOL ...
+
+  // Buyer payment confirmation
+  bankRef: text('bank_ref'),               // buyer's bank reference / tx hash
+  paymentProof: text('payment_proof'),     // text note from buyer
+  paymentProofFile: text('payment_proof_file'), // uploaded file path
+
+  // Custom / Private sale
+  customVehicleDescription: text('custom_vehicle_description'),
   notes: text('notes'),
-  // Custom/Private Sale Fields
-  customVehicleDescription: text('custom_vehicle_description'), // for non-inventory vehicles
-  sellerEmail: text('seller_email'), // private seller email
-  sellerName: text('seller_name'), // private seller name
-  sellerPhone: text('seller_phone'), // private seller phone
+
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-export const insertTransactionSchema = createInsertSchema(transactions).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
+export const insertTransactionSchema = createInsertSchema(transactions).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 
@@ -142,9 +140,6 @@ export const transactionEvents = pgTable('transaction_events', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-export const insertTransactionEventSchema = createInsertSchema(transactionEvents).omit({
-  id: true,
-  createdAt: true,
-});
+export const insertTransactionEventSchema = createInsertSchema(transactionEvents).omit({ id: true, createdAt: true });
 export type InsertTransactionEvent = z.infer<typeof insertTransactionEventSchema>;
 export type TransactionEvent = typeof transactionEvents.$inferSelect;

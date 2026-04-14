@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import path from "path";
@@ -7,114 +7,110 @@ import passport from "./auth";
 import { isAuthenticated, isAdmin } from "./auth";
 import { storage } from "./storage";
 import { insertVehicleSchema, insertVehicleOfferSchema, insertTransactionSchema } from "@shared/schema";
-import { sendBuyerTransactionInitiated, sendSellerTransactionNotification, sendTransactionStatusUpdate } from "./email";
+import {
+  sendBuyerTransactionInitiated,
+  sendSellerTransactionNotification,
+  sendTransactionStatusUpdate,
+  sendBuyerPaymentInstructions,
+  sendAdminPaymentConfirmation,
+  sendSellerPaymentReceived,
+  sendSellerFundsReleased,
+} from "./email";
 
-// Configure multer for file uploads
-const uploadStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+// Seller action password (configurable via env var)
+const SELLER_PASSWORD = process.env.SELLER_PASSWORD || 'escrow2024';
+
+// Configure multer for vehicle image uploads (images only)
+const imageStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, 'uploads/'),
+  filename: (_req, file, cb) => {
+    cb(null, `${Date.now()}-${randomUUID()}${path.extname(file.originalname)}`);
   },
-  filename: (req, file, cb) => {
-    const uniqueName = `${Date.now()}-${randomUUID()}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
+});
+const upload = multer({
+  storage: imageStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (/jpeg|jpg|png|gif|webp/.test(path.extname(file.originalname).toLowerCase()) &&
+        /image/.test(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
   },
 });
 
-const upload = multer({
-  storage: uploadStorage,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+// Configure multer for payment proof uploads (images + PDF)
+const proofStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, 'uploads/proofs/'),
+  filename: (_req, file, cb) => {
+    cb(null, `proof-${Date.now()}-${randomUUID()}${path.extname(file.originalname)}`);
   },
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|webp/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-    
-    if (extname && mimetype) {
-      return cb(null, true);
+});
+const uploadProof = multer({
+  storage: proofStorage,
+  limits: { fileSize: 16 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (/jpeg|jpg|png|gif|webp|pdf/.test(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only images and PDF files are allowed'));
     }
-    cb(new Error('Only image files are allowed'));
   },
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  
+
   // ===== AUTHENTICATION ROUTES =====
-  
-  // Login
+
   app.post('/api/auth/login', (req, res, next) => {
     passport.authenticate('local', (err: any, user: any, info: any) => {
-      if (err) {
-        return res.status(500).json({ error: 'Authentication error' });
-      }
-      if (!user) {
-        return res.status(401).json({ error: info?.message || 'Invalid credentials' });
-      }
+      if (err) return res.status(500).json({ error: 'Authentication error' });
+      if (!user) return res.status(401).json({ error: info?.message || 'Invalid credentials' });
       req.logIn(user, (err) => {
-        if (err) {
-          return res.status(500).json({ error: 'Login error' });
-        }
+        if (err) return res.status(500).json({ error: 'Login error' });
         const { password, ...userWithoutPassword } = user;
         return res.json({ user: userWithoutPassword });
       });
     })(req, res, next);
   });
-  
-  // Logout
+
   app.post('/api/auth/logout', (req, res) => {
     req.logout((err) => {
-      if (err) {
-        return res.status(500).json({ error: 'Logout error' });
-      }
-      res.json({ success: true });
+      if (err) return res.status(500).json({ error: 'Logout error' });
+      res.json({ message: 'Logged out successfully' });
     });
   });
-  
-  // Get current user
-  app.get('/api/auth/me', isAuthenticated, (req, res) => {
+
+  app.get('/api/auth/me', (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ error: 'Not authenticated' });
     const { password, ...userWithoutPassword } = req.user as any;
     res.json({ user: userWithoutPassword });
   });
-  
-  // Register (optional customer accounts)
-  app.post('/api/auth/register', async (req, res) => {
-    try {
-      const { email, password, name, phone } = req.body;
-      
-      const existingUser = await storage.getUserByEmail(email);
-      if (existingUser) {
-        return res.status(400).json({ error: 'Email already registered' });
-      }
-      
-      const user = await storage.createUser({
-        email,
-        password,
-        name,
-        phone,
-        role: 'customer',
-      });
-      
-      const { password: _, ...userWithoutPassword } = user;
-      res.json({ user: userWithoutPassword });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-  
-  // ===== PUBLIC VEHICLE ROUTES =====
-  
-  // Get all available vehicles
+
+  // ===== VEHICLE ROUTES =====
+
   app.get('/api/vehicles', async (req, res) => {
     try {
+      const { make, condition, minPrice, maxPrice, search } = req.query;
       const vehicles = await storage.getAvailableVehiclesWithImages();
-      res.json({ vehicles });
+      let filtered = vehicles;
+      if (make) filtered = filtered.filter(v => v.make.toLowerCase().includes((make as string).toLowerCase()));
+      if (condition) filtered = filtered.filter(v => v.condition === condition);
+      if (minPrice) filtered = filtered.filter(v => parseFloat(v.price) >= parseFloat(minPrice as string));
+      if (maxPrice) filtered = filtered.filter(v => parseFloat(v.price) <= parseFloat(maxPrice as string));
+      if (search) {
+        const s = (search as string).toLowerCase();
+        filtered = filtered.filter(v => v.name.toLowerCase().includes(s) || v.make.toLowerCase().includes(s) || v.model.toLowerCase().includes(s));
+      }
+      res.json({ vehicles: filtered });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
-  
-  // Get featured vehicles
-  app.get('/api/vehicles/featured', async (req, res) => {
+
+  app.get('/api/vehicles/featured', async (_req, res) => {
     try {
       const vehicles = await storage.getFeaturedVehiclesWithImages();
       res.json({ vehicles });
@@ -122,30 +118,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: error.message });
     }
   });
-  
-  // Get single vehicle with images and offer
+
   app.get('/api/vehicles/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const vehicle = await storage.getVehicle(id);
-      
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-      
+      if (!vehicle) return res.status(404).json({ error: 'Vehicle not found' });
       const images = await storage.getVehicleImages(id);
-      const offer = await storage.getActiveOffer(id);
-      
+      const offer = await storage.getVehicleOffer(id);
       res.json({ vehicle, images, offer });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   // ===== ADMIN VEHICLE ROUTES =====
-  
-  // Get all vehicles (including unavailable)
-  app.get('/api/admin/vehicles', isAdmin, async (req, res) => {
+
+  app.get('/api/admin/vehicles', isAdmin, async (_req, res) => {
     try {
       const vehicles = await storage.getAllVehiclesWithImages();
       res.json({ vehicles });
@@ -153,246 +142,249 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: error.message });
     }
   });
-  
-  // Create vehicle
-  app.post('/api/admin/vehicles', isAdmin, async (req, res) => {
+
+  app.post('/api/admin/vehicles', isAdmin, upload.array('images', 10), async (req, res) => {
     try {
-      const vehicleData = insertVehicleSchema.parse(req.body);
+      const vehicleData = insertVehicleSchema.parse({
+        ...req.body,
+        year: parseInt(req.body.year),
+        price: req.body.price,
+        mileage: req.body.mileage ? parseInt(req.body.mileage) : undefined,
+        featured: req.body.featured === 'true',
+        available: req.body.available !== 'false',
+      });
       const vehicle = await storage.createVehicle(vehicleData);
-      res.json({ vehicle });
+      const files = req.files as Express.Multer.File[];
+      if (files && files.length > 0) {
+        for (let i = 0; i < files.length; i++) {
+          await storage.addVehicleImage({
+            vehicleId: vehicle.id,
+            imageUrl: `/uploads/${files[i].filename}`,
+            isPrimary: i === 0,
+            displayOrder: i,
+          });
+        }
+      }
+      res.status(201).json({ vehicle });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
   });
-  
-  // Update vehicle
-  app.patch('/api/admin/vehicles/:id', isAdmin, async (req, res) => {
+
+  app.patch('/api/admin/vehicles/:id', isAdmin, upload.array('images', 10), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const vehicle = await storage.updateVehicle(id, req.body);
-      
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
+      const updateData: any = { ...req.body };
+      if (req.body.year) updateData.year = parseInt(req.body.year);
+      if (req.body.mileage) updateData.mileage = parseInt(req.body.mileage);
+      if (req.body.featured !== undefined) updateData.featured = req.body.featured === 'true';
+      if (req.body.available !== undefined) updateData.available = req.body.available !== 'false';
+      const vehicle = await storage.updateVehicle(id, updateData);
+      if (!vehicle) return res.status(404).json({ error: 'Vehicle not found' });
+      const files = req.files as Express.Multer.File[];
+      if (files && files.length > 0) {
+        for (let i = 0; i < files.length; i++) {
+          await storage.addVehicleImage({
+            vehicleId: vehicle.id,
+            imageUrl: `/uploads/${files[i].filename}`,
+            isPrimary: false,
+            displayOrder: i,
+          });
+        }
       }
-      
       res.json({ vehicle });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
   });
-  
-  // Delete vehicle
+
   app.delete('/api/admin/vehicles/:id', isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteVehicle(id);
-      
-      if (!success) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-      
-      res.json({ success: true });
+      if (!success) return res.status(404).json({ error: 'Vehicle not found' });
+      res.json({ message: 'Vehicle deleted successfully' });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
-  
-  // ===== IMAGE UPLOAD ROUTES =====
-  
-  // Upload vehicle image
-  app.post('/api/admin/vehicles/:id/images', isAdmin, upload.single('image'), async (req, res) => {
+
+  app.delete('/api/admin/vehicles/:vehicleId/images/:imageId', isAdmin, async (req, res) => {
     try {
-      const vehicleId = parseInt(req.params.id);
-      
-      if (!req.file) {
-        return res.status(400).json({ error: 'No image uploaded' });
-      }
-      
-      const imageUrl = `/uploads/${req.file.filename}`;
-      const image = await storage.addVehicleImage({
-        vehicleId,
-        imageUrl,
-        isPrimary: false,
-        displayOrder: 0,
-      });
-      
-      res.json({ image });
+      const imageId = parseInt(req.params.imageId);
+      const success = await storage.deleteVehicleImage(imageId);
+      if (!success) return res.status(404).json({ error: 'Image not found' });
+      res.json({ message: 'Image deleted' });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
-  
-  // Delete vehicle image
-  app.delete('/api/admin/vehicles/images/:id', isAdmin, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const success = await storage.deleteVehicleImage(id);
-      
-      if (!success) {
-        return res.status(404).json({ error: 'Image not found' });
-      }
-      
-      res.json({ success: true });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-  
-  // Set primary image
+
   app.patch('/api/admin/vehicles/:vehicleId/images/:imageId/primary', isAdmin, async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
       const imageId = parseInt(req.params.imageId);
-      
-      const success = await storage.setPrimaryImage(vehicleId, imageId);
-      
-      if (!success) {
-        return res.status(404).json({ error: 'Image not found' });
-      }
-      
-      res.json({ success: true });
+      await storage.setPrimaryImage(vehicleId, imageId);
+      res.json({ message: 'Primary image updated' });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
-  
-  // ===== OFFER ROUTES =====
-  
-  // Create offer
+
+  // ===== VEHICLE OFFERS =====
+
+  app.get('/api/vehicles/:id/offer', async (req, res) => {
+    try {
+      const offer = await storage.getVehicleOffer(parseInt(req.params.id));
+      res.json({ offer });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/offers', async (_req, res) => {
+    try {
+      const offers = await storage.getAllOffers();
+      res.json({ offers });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.post('/api/admin/offers', isAdmin, async (req, res) => {
     try {
       const offerData = insertVehicleOfferSchema.parse(req.body);
       const offer = await storage.createOffer(offerData);
-      res.json({ offer });
+      res.status(201).json({ offer });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
   });
-  
-  // Update offer
+
   app.patch('/api/admin/offers/:id', isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const offer = await storage.updateOffer(id, req.body);
-      
-      if (!offer) {
-        return res.status(404).json({ error: 'Offer not found' });
-      }
-      
+      if (!offer) return res.status(404).json({ error: 'Offer not found' });
       res.json({ offer });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
   });
-  
+
+  app.delete('/api/admin/offers/:id', isAdmin, async (req, res) => {
+    try {
+      const success = await storage.deleteOffer(parseInt(req.params.id));
+      if (!success) return res.status(404).json({ error: 'Offer not found' });
+      res.json({ message: 'Offer deleted' });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // ===== TRANSACTION ROUTES =====
-  
-  // Initiate transaction (customer/guest)
+
+  // Initiate transaction (customer/guest — dealership vehicle)
   app.post('/api/transactions', async (req, res) => {
     try {
       const transactionData = insertTransactionSchema.parse(req.body);
-      
-      // Generate guest token if not logged in
       const guestToken = req.isAuthenticated() ? null : randomUUID();
+      const sellerToken = randomUUID();
 
-      // Build insert data - omit nullable integer FK columns when null
       const insertData: any = {
         ...transactionData,
         guestToken,
+        sellerToken,
+        sellerStatus: 'pending',
         status: 'initiated',
       };
-
-      // Only include buyerId if authenticated (avoids Neon null-as-'' bug for integer FK)
       if (req.isAuthenticated()) {
         const rawId = (req.user as any).id;
         const parsedId = parseInt(String(rawId), 10);
-        if (!isNaN(parsedId)) {
-          insertData.buyerId = parsedId;
-        }
+        if (!isNaN(parsedId)) insertData.buyerId = parsedId;
       }
-      
+
       const transaction = await storage.createTransaction(insertData);
-      
-      // Create initial event
+
       await storage.addTransactionEvent({
         transactionId: transaction.id,
         status: 'initiated',
         notes: 'Transaction initiated by buyer',
         createdBy: req.isAuthenticated() ? (req.user as any).id : null,
       });
-      
-      res.json({ transaction, guestToken });
+
+      try {
+        await sendBuyerTransactionInitiated({
+          id: transaction.id,
+          buyerName: transaction.buyerName,
+          buyerEmail: transaction.buyerEmail,
+          guestToken: transaction.guestToken!,
+          amount: transaction.amount,
+          inspectionDays: transaction.inspectionDays,
+        });
+        if (transaction.sellerEmail) {
+          await sendSellerTransactionNotification({
+            id: transaction.id,
+            sellerName: transaction.sellerName,
+            sellerEmail: transaction.sellerEmail,
+            sellerToken: transaction.sellerToken!,
+            buyerName: transaction.buyerName,
+            customVehicleDescription: transaction.customVehicleDescription,
+            amount: transaction.amount,
+          });
+        }
+      } catch (emailError) {
+        console.error('Email error:', emailError);
+      }
+
+      res.json({ transaction, guestToken: transaction.guestToken });
     } catch (error: any) {
-      res.status(400).json({ error: error.message });
+      console.error('Transaction error:', error);
+      res.status(400).json({ error: error.message || 'Failed to create transaction' });
     }
   });
 
-  // Initiate custom escrow transaction (for private sales)
+  // Initiate custom escrow (private sale)
   app.post('/api/transactions/custom', async (req, res) => {
     try {
       const {
-        customVehicleDescription,
-        amount,
-        buyerName,
-        buyerEmail,
-        buyerPhone,
-        shippingAddress,
-        inspectionDays,
-        sellerEmail,
-        sellerName,
+        customVehicleDescription, amount, buyerName, buyerEmail, buyerPhone,
+        shippingAddress, inspectionDays, sellerEmail, sellerName, sellerPhone,
       } = req.body;
 
-      // Validate required fields
       if (!customVehicleDescription || !amount || !buyerName || !buyerEmail || !buyerPhone || !shippingAddress) {
         return res.status(400).json({ error: 'Missing required fields' });
       }
 
-      // Parse and validate numeric fields
-      const parsedAmount = parseFloat(String(amount));
-      if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        return res.status(400).json({ error: 'Invalid price amount' });
-      }
+      const guestToken = randomUUID();
+      const sellerToken = randomUUID();
 
-      const parsedInspectionDays = parseInt(String(inspectionDays), 10);
-      const safeInspectionDays = (!isNaN(parsedInspectionDays) && parsedInspectionDays >= 1 && parsedInspectionDays <= 5)
-        ? parsedInspectionDays
-        : 3;
-
-      // Resolve buyerId - only if authenticated and id is a valid integer
-      const rawBuyerId = req.isAuthenticated() ? (req.user as any)?.id : null;
-      const safeBuyerId = rawBuyerId !== null && rawBuyerId !== undefined && !isNaN(parseInt(String(rawBuyerId)))
-        ? parseInt(String(rawBuyerId))
+      const safeBuyerId: number | null = req.isAuthenticated()
+        ? (() => { const p = parseInt(String((req.user as any).id), 10); return isNaN(p) ? null : p; })()
         : null;
 
-      // Generate guest token
-      const guestToken = randomUUID();
-
-      // Build transaction data - omit nullable integer FK columns when null
-      // (Neon driver serializes null as '' for integer columns, causing DB errors)
       const transactionData: any = {
+        guestToken,
+        sellerToken,
+        sellerStatus: 'pending',
+        status: 'initiated',
         buyerName: String(buyerName).trim(),
         buyerEmail: String(buyerEmail).trim(),
         buyerPhone: String(buyerPhone).trim(),
         shippingAddress: String(shippingAddress).trim(),
-        amount: parsedAmount.toFixed(2),
-        status: 'initiated',
-        inspectionDays: safeInspectionDays,
-        guestToken,
+        amount: parseFloat(String(amount)).toFixed(2),
+        inspectionDays: parseInt(String(inspectionDays)) || 3,
         customVehicleDescription: String(customVehicleDescription).trim(),
         sellerEmail: sellerEmail && String(sellerEmail).trim() ? String(sellerEmail).trim() : null,
         sellerName: sellerName && String(sellerName).trim() ? String(sellerName).trim() : null,
+        sellerPhone: sellerPhone && String(sellerPhone).trim() ? String(sellerPhone).trim() : null,
         notes: 'Custom escrow transaction for private sale',
       };
 
-      // Only include integer FK columns when they have valid values
-      if (safeBuyerId !== null) {
-        transactionData.buyerId = safeBuyerId;
-      }
-      // vehicleId intentionally omitted for custom/private sales (defaults to NULL in DB)
+      if (safeBuyerId !== null) transactionData.buyerId = safeBuyerId;
 
       const transaction = await storage.createTransaction(transactionData);
 
-      // Create initial event
       await storage.addTransactionEvent({
         transactionId: transaction.id,
         status: 'initiated',
@@ -400,9 +392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdBy: req.isAuthenticated() ? (req.user as any).id : null,
       });
 
-      // Send email notifications
       try {
-        // Send email to buyer
         await sendBuyerTransactionInitiated({
           id: transaction.id,
           buyerName: transaction.buyerName,
@@ -412,13 +402,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           amount: transaction.amount,
           inspectionDays: transaction.inspectionDays,
         });
-
-        // Send email to seller if provided
         if (sellerEmail) {
           await sendSellerTransactionNotification({
             id: transaction.id,
             sellerName: transaction.sellerName,
             sellerEmail,
+            sellerToken: transaction.sellerToken!,
             buyerName: transaction.buyerName,
             customVehicleDescription: transaction.customVehicleDescription,
             amount: transaction.amount,
@@ -426,39 +415,169 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       } catch (emailError) {
         console.error('Email notification error:', emailError);
-        // Don't fail the transaction if email fails
       }
 
-      res.json({ 
+      res.json({
         id: transaction.id,
         guestToken: transaction.guestToken,
-        message: 'Custom escrow transaction created successfully. Check your email for details.'
+        message: 'Custom escrow transaction created successfully. Check your email for details.',
       });
     } catch (error: any) {
       console.error('Custom transaction error:', error);
       res.status(400).json({ error: error.message || 'Failed to create custom transaction' });
     }
   });
-  
+
+  // ===== SELLER ACTION ROUTES (no auth — protected by password + token) =====
+
+  // Get transaction info for seller (public, by seller token)
+  app.get('/api/seller/:token', async (req, res) => {
+    try {
+      const transaction = await storage.getTransactionBySellerToken(req.params.token);
+      if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
+      // Return only safe seller-relevant fields
+      res.json({
+        id: transaction.id,
+        buyerName: transaction.buyerName,
+        amount: transaction.amount,
+        customVehicleDescription: transaction.customVehicleDescription,
+        sellerName: transaction.sellerName,
+        sellerStatus: transaction.sellerStatus,
+        status: transaction.status,
+        inspectionDays: transaction.inspectionDays,
+        createdAt: transaction.createdAt,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Seller accepts transaction
+  app.post('/api/seller/:token/accept', async (req, res) => {
+    try {
+      const { password } = req.body;
+      if (password !== SELLER_PASSWORD) {
+        return res.status(403).json({ error: 'Incorrect password' });
+      }
+      const transaction = await storage.getTransactionBySellerToken(req.params.token);
+      if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
+      if (transaction.sellerStatus !== 'pending') {
+        return res.status(400).json({ error: 'This transaction has already been responded to' });
+      }
+
+      const updated = await storage.updateTransaction(transaction.id, {
+        sellerStatus: 'accepted',
+        status: 'awaiting_admin_approval',
+      });
+
+      await storage.addTransactionEvent({
+        transactionId: transaction.id,
+        status: 'awaiting_admin_approval',
+        notes: 'Seller accepted the transaction',
+      });
+
+      res.json({ message: 'Transaction accepted successfully', transaction: updated });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Seller rejects transaction
+  app.post('/api/seller/:token/reject', async (req, res) => {
+    try {
+      const { password, reason } = req.body;
+      if (password !== SELLER_PASSWORD) {
+        return res.status(403).json({ error: 'Incorrect password' });
+      }
+      const transaction = await storage.getTransactionBySellerToken(req.params.token);
+      if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
+      if (transaction.sellerStatus !== 'pending') {
+        return res.status(400).json({ error: 'This transaction has already been responded to' });
+      }
+
+      const updated = await storage.updateTransaction(transaction.id, {
+        sellerStatus: 'rejected',
+        status: 'cancelled',
+        notes: reason ? `Seller rejected: ${reason}` : 'Seller rejected the transaction',
+      });
+
+      await storage.addTransactionEvent({
+        transactionId: transaction.id,
+        status: 'cancelled',
+        notes: reason ? `Seller rejected: ${reason}` : 'Seller rejected the transaction',
+      });
+
+      res.json({ message: 'Transaction rejected', transaction: updated });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ===== PAYMENT PROOF UPLOAD =====
+
+  app.post('/api/transactions/:idOrToken/payment-proof', uploadProof.single('proof'), async (req, res) => {
+    try {
+      const { idOrToken } = req.params;
+      const { bankRef } = req.body;
+
+      let transaction;
+      if (idOrToken.includes('-')) {
+        transaction = await storage.getTransactionByToken(idOrToken);
+      } else {
+        transaction = await storage.getTransaction(parseInt(idOrToken));
+      }
+      if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
+
+      const updateData: any = {};
+      if (bankRef) updateData.bankRef = bankRef;
+      if (req.file) updateData.paymentProofFile = `/uploads/proofs/${req.file.filename}`;
+
+      const updated = await storage.updateTransaction(transaction.id, updateData);
+
+      // Notify admin
+      try {
+        await sendAdminPaymentConfirmation({
+          id: transaction.id,
+          buyerName: transaction.buyerName,
+          buyerEmail: transaction.buyerEmail,
+          amount: transaction.amount,
+          bankRef: bankRef || null,
+          hasProofFile: !!req.file,
+        });
+        // Notify seller if they have an email
+        if (transaction.sellerEmail) {
+          await sendSellerPaymentReceived({
+            id: transaction.id,
+            sellerName: transaction.sellerName,
+            sellerEmail: transaction.sellerEmail,
+            buyerName: transaction.buyerName,
+            amount: transaction.amount,
+          });
+        }
+      } catch (emailError) {
+        console.error('Email error:', emailError);
+      }
+
+      res.json({ message: 'Payment proof submitted successfully', transaction: updated });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
   // Get transaction by ID or token
   app.get('/api/transactions/:idOrToken', async (req, res) => {
     try {
       const { idOrToken } = req.params;
       let transaction;
-      
+
       if (idOrToken.includes('-')) {
-        // It's a UUID token
         transaction = await storage.getTransactionByToken(idOrToken);
       } else {
-        // It's a numeric ID
         const id = parseInt(idOrToken);
         transaction = await storage.getTransaction(id);
-        
-        // If not admin, verify ownership
         if (transaction && !req.isAuthenticated()) {
           return res.status(403).json({ error: 'Access denied' });
         }
-        
         if (transaction && req.isAuthenticated()) {
           const user = req.user as any;
           if (user.role !== 'admin' && transaction.buyerId !== user.id) {
@@ -466,23 +585,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       }
-      
-      if (!transaction) {
-        return res.status(404).json({ error: 'Transaction not found' });
-      }
-      
+
+      if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
+
       const events = await storage.getTransactionEvents(transaction.id);
-      const vehicle = transaction.vehicleId 
-        ? await storage.getVehicle(transaction.vehicleId)
-        : null;
-      
+      const vehicle = transaction.vehicleId ? await storage.getVehicle(transaction.vehicleId) : null;
+
       res.json({ transaction, events, vehicle });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
-  
-  // Get user transactions
+
   app.get('/api/transactions', isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
@@ -492,11 +606,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: error.message });
     }
   });
-  
+
   // ===== ADMIN TRANSACTION MANAGEMENT =====
-  
-  // Get all transactions
-  app.get('/api/admin/transactions', isAdmin, async (req, res) => {
+
+  app.get('/api/admin/transactions', isAdmin, async (_req, res) => {
     try {
       const transactions = await storage.getAllTransactions();
       res.json({ transactions });
@@ -504,44 +617,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: error.message });
     }
   });
-  
-  // Update transaction status
+
+  // Update transaction (admin)
   app.patch('/api/admin/transactions/:id', isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const { status, bankInfo, notes } = req.body;
-      
-      const transaction = await storage.updateTransaction(id, {
-        status,
-        bankInfo,
-        notes,
-      });
-      
-      if (!transaction) {
-        return res.status(404).json({ error: 'Transaction not found' });
-      }
-      
-      // Create event
+      const { status, bankInfo, paymentMethod, cryptoAddress, cryptoCoin, notes } = req.body;
+
+      const previousTransaction = await storage.getTransaction(id);
+      if (!previousTransaction) return res.status(404).json({ error: 'Transaction not found' });
+
+      const updateData: any = {};
+      if (status) updateData.status = status;
+      if (bankInfo !== undefined) updateData.bankInfo = bankInfo;
+      if (paymentMethod) updateData.paymentMethod = paymentMethod;
+      if (cryptoAddress !== undefined) updateData.cryptoAddress = cryptoAddress;
+      if (cryptoCoin !== undefined) updateData.cryptoCoin = cryptoCoin;
+      if (notes) updateData.notes = notes;
+
+      const transaction = await storage.updateTransaction(id, updateData);
+      if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
+
       await storage.addTransactionEvent({
         transactionId: id,
-        status,
-        notes: notes || `Status updated to ${status}`,
+        status: status || previousTransaction.status,
+        notes: notes || `Status updated to ${status || previousTransaction.status}`,
         createdBy: (req.user as any).id,
       });
-      
+
+      // Trigger emails based on status change
+      try {
+        if (status === 'awaiting_payment_confirmation') {
+          await sendBuyerPaymentInstructions({
+            id: transaction.id,
+            buyerName: transaction.buyerName,
+            buyerEmail: transaction.buyerEmail,
+            guestToken: transaction.guestToken,
+            amount: transaction.amount,
+            paymentMethod: transaction.paymentMethod || 'bank',
+            bankInfo: transaction.bankInfo,
+            cryptoAddress: transaction.cryptoAddress,
+            cryptoCoin: transaction.cryptoCoin,
+          });
+        } else if (status === 'released') {
+          if (transaction.sellerEmail) {
+            await sendSellerFundsReleased({
+              id: transaction.id,
+              sellerName: transaction.sellerName,
+              sellerEmail: transaction.sellerEmail,
+              buyerName: transaction.buyerName,
+              amount: transaction.amount,
+              customVehicleDescription: transaction.customVehicleDescription,
+            });
+          }
+          await sendTransactionStatusUpdate({
+            id: transaction.id,
+            buyerName: transaction.buyerName,
+            buyerEmail: transaction.buyerEmail,
+            guestToken: transaction.guestToken,
+            status: 'released',
+          });
+        } else if (status && status !== previousTransaction.status) {
+          await sendTransactionStatusUpdate({
+            id: transaction.id,
+            buyerName: transaction.buyerName,
+            buyerEmail: transaction.buyerEmail,
+            guestToken: transaction.guestToken,
+            status,
+            bankInfo: transaction.bankInfo,
+          });
+        }
+      } catch (emailError) {
+        console.error('Email error:', emailError);
+      }
+
       res.json({ transaction });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
   });
-  
+
   // Serve uploaded files
-  app.use('/uploads', (req, res, next) => {
-    // Static file serving for uploads
-    const express = require('express');
-    express.static('uploads')(req, res, next);
-  });
-  
+  app.use('/uploads', express.static('uploads'));
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -265,6 +265,11 @@ export class PostgresStorage implements IStorage {
     return result[0];
   }
 
+  async getTransactionBySellerToken(token: string): Promise<Transaction | undefined> {
+    const result = await db.select().from(transactions).where(eq(transactions.sellerToken, token));
+    return result[0];
+  }
+
   async getUserTransactions(buyerId: number): Promise<Transaction[]> {
     return await db.select().from(transactions)
       .where(eq(transactions.buyerId, buyerId))

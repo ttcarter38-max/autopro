@@ -1,35 +1,28 @@
 import { Resend } from 'resend';
 
-// Email is sent via Resend when RESEND_API_KEY is set.
-// Falls back to console logging for development/testing.
-
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
   if (!key) return null;
   return new Resend(key);
 }
 
-// The "from" address. Resend's free tier allows sending from onboarding@resend.dev
-// Once you verify a domain at resend.com, update this to your domain address.
 const FROM_ADDRESS = process.env.RESEND_FROM_EMAIL || 'AutoPro Escrow <onboarding@resend.dev>';
 
-interface EmailData {
-  to: string;
-  subject: string;
-  html: string;
+function getBaseUrl(): string {
+  return process.env.REPL_DOMAINS
+    ? `https://${process.env.REPL_DOMAINS.split(',')[0]}`
+    : 'http://localhost:5000';
 }
+
+interface EmailData { to: string; subject: string; html: string; }
 
 export async function sendEmail(data: EmailData): Promise<boolean> {
   const resend = getResend();
-
   if (!resend) {
-    console.log('📧 EMAIL (no RESEND_API_KEY set — logging only):');
-    console.log('To:', data.to);
-    console.log('Subject:', data.subject);
-    console.log('---');
+    console.log('📧 EMAIL (no RESEND_API_KEY — logging only):');
+    console.log('To:', data.to, '| Subject:', data.subject);
     return true;
   }
-
   try {
     const result = await resend.emails.send({
       from: FROM_ADDRESS,
@@ -37,147 +30,121 @@ export async function sendEmail(data: EmailData): Promise<boolean> {
       subject: data.subject,
       html: data.html,
     });
-
-    if (result.error) {
-      console.error('Resend error:', result.error);
-      return false;
-    }
-
+    if (result.error) { console.error('Resend error:', result.error); return false; }
     console.log(`📧 Email sent via Resend to ${data.to} (id: ${result.data?.id})`);
     return true;
   } catch (err) {
-    console.error('Failed to send email via Resend:', err);
+    console.error('Failed to send email:', err);
     return false;
   }
 }
 
+// ── Shared email wrapper ─────────────────────────────────────────────────────
+function emailWrapper(content: string) {
+  return `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a;">
+      <div style="background:#111;padding:24px 32px;border-radius:8px 8px 0 0;">
+        <h1 style="color:#fff;margin:0;font-size:22px;letter-spacing:1px;">AUTOPRO ESCROW</h1>
+      </div>
+      <div style="background:#f9f9f9;padding:32px;border-radius:0 0 8px 8px;">
+        ${content}
+        <p style="margin-top:28px;font-size:14px;">Questions? Contact us:<br>
+          <strong>Phone:</strong> 1-800-CAR-DEAL &nbsp;|&nbsp; <strong>Email:</strong> escrow@autopro.com
+        </p>
+        <p style="color:#999;font-size:11px;margin-top:28px;border-top:1px solid #e0e0e0;padding-top:16px;">
+          Automated message from AutoPro Escrow Service. Do not reply to this email.
+        </p>
+      </div>
+    </div>`;
+}
+
+function infoBox(rows: [string, string][]) {
+  const cells = rows.map(([label, val]) =>
+    `<p style="margin:6px 0;"><strong>${label}:</strong> ${val}</p>`).join('');
+  return `<div style="background:#fff;border:1px solid #e0e0e0;padding:20px;border-radius:8px;margin:20px 0;">${cells}</div>`;
+}
+
+function ctaButton(text: string, href: string, color = '#c0392b') {
+  return `
+    <div style="text-align:center;margin:28px 0;">
+      <a href="${href}" style="background:${color};color:#fff;padding:14px 36px;text-decoration:none;border-radius:6px;display:inline-block;font-weight:bold;font-size:15px;">${text}</a>
+    </div>`;
+}
+
+// ── 1. Buyer: transaction initiated ──────────────────────────────────────────
 export async function sendBuyerTransactionInitiated(transaction: {
-  id: number;
-  buyerName: string;
-  buyerEmail: string;
-  guestToken: string;
-  customVehicleDescription?: string | null;
-  amount: string;
-  inspectionDays: number;
+  id: number; buyerName: string; buyerEmail: string; guestToken: string;
+  customVehicleDescription?: string | null; amount: string; inspectionDays: number;
 }) {
+  const base = getBaseUrl();
   const vehicleInfo = transaction.customVehicleDescription || 'Vehicle from AutoPro';
-  const baseUrl = process.env.REPL_DOMAINS
-    ? `https://${process.env.REPL_DOMAINS.split(',')[0]}`
-    : 'http://localhost:5000';
-
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
-      <div style="background-color: #111; padding: 24px 32px; border-radius: 8px 8px 0 0;">
-        <h1 style="color: #fff; margin: 0; font-size: 24px;">AutoPro Escrow</h1>
-      </div>
-      <div style="background-color: #f9f9f9; padding: 32px; border-radius: 0 0 8px 8px;">
-        <h2 style="color: #111; margin-top: 0;">Escrow Transaction Initiated</h2>
-
-        <p>Dear ${transaction.buyerName},</p>
-
-        <p>Your escrow transaction has been successfully initiated. Here are your details:</p>
-
-        <div style="background-color: #fff; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <p style="margin: 6px 0;"><strong>Transaction ID:</strong> #${transaction.id}</p>
-          <p style="margin: 6px 0;"><strong>Vehicle:</strong> ${vehicleInfo}</p>
-          <p style="margin: 6px 0;"><strong>Amount:</strong> $${parseFloat(transaction.amount).toLocaleString()}</p>
-          <p style="margin: 6px 0;"><strong>Inspection Period:</strong> ${transaction.inspectionDays} day${transaction.inspectionDays !== 1 ? 's' : ''}</p>
-        </div>
-
-        <h3 style="color: #111;">What Happens Next</h3>
-        <ol style="line-height: 1.8;">
-          <li>Our team will review and approve your transaction within 24 hours</li>
-          <li>You'll receive secure bank payment details by email</li>
-          <li>Once payment is confirmed, the vehicle will be shipped to your address</li>
-          <li>You'll have ${transaction.inspectionDays} day${transaction.inspectionDays !== 1 ? 's' : ''} to inspect the vehicle</li>
-        </ol>
-
-        <p>Track your transaction status at any time using your tracking link below:</p>
-
-        <div style="text-align: center; margin: 28px 0;">
-          <a href="${baseUrl}/track/${transaction.guestToken}"
-             style="background-color: #c0392b; color: #fff; padding: 14px 36px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; font-size: 15px;">
-            Track My Transaction
-          </a>
-        </div>
-
-        <div style="background-color: #e8f4fd; border-left: 4px solid #1976d2; padding: 14px 18px; border-radius: 4px; margin: 20px 0;">
-          <p style="margin: 0; font-size: 13px;"><strong>Tracking Token:</strong> ${transaction.guestToken}</p>
-          <p style="margin: 6px 0 0; font-size: 13px; color: #555;">Save this token — you'll need it to track your transaction.</p>
-        </div>
-
-        <p style="margin-top: 28px;">Questions? Contact us:<br>
-          <strong>Phone:</strong> 1-800-CAR-DEAL<br>
-          <strong>Email:</strong> escrow@autopro.com
-        </p>
-
-        <p style="color: #999; font-size: 12px; margin-top: 32px; border-top: 1px solid #e0e0e0; padding-top: 16px;">
-          This is an automated message from AutoPro Escrow Service. Please do not reply to this email.
-        </p>
-      </div>
-    </div>
-  `;
+  const html = emailWrapper(`
+    <h2 style="color:#111;margin-top:0;">Escrow Transaction Initiated</h2>
+    <p>Dear ${transaction.buyerName},</p>
+    <p>Your escrow transaction has been successfully initiated. Here are your details:</p>
+    ${infoBox([
+      ['Transaction ID', `#${transaction.id}`],
+      ['Vehicle', vehicleInfo],
+      ['Amount', `$${parseFloat(transaction.amount).toLocaleString()}`],
+      ['Inspection Period', `${transaction.inspectionDays} day${transaction.inspectionDays !== 1 ? 's' : ''}`],
+    ])}
+    <h3>What Happens Next</h3>
+    <ol style="line-height:1.9;">
+      <li>Our team reviews and approves your transaction within 24 hours</li>
+      <li>You'll receive payment instructions (bank or crypto) by email</li>
+      <li>Once payment is confirmed the vehicle ships to your address</li>
+      <li>You'll have ${transaction.inspectionDays} day(s) to inspect</li>
+    </ol>
+    ${ctaButton('Track My Transaction', `${base}/track/${transaction.guestToken}`)}
+    <div style="background:#e8f4fd;border-left:4px solid #1976d2;padding:14px 18px;border-radius:4px;">
+      <p style="margin:0;font-size:13px;"><strong>Tracking Token:</strong> ${transaction.guestToken}</p>
+      <p style="margin:6px 0 0;font-size:12px;color:#555;">Save this — you'll need it to track your transaction.</p>
+    </div>`);
 
   return sendEmail({
     to: transaction.buyerEmail,
-    subject: `Your Escrow Transaction #${transaction.id} Has Been Initiated — AutoPro`,
+    subject: `Escrow Transaction #${transaction.id} Initiated — AutoPro`,
     html,
   });
 }
 
+// ── 2. Seller: new transaction (with Accept / Reject buttons) ─────────────────
 export async function sendSellerTransactionNotification(transaction: {
-  id: number;
-  sellerName?: string | null;
-  sellerEmail: string;
-  buyerName: string;
-  customVehicleDescription?: string | null;
-  amount: string;
+  id: number; sellerName?: string | null; sellerEmail: string;
+  sellerToken: string; buyerName: string;
+  customVehicleDescription?: string | null; amount: string;
 }) {
-  const sellerDisplayName = transaction.sellerName || 'Seller';
+  const base = getBaseUrl();
+  const sellerDisplay = transaction.sellerName || 'Seller';
   const vehicleInfo = transaction.customVehicleDescription || 'Your vehicle';
+  const acceptUrl = `${base}/seller/${transaction.sellerToken}?action=accept`;
+  const rejectUrl = `${base}/seller/${transaction.sellerToken}?action=reject`;
 
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
-      <div style="background-color: #111; padding: 24px 32px; border-radius: 8px 8px 0 0;">
-        <h1 style="color: #fff; margin: 0; font-size: 24px;">AutoPro Escrow</h1>
-      </div>
-      <div style="background-color: #f9f9f9; padding: 32px; border-radius: 0 0 8px 8px;">
-        <h2 style="color: #111; margin-top: 0;">A Buyer Has Started Escrow for Your Vehicle</h2>
-
-        <p>Dear ${sellerDisplayName},</p>
-
-        <p>Great news — a buyer has initiated an escrow transaction for your vehicle through AutoPro.</p>
-
-        <div style="background-color: #fff; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <p style="margin: 6px 0;"><strong>Transaction ID:</strong> #${transaction.id}</p>
-          <p style="margin: 6px 0;"><strong>Vehicle:</strong> ${vehicleInfo}</p>
-          <p style="margin: 6px 0;"><strong>Buyer:</strong> ${transaction.buyerName}</p>
-          <p style="margin: 6px 0;"><strong>Amount:</strong> $${parseFloat(transaction.amount).toLocaleString()}</p>
-        </div>
-
-        <h3 style="color: #111;">What Happens Next</h3>
-        <ol style="line-height: 1.8;">
-          <li>Our team will review and approve the transaction within 24 hours</li>
-          <li>The buyer will transfer funds to our secure escrow account</li>
-          <li>Once payment is confirmed, you'll be notified to ship the vehicle</li>
-          <li>After the buyer completes their inspection, payment will be released to you</li>
-        </ol>
-
-        <div style="background-color: #e8f5e9; border-left: 4px solid #388e3c; padding: 14px 18px; border-radius: 4px; margin: 20px 0;">
-          <p style="margin: 0; font-weight: bold; color: #1b5e20;">Your payment is fully protected in our secure escrow account</p>
-        </div>
-
-        <p style="margin-top: 28px;">Questions? Contact us:<br>
-          <strong>Phone:</strong> 1-800-CAR-DEAL<br>
-          <strong>Email:</strong> escrow@autopro.com
-        </p>
-
-        <p style="color: #999; font-size: 12px; margin-top: 32px; border-top: 1px solid #e0e0e0; padding-top: 16px;">
-          This is an automated message from AutoPro Escrow Service. Please do not reply to this email.
-        </p>
-      </div>
+  const html = emailWrapper(`
+    <h2 style="color:#111;margin-top:0;">A Buyer Has Started Escrow for Your Vehicle</h2>
+    <p>Dear ${sellerDisplay},</p>
+    <p>A buyer has initiated a secure escrow transaction for your vehicle through AutoPro. Please review the details and respond.</p>
+    ${infoBox([
+      ['Transaction ID', `#${transaction.id}`],
+      ['Vehicle', vehicleInfo],
+      ['Buyer', transaction.buyerName],
+      ['Amount', `$${parseFloat(transaction.amount).toLocaleString()}`],
+    ])}
+    <p><strong>Please accept or reject this transaction:</strong></p>
+    <div style="text-align:center;margin:24px 0;">
+      <a href="${acceptUrl}" style="background:#16a34a;color:#fff;padding:14px 30px;text-decoration:none;border-radius:6px;display:inline-block;font-weight:bold;font-size:15px;margin-right:12px;">
+        ✓ Accept Transaction
+      </a>
+      <a href="${rejectUrl}" style="background:#dc2626;color:#fff;padding:14px 30px;text-decoration:none;border-radius:6px;display:inline-block;font-weight:bold;font-size:15px;">
+        ✗ Reject Transaction
+      </a>
     </div>
-  `;
+    <div style="background:#fff8e1;border:1px solid #ffc107;padding:14px 18px;border-radius:4px;margin-top:16px;">
+      <p style="margin:0;font-size:13px;"><strong>Note:</strong> You will need the access password to complete your response. Contact the buyer if you don't have it.</p>
+    </div>
+    <div style="background:#e8f5e9;border-left:4px solid #388e3c;padding:14px 18px;border-radius:4px;margin-top:16px;">
+      <p style="margin:0;font-weight:bold;color:#1b5e20;">Your payment is fully protected in AutoPro's secure escrow account.</p>
+    </div>`);
 
   return sendEmail({
     to: transaction.sellerEmail,
@@ -186,103 +153,167 @@ export async function sendSellerTransactionNotification(transaction: {
   });
 }
 
-export async function sendTransactionStatusUpdate(transaction: {
-  id: number;
-  buyerName: string;
-  buyerEmail: string;
-  status: string;
-  bankInfo?: string | null;
-  bankPassword?: string | null;
-  guestToken?: string | null;
+// ── 3. Buyer: payment instructions (bank or crypto) ──────────────────────────
+export async function sendBuyerPaymentInstructions(transaction: {
+  id: number; buyerName: string; buyerEmail: string; guestToken: string | null;
+  amount: string; paymentMethod: string; bankInfo?: string | null;
+  cryptoAddress?: string | null; cryptoCoin?: string | null;
 }) {
-  const statusMessages: Record<string, { title: string; message: string }> = {
-    awaiting_admin_approval: {
-      title: 'Transaction Approved — Awaiting Your Payment',
-      message: 'Our team has reviewed and approved your transaction. Bank payment details will be shared with you shortly.',
-    },
-    awaiting_payment_confirmation: {
-      title: 'Bank Payment Details Are Ready',
-      message: 'Bank information has been provided for your transaction. Please log in to view and make your payment.',
-    },
-    in_transit: {
-      title: 'Payment Confirmed — Vehicle Is On Its Way',
-      message: 'Your payment has been confirmed! The vehicle is now being shipped to your address.',
-    },
-    inspection: {
-      title: 'Inspection Period Has Started',
-      message: 'The vehicle has been delivered. Your inspection period has begun — please inspect the vehicle carefully.',
-    },
-    approved: {
-      title: 'You Approved the Vehicle',
-      message: 'You have approved the vehicle. Payment will now be released to the seller. Thank you!',
-    },
-    released: {
-      title: 'Transaction Complete',
-      message: 'Payment has been released to the seller. Your transaction is complete. Thank you for using AutoPro Escrow!',
-    },
-  };
+  const base = getBaseUrl();
+  const trackUrl = transaction.guestToken ? `${base}/track/${transaction.guestToken}` : `${base}/track/${transaction.id}`;
 
-  const statusInfo = statusMessages[transaction.status] || {
-    title: 'Transaction Status Updated',
-    message: `Your transaction status has been updated to: ${transaction.status.replace(/_/g, ' ')}`,
-  };
-
-  const baseUrl = process.env.REPL_DOMAINS
-    ? `https://${process.env.REPL_DOMAINS.split(',')[0]}`
-    : 'http://localhost:5000';
-
-  const trackingPath = transaction.guestToken
-    ? `/track/${transaction.guestToken}`
-    : `/track/${transaction.id}`;
-
-  let bankInfoHtml = '';
-  if (transaction.status === 'awaiting_payment_confirmation' && transaction.bankInfo) {
-    bankInfoHtml = `
-      <div style="background-color: #fff8e1; border: 1px solid #ffc107; padding: 18px; border-radius: 8px; margin: 20px 0;">
-        <h3 style="color: #856404; margin-top: 0;">Bank Payment Details Are Ready</h3>
-        <p style="margin-bottom: 8px;">A password is required to view the full bank details. You'll find the password in your transaction tracking page.</p>
-        ${transaction.bankPassword ? `<p style="margin: 0;"><strong>Password hint:</strong> Check your tracking page or contact support.</p>` : ''}
-      </div>
-    `;
+  let paymentSection = '';
+  if (transaction.paymentMethod === 'crypto' && transaction.cryptoAddress) {
+    paymentSection = `
+      <div style="background:#fff8e1;border:2px solid #f59e0b;padding:20px;border-radius:8px;margin:20px 0;">
+        <h3 style="color:#92400e;margin-top:0;">Crypto Payment Instructions</h3>
+        <p style="margin:6px 0;"><strong>Coin:</strong> ${transaction.cryptoCoin || 'See tracking page'}</p>
+        <p style="margin:6px 0;"><strong>Amount:</strong> $${parseFloat(transaction.amount).toLocaleString()} (pay equivalent in ${transaction.cryptoCoin || 'crypto'})</p>
+        <p style="margin:6px 0;"><strong>Wallet Address:</strong></p>
+        <div style="background:#fff;padding:10px;border-radius:4px;font-family:monospace;word-break:break-all;font-size:13px;border:1px solid #e5e7eb;">${transaction.cryptoAddress}</div>
+        <p style="margin:12px 0 0;font-size:12px;color:#92400e;"><strong>Important:</strong> After sending, upload your transaction screenshot as payment proof.</p>
+      </div>`;
+  } else if (transaction.bankInfo) {
+    paymentSection = `
+      <div style="background:#fff8e1;border:2px solid #f59e0b;padding:20px;border-radius:8px;margin:20px 0;">
+        <h3 style="color:#92400e;margin-top:0;">Bank Transfer Instructions</h3>
+        <p>Log in to your transaction tracking page to view the full bank details (password-protected).</p>
+        <p style="font-size:12px;color:#92400e;"><strong>Important:</strong> After transferring, upload your receipt as payment proof.</p>
+      </div>`;
   }
 
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
-      <div style="background-color: #111; padding: 24px 32px; border-radius: 8px 8px 0 0;">
-        <h1 style="color: #fff; margin: 0; font-size: 24px;">AutoPro Escrow</h1>
-      </div>
-      <div style="background-color: #f9f9f9; padding: 32px; border-radius: 0 0 8px 8px;">
-        <h2 style="color: #111; margin-top: 0;">${statusInfo.title}</h2>
+  const html = emailWrapper(`
+    <h2 style="color:#111;margin-top:0;">Payment Instructions Ready</h2>
+    <p>Dear ${transaction.buyerName},</p>
+    <p>Your escrow transaction has been approved. Payment instructions are now available.</p>
+    ${infoBox([
+      ['Transaction ID', `#${transaction.id}`],
+      ['Amount Due', `$${parseFloat(transaction.amount).toLocaleString()}`],
+      ['Payment Method', transaction.paymentMethod === 'crypto' ? `Cryptocurrency (${transaction.cryptoCoin || ''})` : 'Bank Transfer'],
+    ])}
+    ${paymentSection}
+    ${ctaButton('View Full Payment Details', trackUrl)}
+    <p style="font-size:13px;color:#555;">After making payment, use the tracking page to upload your payment proof (screenshot or receipt).</p>`);
 
-        <p>Dear ${transaction.buyerName},</p>
+  return sendEmail({
+    to: transaction.buyerEmail,
+    subject: `Payment Instructions for Transaction #${transaction.id} — AutoPro`,
+    html,
+  });
+}
 
-        <p>${statusInfo.message}</p>
+// ── 4. Admin: buyer confirmed payment ────────────────────────────────────────
+export async function sendAdminPaymentConfirmation(transaction: {
+  id: number; buyerName: string; buyerEmail: string; amount: string;
+  bankRef: string | null; hasProofFile: boolean;
+}) {
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@autopro.com';
+  const html = emailWrapper(`
+    <h2 style="color:#111;margin-top:0;">Payment Confirmation — Verification Required</h2>
+    <p>A buyer has submitted payment confirmation for a transaction. Please verify and release funds.</p>
+    ${infoBox([
+      ['Transaction ID', `#${transaction.id}`],
+      ['Buyer', transaction.buyerName],
+      ['Buyer Email', transaction.buyerEmail],
+      ['Amount', `$${parseFloat(transaction.amount).toLocaleString()}`],
+      ['Bank Ref / TX Hash', transaction.bankRef || 'Not provided'],
+      ['Proof File Uploaded', transaction.hasProofFile ? 'Yes' : 'No'],
+    ])}
+    <div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:14px 18px;border-radius:4px;">
+      <p style="margin:0;font-weight:bold;">Action Required: Log in to the admin panel to verify payment and update the transaction status.</p>
+    </div>`);
 
-        <div style="background-color: #fff; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <p style="margin: 6px 0;"><strong>Transaction ID:</strong> #${transaction.id}</p>
-          <p style="margin: 6px 0;"><strong>Status:</strong> ${transaction.status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
-        </div>
+  return sendEmail({
+    to: adminEmail,
+    subject: `Payment Confirmation Awaiting Verification — Transaction #${transaction.id}`,
+    html,
+  });
+}
 
-        ${bankInfoHtml}
+// ── 5. Seller: payment received (buyer confirmed) ────────────────────────────
+export async function sendSellerPaymentReceived(transaction: {
+  id: number; sellerName?: string | null; sellerEmail: string;
+  buyerName: string; amount: string;
+}) {
+  const sellerDisplay = transaction.sellerName || 'Seller';
+  const html = emailWrapper(`
+    <h2 style="color:#111;margin-top:0;">Buyer Has Submitted Payment</h2>
+    <p>Dear ${sellerDisplay},</p>
+    <p>The buyer for your vehicle has submitted payment confirmation. Our team is currently verifying the payment.</p>
+    ${infoBox([
+      ['Transaction ID', `#${transaction.id}`],
+      ['Buyer', transaction.buyerName],
+      ['Amount', `$${parseFloat(transaction.amount).toLocaleString()}`],
+    ])}
+    <div style="background:#e8f5e9;border-left:4px solid #388e3c;padding:14px 18px;border-radius:4px;">
+      <p style="margin:0;font-weight:bold;color:#1b5e20;">Once payment is verified, you will receive another notification to ship the vehicle.</p>
+    </div>`);
 
-        <div style="text-align: center; margin: 28px 0;">
-          <a href="${baseUrl}${trackingPath}"
-             style="background-color: #c0392b; color: #fff; padding: 14px 36px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; font-size: 15px;">
-            View Transaction Details
-          </a>
-        </div>
+  return sendEmail({
+    to: transaction.sellerEmail,
+    subject: `Payment Submitted for Transaction #${transaction.id} — AutoPro`,
+    html,
+  });
+}
 
-        <p style="margin-top: 28px;">Questions? Contact us:<br>
-          <strong>Phone:</strong> 1-800-CAR-DEAL<br>
-          <strong>Email:</strong> escrow@autopro.com
-        </p>
-
-        <p style="color: #999; font-size: 12px; margin-top: 32px; border-top: 1px solid #e0e0e0; padding-top: 16px;">
-          This is an automated message from AutoPro Escrow Service. Please do not reply to this email.
-        </p>
-      </div>
+// ── 6. Seller: funds released (transaction complete) ─────────────────────────
+export async function sendSellerFundsReleased(transaction: {
+  id: number; sellerName?: string | null; sellerEmail: string;
+  buyerName: string; amount: string; customVehicleDescription?: string | null;
+}) {
+  const sellerDisplay = transaction.sellerName || 'Seller';
+  const vehicleInfo = transaction.customVehicleDescription || 'Your vehicle';
+  const html = emailWrapper(`
+    <h2 style="color:#111;margin-top:0;">Funds Released — Transaction Complete</h2>
+    <p>Dear ${sellerDisplay},</p>
+    <p>Congratulations! The buyer has approved the vehicle and payment has been released to you.</p>
+    ${infoBox([
+      ['Transaction ID', `#${transaction.id}`],
+      ['Vehicle', vehicleInfo],
+      ['Buyer', transaction.buyerName],
+      ['Amount Released', `$${parseFloat(transaction.amount).toLocaleString()}`],
+    ])}
+    <div style="background:#e8f5e9;border:2px solid #16a34a;padding:20px;border-radius:8px;margin:20px 0;text-align:center;">
+      <p style="margin:0;font-size:20px;font-weight:bold;color:#15803d;">$${parseFloat(transaction.amount).toLocaleString()} Released</p>
+      <p style="margin:8px 0 0;color:#166534;">Funds have been released to your account</p>
     </div>
-  `;
+    <p>Thank you for using AutoPro Escrow. We hope to facilitate more transactions for you in the future!</p>`);
+
+  return sendEmail({
+    to: transaction.sellerEmail,
+    subject: `Funds Released — Transaction #${transaction.id} Complete — AutoPro`,
+    html,
+  });
+}
+
+// ── 7. Buyer: general status update ──────────────────────────────────────────
+export async function sendTransactionStatusUpdate(transaction: {
+  id: number; buyerName: string; buyerEmail: string; status: string;
+  bankInfo?: string | null; guestToken?: string | null;
+}) {
+  const statusMessages: Record<string, { title: string; message: string }> = {
+    awaiting_admin_approval: { title: 'Transaction Under Review', message: 'Our team is reviewing your transaction.' },
+    awaiting_payment_confirmation: { title: 'Payment Instructions Ready', message: 'Bank or crypto payment details are now available in your tracking page.' },
+    in_transit: { title: 'Vehicle Is On Its Way', message: 'Payment confirmed! The vehicle is being shipped to your address.' },
+    inspection: { title: 'Inspection Period Started', message: 'The vehicle has been delivered. Your inspection period has begun.' },
+    approved: { title: 'Purchase Approved', message: 'You approved the vehicle. Payment will be released to the seller.' },
+    released: { title: 'Transaction Complete', message: 'Payment has been released. Thank you for using AutoPro Escrow!' },
+    cancelled: { title: 'Transaction Cancelled', message: 'This transaction has been cancelled. Contact us if you have questions.' },
+  };
+
+  const base = getBaseUrl();
+  const trackUrl = transaction.guestToken ? `${base}/track/${transaction.guestToken}` : `${base}/track/${transaction.id}`;
+  const statusInfo = statusMessages[transaction.status] || { title: 'Transaction Updated', message: `Status: ${transaction.status.replace(/_/g, ' ')}` };
+
+  const html = emailWrapper(`
+    <h2 style="color:#111;margin-top:0;">${statusInfo.title}</h2>
+    <p>Dear ${transaction.buyerName},</p>
+    <p>${statusInfo.message}</p>
+    ${infoBox([
+      ['Transaction ID', `#${transaction.id}`],
+      ['Status', transaction.status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())],
+    ])}
+    ${ctaButton('View Transaction Details', trackUrl)}`);
 
   return sendEmail({
     to: transaction.buyerEmail,

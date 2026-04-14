@@ -8,9 +8,23 @@ A full-featured car dealership and escrow platform similar to escrow.com. Includ
 - **Vehicle Search**: Filter by make, model, and price range
 - **Special Offers**: Highlighted vehicles with sale pricing
 - **Featured Vehicles**: Tabbed interface for All Cars, New Cars, and Used Cars
+- **Custom Escrow**: Private sale escrow for buyer-seller deals not in inventory
+- **Seller Accept/Reject**: Seller receives email with token link → password-protected page to accept or reject
+- **Admin Payment Entry**: Admin sets bank transfer OR cryptocurrency (BTC/ETH/USDT/etc.) per transaction
+- **Payment Proof Upload**: Buyer uploads screenshot or PDF on tracking page; admin gets notified
+- **Rich Email Chain**: 7 distinct email templates via Resend (buyer initiated, seller notification, payment instructions, payment proof received, seller funds released, etc.)
 - **Statistics Section**: Dealership metrics and call-to-action
-- **Newsletter Signup**: Email subscription with validation
 - **Mobile Responsive**: Optimized for all device sizes
+
+## Key Credentials & Secrets
+- Admin: admin@autopro.com / admin123
+- Seller action password: `escrow2024` (configurable via `SELLER_PASSWORD` env var)
+- Email: Resend SDK using `RESEND_API_KEY` secret; sender `onboarding@resend.dev`
+
+## Key Routes
+- `/seller/:token` — Seller accept/reject page (token from email)
+- `/track/:idOrToken` — Buyer transaction tracking + payment proof upload
+- `/admin/transactions` — Admin manages transactions, sets bank/crypto payment details
 
 ## Technology Stack
 - **Frontend**: React 18, TypeScript, Wouter (routing)

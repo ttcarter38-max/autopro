@@ -7,6 +7,7 @@ import Home from "@/pages/Home";
 import Escrow from "@/pages/Escrow";
 import VehicleDetail from "@/pages/VehicleDetail";
 import TransactionTracking from "@/pages/TransactionTracking";
+import SellerAction from "@/pages/SellerAction";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminVehicles from "@/pages/admin/Vehicles";
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/escrow" component={Escrow}/>
       <Route path="/vehicle/:id" component={VehicleDetail}/>
       <Route path="/track/:idOrToken" component={TransactionTracking}/>
+      <Route path="/seller/:token" component={SellerAction}/>
       <Route path="/admin/login" component={AdminLogin}/>
       <Route path="/admin/dashboard" component={AdminDashboard}/>
       <Route path="/admin/vehicles" component={AdminVehicles}/>
