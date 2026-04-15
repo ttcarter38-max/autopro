@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import escrowBanner from '@assets/Design_a_realistic_banner_photo_for_the_Auto_Pro_automotive_es_1776236879324.png';
-import truckBanner from '@assets/banner_auto_pro_1776236891031.png';
+import truckBanner from '@assets/8872a0c0-1aeb-4ad3-a144-7f94de3ad2d5_1776239408426.png';
+import escrowBanner from '@assets/be14b73b-d8b1-4252-8d28-cacc0d9b235e_1776239412239.png';
 
 interface Slide {
   id: number;
@@ -80,10 +80,12 @@ export default function HeroSlider() {
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage: index < 2
-                ? `linear-gradient(rgba(0,0,0,0.82), rgba(0,0,0,0.82)), url(${slide.image})`
+              backgroundImage: index === 0
+                ? `linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.1) 100%), url(${slide.image})`
+                : index === 1
+                ? `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url(${slide.image})`
                 : `linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.65) 100%), url(${slide.image})`,
-              backgroundPosition: index === 0 ? 'center right' : 'center center',
+              backgroundPosition: 'center center',
             }}
           >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
