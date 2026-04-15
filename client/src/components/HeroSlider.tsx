@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import escrowBanner from '@assets/Design_a_realistic_banner_photo_for_the_Auto_Pro_automotive_es_1776236879324.png';
+import truckBanner from '@assets/banner_auto_pro_1776236891031.png';
 
 interface Slide {
   id: number;
@@ -14,7 +16,7 @@ interface Slide {
 const slides: Slide[] = [
   {
     id: 1,
-    image: 'https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=1920&q=80',
+    image: truckBanner,
     eyebrow: 'NATIONWIDE VEHICLE TRANSPORT',
     heading: 'YOUR CAR. DELIVERED.',
     sub: 'Secure door-to-door auto transport across the country',
@@ -22,7 +24,7 @@ const slides: Slide[] = [
   },
   {
     id: 2,
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=80',
+    image: escrowBanner,
     eyebrow: 'TRUSTED ESCROW SERVICE',
     heading: 'BUY & SELL WITH CONFIDENCE',
     sub: 'Our escrow protects both buyer and seller every step of the way',
@@ -78,7 +80,10 @@ export default function HeroSlider() {
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.65) 100%), url(${slide.image})`,
+              backgroundImage: index < 2
+                ? `linear-gradient(rgba(0,0,0,0.82), rgba(0,0,0,0.82)), url(${slide.image})`
+                : `linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.65) 100%), url(${slide.image})`,
+              backgroundPosition: index === 0 ? 'center right' : 'center center',
             }}
           >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
