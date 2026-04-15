@@ -124,8 +124,187 @@ export default function Escrow() {
         </div>
       </div>
 
+      {/* How It Works Section */}
+      <div id="how-it-works" className="py-20 bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">
+              How Escrow Works
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              A simple, secure 7-step process that protects your purchase
+            </p>
+          </div>
+
+          <Tabs defaultValue="buyer" className="w-full">
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-12">
+              <TabsTrigger value="buyer" data-testid="tab-buyer">For Buyers</TabsTrigger>
+              <TabsTrigger value="seller" data-testid="tab-seller">For Sellers</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="buyer">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                      <span className="text-xl font-bold text-primary">1</span>
+                    </div>
+                    <h3 className="font-semibold mb-2">Start Escrow</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Browse dealership inventory or start a custom escrow for private sales.
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                      <span className="text-xl font-bold text-primary">2</span>
+                    </div>
+                    <h3 className="font-semibold mb-2">Submit Details</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Fill out vehicle description, price, delivery details, and inspection period.
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                      <span className="text-xl font-bold text-primary">3</span>
+                    </div>
+                    <h3 className="font-semibold mb-2">Admin Approval</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Our team reviews and approves your transaction within 24 hours.
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                      <span className="text-xl font-bold text-primary">4</span>
+                    </div>
+                    <h3 className="font-semibold mb-2">Secure Payment</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Receive bank details via email and transfer funds to our escrow account.
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                      <span className="text-xl font-bold text-primary">5</span>
+                    </div>
+                    <h3 className="font-semibold mb-2">Vehicle Shipping</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Once payment is confirmed, the vehicle is shipped to your address.
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                      <span className="text-xl font-bold text-primary">6</span>
+                    </div>
+                    <h3 className="font-semibold mb-2">Inspection Period</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Inspect the vehicle for your selected period (1-5 days) to ensure satisfaction.
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                      <CheckCircle className="w-6 h-6 text-primary" />
+                    </div>
+                    <h3 className="font-semibold mb-2">Approve Purchase</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Contact us to approve the purchase if you're satisfied with the vehicle.
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                      <Lock className="w-6 h-6 text-primary" />
+                    </div>
+                    <h3 className="font-semibold mb-2">Payment Released</h3>
+                    <p className="text-sm text-muted-foreground">
+                      We release payment to the seller and the transaction is complete.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="seller">
+              <div className="max-w-3xl mx-auto">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="space-y-6">
+                      <div className="flex gap-4">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <FileText className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-2">1. List Your Vehicle</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Contact our admin team to list your vehicle in our inventory, or the buyer can create a custom escrow with your details.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-4">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Clock className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-2">2. Buyer Initiates Escrow</h3>
+                          <p className="text-sm text-muted-foreground">
+                            When a buyer starts escrow, you'll receive an email notification. Funds are held securely.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-4">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Shield className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-2">3. Vehicle Inspection</h3>
+                          <p className="text-sm text-muted-foreground">
+                            After shipping, the buyer inspects the vehicle. Your payment is protected in escrow during this time.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-4">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <CheckCircle className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-2">4. Receive Payment</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Once the buyer approves, we release the full payment to you via email notification. Safe, secure, guaranteed.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+
       {/* Start Custom Escrow Form */}
-      <div id="start-escrow" className="py-20 bg-background">
+      <div id="start-escrow" className="py-20 bg-muted">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <Plus className="w-12 h-12 text-primary mx-auto mb-4" />
@@ -378,7 +557,7 @@ export default function Escrow() {
       </div>
 
       {/* Track Transaction Section */}
-      <div className="py-12 bg-muted">
+      <div className="py-12 bg-background">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <Card>
             <CardHeader>
@@ -405,185 +584,6 @@ export default function Escrow() {
               </div>
             </CardContent>
           </Card>
-        </div>
-      </div>
-
-      {/* How It Works Section */}
-      <div id="how-it-works" className="py-20 bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">
-              How Escrow Works
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              A simple, secure 7-step process that protects your purchase
-            </p>
-          </div>
-
-          <Tabs defaultValue="buyer" className="w-full">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-12">
-              <TabsTrigger value="buyer" data-testid="tab-buyer">For Buyers</TabsTrigger>
-              <TabsTrigger value="seller" data-testid="tab-seller">For Sellers</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="buyer">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                      <span className="text-xl font-bold text-primary">1</span>
-                    </div>
-                    <h3 className="font-semibold mb-2">Start Escrow</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Browse dealership inventory or start a custom escrow for private sales.
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                      <span className="text-xl font-bold text-primary">2</span>
-                    </div>
-                    <h3 className="font-semibold mb-2">Submit Details</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Fill out vehicle description, price, delivery details, and inspection period.
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                      <span className="text-xl font-bold text-primary">3</span>
-                    </div>
-                    <h3 className="font-semibold mb-2">Admin Approval</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Our team reviews and approves your transaction within 24 hours.
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                      <span className="text-xl font-bold text-primary">4</span>
-                    </div>
-                    <h3 className="font-semibold mb-2">Secure Payment</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Receive bank details via email and transfer funds to our escrow account.
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                      <span className="text-xl font-bold text-primary">5</span>
-                    </div>
-                    <h3 className="font-semibold mb-2">Vehicle Shipping</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Once payment is confirmed, the vehicle is shipped to your address.
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                      <span className="text-xl font-bold text-primary">6</span>
-                    </div>
-                    <h3 className="font-semibold mb-2">Inspection Period</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Inspect the vehicle for your selected period (1-5 days) to ensure satisfaction.
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                      <CheckCircle className="w-6 h-6 text-primary" />
-                    </div>
-                    <h3 className="font-semibold mb-2">Approve Purchase</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Contact us to approve the purchase if you're satisfied with the vehicle.
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                      <Lock className="w-6 h-6 text-primary" />
-                    </div>
-                    <h3 className="font-semibold mb-2">Payment Released</h3>
-                    <p className="text-sm text-muted-foreground">
-                      We release payment to the seller and the transaction is complete.
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="seller">
-              <div className="max-w-3xl mx-auto">
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="space-y-6">
-                      <div className="flex gap-4">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <FileText className="w-6 h-6 text-primary" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold mb-2">1. List Your Vehicle</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Contact our admin team to list your vehicle in our inventory, or the buyer can create a custom escrow with your details.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-4">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Clock className="w-6 h-6 text-primary" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold mb-2">2. Buyer Initiates Escrow</h3>
-                          <p className="text-sm text-muted-foreground">
-                            When a buyer starts escrow, you'll receive an email notification. Funds are held securely.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-4">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Shield className="w-6 h-6 text-primary" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold mb-2">3. Vehicle Inspection</h3>
-                          <p className="text-sm text-muted-foreground">
-                            After shipping, the buyer inspects the vehicle. Your payment is protected in escrow during this time.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-4">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <CheckCircle className="w-6 h-6 text-primary" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold mb-2">4. Receive Payment</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Once the buyer approves, we release the full payment to you via email notification. Safe, secure, guaranteed.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
         </div>
       </div>
 
