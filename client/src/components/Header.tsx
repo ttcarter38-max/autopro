@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 
 export default function Header() {
@@ -33,13 +33,11 @@ export default function Header() {
                   ESCROW
                 </span>
               </Link>
-              <a
-                href="#footer-contact"
-                className="text-sm font-medium hover-elevate px-3 py-2 rounded-md"
-                data-testid="button-contact-menu"
-              >
-                CONTACT
-              </a>
+              <Link href="/contact">
+                <span className="text-sm font-medium hover-elevate px-3 py-2 rounded-md cursor-pointer" data-testid="button-contact-menu">
+                  CONTACT
+                </span>
+              </Link>
             </nav>
           </div>
 
@@ -89,14 +87,15 @@ export default function Header() {
                 ESCROW
               </span>
             </Link>
-            <a
-              href="#footer-contact"
-              className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md"
-              onClick={() => setMobileMenuOpen(false)}
-              data-testid="button-mobile-contact"
-            >
-              CONTACT
-            </a>
+            <Link href="/contact">
+              <span
+                className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md cursor-pointer"
+                onClick={() => setMobileMenuOpen(false)}
+                data-testid="button-mobile-contact"
+              >
+                CONTACT
+              </span>
+            </Link>
           </nav>
         </div>
       )}

@@ -14,6 +14,7 @@ import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminVehicles from "@/pages/admin/Vehicles";
 import VehicleForm from "@/pages/admin/VehicleForm";
 import AdminTransactions from "@/pages/admin/Transactions";
+import Contact from "@/pages/Contact";
 import NotFound from "@/pages/not-found";
 import { SiWhatsapp } from "react-icons/si";
 
@@ -53,6 +54,7 @@ function Router() {
       <Route path="/admin/vehicles/new" component={VehicleForm}/>
       <Route path="/admin/vehicles/:id/edit" component={VehicleForm}/>
       <Route path="/admin/transactions" component={AdminTransactions}/>
+      <Route path="/contact" component={Contact}/>
       <Route component={NotFound} />
     </Switch>
   );

@@ -338,6 +338,45 @@ export async function sendSellerFundsReleased(transaction: {
   });
 }
 
+// ── Contact form — notify admin ──────────────────────────────────────────────
+export async function sendContactFormEmail(data: {
+  name: string; email: string; phone?: string; subject: string; message: string;
+}) {
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@autopro.com';
+  const subjectLabels: Record<string, string> = {
+    'vehicle-inquiry': 'Vehicle Inquiry',
+    'escrow-question': 'Escrow Question',
+    'test-drive': 'Schedule a Test Drive',
+    'financing': 'Financing Options',
+    'sell-vehicle': 'Sell My Vehicle',
+    'other': 'Other',
+  };
+  const subjectLabel = subjectLabels[data.subject] || data.subject;
+
+  const html = emailWrapper(`
+    <h2 style="color:#111;margin-top:0;">New Contact Form Submission</h2>
+    <p>A visitor has submitted the contact form on your website.</p>
+    ${infoBox([
+      ['Name', data.name],
+      ['Email', data.email],
+      ['Phone', data.phone || 'Not provided'],
+      ['Subject', subjectLabel],
+    ])}
+    <div style="background:#fff;border:1px solid #e0e0e0;padding:20px;border-radius:8px;margin:20px 0;">
+      <p style="margin:0 0 8px;font-weight:bold;">Message:</p>
+      <p style="margin:0;white-space:pre-wrap;line-height:1.7;">${data.message}</p>
+    </div>
+    <div style="background:#e8f4fd;border-left:4px solid #1976d2;padding:14px 18px;border-radius:4px;">
+      <p style="margin:0;font-size:13px;">Reply directly to this email to respond to <strong>${data.name}</strong> at <strong>${data.email}</strong>.</p>
+    </div>`);
+
+  return sendEmail({
+    to: adminEmail,
+    subject: `Contact Form: ${subjectLabel} from ${data.name} — AutoPro`,
+    html,
+  });
+}
+
 // ── 7. General status update — buyer OR seller ───────────────────────────────
 export async function sendTransactionStatusUpdate(transaction: {
   id: number;

@@ -16,6 +16,7 @@ import {
   sendAdminPaymentConfirmation,
   sendSellerPaymentReceived,
   sendSellerFundsReleased,
+  sendContactFormEmail,
 } from "./email";
 
 // Seller action password (configurable via env var)
@@ -126,6 +127,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.status(401).json({ error: 'Not authenticated' });
     const { password, ...userWithoutPassword } = req.user as any;
     res.json({ user: userWithoutPassword });
+  });
+
+  // ===== CONTACT FORM ROUTE =====
+
+  app.post('/api/contact', async (req, res) => {
+    try {
+      const { name, email, phone, subject, message } = req.body;
+      if (!name || !email || !subject || !message) {
+        return res.status(400).json({ error: 'Name, email, subject, and message are required' });
+      }
+      await sendContactFormEmail({ name, email, phone, subject, message });
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Contact form error:', err);
+      res.status(500).json({ error: 'Failed to send message' });
+    }
   });
 
   // ===== VEHICLE ROUTES =====
