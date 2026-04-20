@@ -116,9 +116,6 @@ export default function Header() {
                 </Button>
               </>
             )}
-            <Button variant="default" size="sm" asChild data-testid="button-search">
-              <Link href="/inventory">Browse All</Link>
-            </Button>
           </div>
 
           <button
