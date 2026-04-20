@@ -16,6 +16,8 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { useAuth } from '@/hooks/useAuth';
+import { useEffect } from 'react';
 
 const customEscrowSchema = z.object({
   vehicleDescription: z.string().min(10, 'Please provide a detailed vehicle description (at least 10 characters)'),
@@ -35,6 +37,7 @@ export default function Escrow() {
   const [trackingInput, setTrackingInput] = useState('');
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const form = useForm<CustomEscrowForm>({
     resolver: zodResolver(customEscrowSchema),
@@ -50,6 +53,14 @@ export default function Escrow() {
       sellerName: '',
     },
   });
+
+  useEffect(() => {
+    if (user && user.role === 'customer') {
+      if (!form.getValues('buyerName')) form.setValue('buyerName', user.name);
+      if (!form.getValues('buyerEmail')) form.setValue('buyerEmail', user.email);
+      if (!form.getValues('buyerPhone') && user.phone) form.setValue('buyerPhone', user.phone);
+    }
+  }, [user, form]);
 
   const createCustomEscrowMutation = useMutation({
     mutationFn: async (data: CustomEscrowForm) => {

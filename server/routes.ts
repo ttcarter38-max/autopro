@@ -129,6 +129,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ user: userWithoutPassword });
   });
 
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const { email, password, name, phone } = req.body;
+      if (!email || !password || !name) {
+        return res.status(400).json({ error: 'Name, email, and password are required' });
+      }
+      if (password.length < 6) {
+        return res.status(400).json({ error: 'Password must be at least 6 characters' });
+      }
+      const existing = await storage.getUserByEmail(email);
+      if (existing) {
+        return res.status(409).json({ error: 'An account with this email already exists' });
+      }
+      const newUser = await storage.createUser({
+        email,
+        password,
+        name,
+        phone: phone || null,
+        role: 'customer',
+      });
+      req.logIn(newUser, (err) => {
+        if (err) return res.status(500).json({ error: 'Could not log you in after registration' });
+        const { password: _pw, ...userWithoutPassword } = newUser as any;
+        res.json({ user: userWithoutPassword });
+      });
+    } catch (err: any) {
+      console.error('Register error:', err);
+      res.status(500).json({ error: err.message || 'Registration failed' });
+    }
+  });
+
   // ===== CONTACT FORM ROUTE =====
 
   app.post('/api/contact', async (req, res) => {
