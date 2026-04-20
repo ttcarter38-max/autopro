@@ -456,6 +456,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const {
         customVehicleDescription, amount, buyerName, buyerEmail, buyerPhone,
         shippingAddress, inspectionDays, sellerEmail, sellerName, sellerPhone,
+        buyerPaymentMethod, buyerPreferredCoin, buyerPreferredNetwork,
       } = req.body;
 
       if (!customVehicleDescription || !amount || !buyerName || !buyerEmail || !buyerPhone || !shippingAddress) {
@@ -486,6 +487,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sellerPhone: sellerPhone && String(sellerPhone).trim() ? String(sellerPhone).trim() : null,
         notes: 'Custom escrow transaction for private sale',
       };
+
+      // Buyer payment preference (whitelisted, optional)
+      if (buyerPaymentMethod === 'bank' || buyerPaymentMethod === 'crypto') {
+        transactionData.buyerPaymentMethod = buyerPaymentMethod;
+      }
+      if (buyerPreferredCoin && typeof buyerPreferredCoin === 'string') {
+        transactionData.buyerPreferredCoin = String(buyerPreferredCoin).trim().slice(0, 20);
+      }
+      if (buyerPreferredNetwork && typeof buyerPreferredNetwork === 'string') {
+        transactionData.buyerPreferredNetwork = String(buyerPreferredNetwork).trim().slice(0, 40);
+      }
 
       if (safeBuyerId !== null) transactionData.buyerId = safeBuyerId;
 

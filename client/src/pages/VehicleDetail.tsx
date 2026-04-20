@@ -27,6 +27,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import PaymentMethodPicker, { type PaymentMethodValue } from '@/components/PaymentMethodPicker';
 
 export default function VehicleDetail() {
   const [, params] = useRoute('/vehicle/:id');
@@ -40,6 +41,7 @@ export default function VehicleDetail() {
   const [buyerPhone, setBuyerPhone] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
   const [inspectionDays, setInspectionDays] = useState('3');
+  const [paymentPref, setPaymentPref] = useState<PaymentMethodValue>({ buyerPaymentMethod: 'bank' });
 
   const { data, isLoading } = useQuery({
     queryKey: ['/api/vehicles', vehicleId],
@@ -92,6 +94,9 @@ export default function VehicleDetail() {
       shippingAddress,
       amount: data?.vehicle?.price || '0',
       inspectionDays: parseInt(inspectionDays),
+      buyerPaymentMethod: paymentPref.buyerPaymentMethod,
+      buyerPreferredCoin: paymentPref.buyerPreferredCoin || null,
+      buyerPreferredNetwork: paymentPref.buyerPreferredNetwork || null,
     });
   };
 
@@ -365,6 +370,10 @@ export default function VehicleDetail() {
                   <SelectItem value="5">5 Days</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="border-t pt-4">
+              <PaymentMethodPicker value={paymentPref} onChange={setPaymentPref} />
             </div>
           </div>
 

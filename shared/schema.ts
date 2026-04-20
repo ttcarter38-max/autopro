@@ -113,6 +113,11 @@ export const transactions = pgTable('transactions', {
   cryptoAddress: text('crypto_address'),   // crypto wallet address
   cryptoCoin: text('crypto_coin'),         // BTC / ETH / USDT / BNB / SOL ...
 
+  // Buyer's preferred payment method (set at escrow initiation; admin may override above)
+  buyerPaymentMethod: text('buyer_payment_method'),    // 'bank' or 'crypto'
+  buyerPreferredCoin: text('buyer_preferred_coin'),    // BTC / ETH / USDT / BNB / SOL (optional)
+  buyerPreferredNetwork: text('buyer_preferred_network'), // e.g. TRC-20, ERC-20 (optional, free text)
+
   // Buyer payment confirmation
   bankRef: text('bank_ref'),               // buyer's bank reference / tx hash
   paymentProof: text('payment_proof'),     // text note from buyer

@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import BuyerCryptoInfo from '@/components/BuyerCryptoInfo';
 import { queryClient } from '@/lib/queryClient';
 
 const STATUS_STEPS = [
@@ -230,7 +231,13 @@ export default function TransactionTracking() {
                                   </Button>
                                 </div>
                               </div>
-                            ) : transaction.bankInfo ? (
+                            ) : null}
+
+                            {transaction.paymentMethod === 'crypto' && transaction.cryptoAddress && (
+                              <BuyerCryptoInfo />
+                            )}
+
+                            {transaction.paymentMethod !== 'crypto' && transaction.bankInfo ? (
                               <div className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md">
                                 <div className="flex items-center gap-2 mb-2">
                                   <Building2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />

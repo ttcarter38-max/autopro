@@ -115,10 +115,16 @@ export default function AdminTransactions() {
   const openDialog = (transaction: any) => {
     setSelectedTransaction(transaction);
     setNewStatus(transaction.status);
-    setPaymentMethod(transaction.paymentMethod || 'bank');
+    // Prefer admin's already-configured method (when bankInfo/cryptoAddress is set);
+    // otherwise honor the buyer's preference; fall back to 'bank'.
+    const adminAlreadyConfigured = !!(transaction.bankInfo || transaction.cryptoAddress);
+    const initialMethod = adminAlreadyConfigured
+      ? (transaction.paymentMethod || 'bank')
+      : (transaction.buyerPaymentMethod || transaction.paymentMethod || 'bank');
+    setPaymentMethod(initialMethod);
     setBankInfo(transaction.bankInfo || '');
     setCryptoAddress(transaction.cryptoAddress || '');
-    setCryptoCoin(transaction.cryptoCoin || 'BTC');
+    setCryptoCoin(transaction.cryptoCoin || transaction.buyerPreferredCoin || 'BTC');
     setNotes('');
     setDialogOpen(true);
   };
@@ -318,6 +324,31 @@ export default function AdminTransactions() {
                   </div>
                 )}
               </div>
+
+              {/* Buyer's preferred payment method */}
+              {selectedTransaction.buyerPaymentMethod && (
+                <div className="flex items-start gap-2 p-3 rounded-md border bg-primary/5 text-sm">
+                  {selectedTransaction.buyerPaymentMethod === 'crypto' ? (
+                    <Bitcoin className="w-4 h-4 mt-0.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                  ) : (
+                    <Building2 className="w-4 h-4 mt-0.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                  )}
+                  <div>
+                    <p className="font-medium">
+                      Buyer prefers: <span className="capitalize">{selectedTransaction.buyerPaymentMethod}</span>
+                      {selectedTransaction.buyerPaymentMethod === 'crypto' && selectedTransaction.buyerPreferredCoin && (
+                        <> — {selectedTransaction.buyerPreferredCoin}</>
+                      )}
+                      {selectedTransaction.buyerPaymentMethod === 'crypto' && selectedTransaction.buyerPreferredNetwork && (
+                        <> ({selectedTransaction.buyerPreferredNetwork})</>
+                      )}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      You can honor or override this preference below.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Status selector */}
               <div className="space-y-2">

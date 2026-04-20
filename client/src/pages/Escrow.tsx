@@ -18,6 +18,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
+import PaymentMethodPicker, { type PaymentMethodValue } from '@/components/PaymentMethodPicker';
 
 const customEscrowSchema = z.object({
   vehicleDescription: z.string().min(10, 'Please provide a detailed vehicle description (at least 10 characters)'),
@@ -38,6 +39,7 @@ export default function Escrow() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
+  const [paymentPref, setPaymentPref] = useState<PaymentMethodValue>({ buyerPaymentMethod: 'bank' });
 
   const form = useForm<CustomEscrowForm>({
     resolver: zodResolver(customEscrowSchema),
@@ -74,6 +76,9 @@ export default function Escrow() {
         inspectionDays: parseInt(data.inspectionDays),
         sellerEmail: data.sellerEmail || null,
         sellerName: data.sellerName || null,
+        buyerPaymentMethod: paymentPref.buyerPaymentMethod,
+        buyerPreferredCoin: paymentPref.buyerPreferredCoin || null,
+        buyerPreferredNetwork: paymentPref.buyerPreferredNetwork || null,
       });
       const result = await response.json();
       return result as { id: number; guestToken: string };
@@ -549,6 +554,12 @@ export default function Escrow() {
                         </FormItem>
                       )}
                     />
+                  </div>
+
+                  {/* Payment Method Preference */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Payment Preference</h3>
+                    <PaymentMethodPicker value={paymentPref} onChange={setPaymentPref} />
                   </div>
 
                   <Button 
