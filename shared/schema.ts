@@ -131,7 +131,11 @@ export const transactions = pgTable('transactions', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-export const insertTransactionSchema = createInsertSchema(transactions).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertTransactionSchema = createInsertSchema(transactions, {
+  buyerPaymentMethod: z.enum(['bank', 'crypto']).optional(),
+  buyerPreferredCoin: z.string().trim().max(20).optional(),
+  buyerPreferredNetwork: z.string().trim().max(40).optional(),
+}).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 

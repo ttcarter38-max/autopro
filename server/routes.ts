@@ -393,19 +393,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initiate transaction (customer/guest — dealership vehicle)
   app.post('/api/transactions', async (req, res) => {
     try {
+      // Schema enforces: buyerPaymentMethod must be 'bank'|'crypto';
+      // buyerPreferredCoin/Network are trimmed and length-capped.
       const transactionData = insertTransactionSchema.parse(req.body);
       const guestToken = req.isAuthenticated() ? null : randomUUID();
       const sellerToken = randomUUID();
-
-      // Whitelist buyer payment preference inputs (constrain enum + length)
-      const rawMethod = (req.body as any)?.buyerPaymentMethod;
-      const rawCoin = (req.body as any)?.buyerPreferredCoin;
-      const rawNetwork = (req.body as any)?.buyerPreferredNetwork;
-      const buyerPaymentMethod = (rawMethod === 'bank' || rawMethod === 'crypto') ? rawMethod : undefined;
-      const buyerPreferredCoin = typeof rawCoin === 'string' && rawCoin.trim()
-        ? rawCoin.trim().slice(0, 20) : undefined;
-      const buyerPreferredNetwork = typeof rawNetwork === 'string' && rawNetwork.trim()
-        ? rawNetwork.trim().slice(0, 40) : undefined;
 
       const insertData: any = {
         ...transactionData,
@@ -413,9 +405,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sellerToken,
         sellerStatus: 'pending',
         status: 'initiated',
-        ...(buyerPaymentMethod ? { buyerPaymentMethod } : {}),
-        ...(buyerPreferredCoin ? { buyerPreferredCoin } : {}),
-        ...(buyerPreferredNetwork ? { buyerPreferredNetwork } : {}),
       };
       if (req.isAuthenticated()) {
         const rawId = (req.user as any).id;
