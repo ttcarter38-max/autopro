@@ -20,8 +20,7 @@ interface Props {
   showCryptoInfoCard?: boolean;
 }
 
-const COMMON_COINS = ['BTC', 'ETH', 'USDT', 'USDC', 'BNB', 'SOL', 'LTC', 'XRP'];
-const COMMON_NETWORKS = ['ERC-20', 'TRC-20', 'BEP-20', 'Polygon', 'Solana', 'Bitcoin', 'Lightning'];
+const COMMON_COINS = ['BTC', 'ETH', 'USDT', 'BNB', 'SOL'];
 
 export default function PaymentMethodPicker({ value, onChange, showCryptoInfoCard = true }: Props) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -93,20 +92,14 @@ export default function PaymentMethodPicker({ value, onChange, showCryptoInfoCar
               </div>
               <div className="space-y-1">
                 <Label htmlFor="preferred-network" className="text-xs">Preferred Network</Label>
-                <Select
-                  value={value.buyerPreferredNetwork || '__any__'}
-                  onValueChange={(v) => onChange({ ...value, buyerPreferredNetwork: v === '__any__' ? undefined : v })}
-                >
-                  <SelectTrigger id="preferred-network" data-testid="select-preferred-network">
-                    <SelectValue placeholder="Any" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__any__">Any / Let admin choose</SelectItem>
-                    {COMMON_NETWORKS.map(n => (
-                      <SelectItem key={n} value={n}>{n}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="preferred-network"
+                  placeholder="e.g. ERC-20, TRC-20, BEP-20"
+                  value={value.buyerPreferredNetwork || ''}
+                  onChange={(e) => onChange({ ...value, buyerPreferredNetwork: e.target.value || undefined })}
+                  maxLength={40}
+                  data-testid="input-preferred-network"
+                />
               </div>
               <p className="text-xs text-muted-foreground sm:col-span-2 flex gap-1.5 items-start">
                 <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
