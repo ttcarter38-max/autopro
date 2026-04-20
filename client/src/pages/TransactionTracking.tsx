@@ -233,7 +233,7 @@ export default function TransactionTracking() {
                               </div>
                             ) : null}
 
-                            {transaction.paymentMethod === 'crypto' && transaction.cryptoAddress && (
+                            {(transaction.paymentMethod === 'crypto' || transaction.buyerPaymentMethod === 'crypto') && (
                               <BuyerCryptoInfo />
                             )}
 
