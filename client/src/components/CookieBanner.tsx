@@ -29,39 +29,33 @@ export default function CookieBanner() {
 
   return (
     <div
-      className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-md z-50 rounded-md border bg-card text-card-foreground shadow-lg"
+      className="fixed bottom-4 left-4 right-4 sm:right-auto sm:bottom-4 sm:left-4 sm:max-w-xs z-50 rounded-md border bg-card text-card-foreground shadow-lg"
       data-testid="banner-cookie"
       role="dialog"
       aria-label="Cookie consent"
     >
-      <div className="p-4">
-        <div className="flex items-start gap-3">
-          <div className="rounded-md bg-primary/10 p-2 text-primary">
-            <Cookie className="w-5 h-5" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold mb-1">We use cookies</p>
-            <p className="text-sm text-muted-foreground">
-              We use essential cookies to keep you signed in and a few analytics cookies to improve
-              the site. See our{' '}
-              <a href="/privacy" className="text-primary hover:underline">
-                Privacy Policy
-              </a>
-              .
-            </p>
-          </div>
+      <div className="p-3">
+        <div className="flex items-start gap-2">
+          <Cookie className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+          <p className="text-xs text-muted-foreground flex-1 leading-snug">
+            We use cookies to keep you signed in and improve the site.{' '}
+            <a href="/privacy" className="text-primary hover:underline">
+              Learn more
+            </a>
+            .
+          </p>
           <button
             onClick={() => decide('declined')}
             aria-label="Dismiss"
-            className="text-muted-foreground hover-elevate rounded-md p-1"
+            className="text-muted-foreground hover-elevate rounded-md p-0.5 shrink-0"
             data-testid="button-cookie-close"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
-        <div className="flex gap-2 justify-end mt-4">
+        <div className="flex gap-2 justify-end mt-2">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => decide('declined')}
             data-testid="button-cookie-decline"
@@ -74,7 +68,7 @@ export default function CookieBanner() {
             onClick={() => decide('accepted')}
             data-testid="button-cookie-accept"
           >
-            Accept all
+            Accept
           </Button>
         </div>
       </div>
