@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
+import { useSearch } from 'wouter';
 import { Search, SlidersHorizontal, X, Car, Caravan, Sailboat, Bike, Tractor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,13 +33,12 @@ const PRICE_RANGES = [
 ];
 
 export default function Inventory() {
-  const [location] = useLocation();
+  const search_str = useSearch();
   const categoryParam = useMemo(() => {
-    const qs = location.includes('?') ? location.split('?')[1] : '';
-    const params = new URLSearchParams(qs || (typeof window !== 'undefined' ? window.location.search : ''));
+    const params = new URLSearchParams(search_str || '');
     const c = params.get('category');
     return c && CATEGORY_META[c] ? c : null;
-  }, [location]);
+  }, [search_str]);
 
   const [search, setSearch] = useState('');
   const [condition, setCondition] = useState('all');

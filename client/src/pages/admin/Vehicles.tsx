@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useState } from 'react';
-import { Plus, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Plus, Edit, Trash2, Image as ImageIcon, Car, Caravan, Sailboat, Bike, Tractor, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -55,7 +55,30 @@ export default function AdminVehicles() {
     },
   });
 
-  const vehicles = vehiclesData?.vehicles || [];
+  const allVehicles: any[] = (vehiclesData as any)?.vehicles || [];
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+
+  const CAT_TABS = [
+    { value: 'all', label: 'All', Icon: LayoutGrid },
+    { value: 'car', label: 'Cars', Icon: Car },
+    { value: 'rv', label: 'RVs', Icon: Caravan },
+    { value: 'boat', label: 'Boats', Icon: Sailboat },
+    { value: 'bike', label: 'Motorcycles', Icon: Bike },
+    { value: 'tractor', label: 'Tractors', Icon: Tractor },
+  ];
+
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { all: allVehicles.length };
+    for (const v of allVehicles) {
+      const k = v.category || 'car';
+      c[k] = (c[k] || 0) + 1;
+    }
+    return c;
+  }, [allVehicles]);
+
+  const vehicles = categoryFilter === 'all'
+    ? allVehicles
+    : allVehicles.filter((v) => (v.category || 'car') === categoryFilter);
 
   return (
     <AdminLayout>
@@ -73,9 +96,29 @@ export default function AdminVehicles() {
           </Button>
         </div>
 
+        <div className="flex flex-wrap gap-2">
+          {CAT_TABS.map((t) => (
+            <Button
+              key={t.value}
+              variant={categoryFilter === t.value ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setCategoryFilter(t.value)}
+              data-testid={`button-admin-cat-${t.value}`}
+            >
+              <t.Icon className="w-4 h-4 mr-2" />
+              {t.label}
+              <Badge variant="secondary" className="ml-2">
+                {counts[t.value] || 0}
+              </Badge>
+            </Button>
+          ))}
+        </div>
+
         <Card>
           <CardHeader>
-            <CardTitle>All Vehicles</CardTitle>
+            <CardTitle>
+              {CAT_TABS.find((t) => t.value === categoryFilter)?.label || 'All'} ({vehicles.length})
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
