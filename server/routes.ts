@@ -3,10 +3,68 @@ import { createServer, type Server } from "http";
 import multer from "multer";
 import path from "path";
 import { randomUUID } from "crypto";
+import { z } from "zod";
 import passport from "./auth";
 import { isAuthenticated, isAdmin } from "./auth";
 import { storage } from "./storage";
-import { insertVehicleSchema, insertVehicleOfferSchema, insertTransactionSchema } from "@shared/schema";
+import { insertVehicleSchema, insertVehicleOfferSchema, insertTransactionSchema, insertTestimonialSchema } from "@shared/schema";
+import {
+  authLimiter,
+  registerLimiter,
+  contactLimiter,
+  transactionLimiter,
+  sellerActionLimiter,
+} from "./middleware/rateLimit";
+
+// ── Strict input schemas (whitelisted; protect against mass-assignment) ─────
+const buyerTransactionInputSchema = z.object({
+  vehicleId: z.coerce.number().int().positive(),
+  buyerName: z.string().trim().min(1).max(120),
+  buyerEmail: z.string().trim().email().max(160),
+  buyerPhone: z.string().trim().min(5).max(40),
+  shippingAddress: z.string().trim().min(5).max(500),
+  inspectionDays: z.coerce.number().int().min(1).max(30),
+  buyerPaymentMethod: z.enum(['bank', 'crypto']).optional(),
+  buyerPreferredCoin: z.string().trim().max(20).nullish(),
+  buyerPreferredNetwork: z.string().trim().max(40).nullish(),
+});
+
+const customTransactionInputSchema = z.object({
+  customVehicleDescription: z.string().trim().min(3).max(1000),
+  amount: z.coerce.number().positive().max(100_000_000),
+  buyerName: z.string().trim().min(1).max(120),
+  buyerEmail: z.string().trim().email().max(160),
+  buyerPhone: z.string().trim().min(5).max(40),
+  shippingAddress: z.string().trim().min(5).max(500),
+  inspectionDays: z.coerce.number().int().min(1).max(30).default(3),
+  sellerEmail: z.string().trim().email().max(160).optional().or(z.literal('')),
+  sellerName: z.string().trim().max(120).optional().or(z.literal('')),
+  sellerPhone: z.string().trim().max(40).optional().or(z.literal('')),
+  buyerPaymentMethod: z.enum(['bank', 'crypto']).optional(),
+  buyerPreferredCoin: z.string().trim().max(20).optional(),
+  buyerPreferredNetwork: z.string().trim().max(40).optional(),
+});
+
+const TX_STATUSES = [
+  'initiated',
+  'awaiting_admin_approval',
+  'awaiting_payment_confirmation',
+  'in_transit',
+  'inspection',
+  'approved',
+  'released',
+  'cancelled',
+] as const;
+
+const adminUpdateTransactionSchema = z.object({
+  status: z.enum(TX_STATUSES).optional(),
+  bankInfo: z.string().max(2000).nullable().optional(),
+  paymentMethod: z.enum(['bank', 'crypto']).optional(),
+  cryptoAddress: z.string().max(200).nullable().optional(),
+  cryptoCoin: z.string().max(20).nullable().optional(),
+  notes: z.string().max(2000).optional(),
+});
+
 import {
   sendBuyerTransactionInitiated,
   sendSellerTransactionNotification,
@@ -105,7 +163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ===== AUTHENTICATION ROUTES =====
 
-  app.post('/api/auth/login', (req, res, next) => {
+  app.post('/api/auth/login', authLimiter, (req, res, next) => {
     passport.authenticate('local', (err: any, user: any, info: any) => {
       if (err) return res.status(500).json({ error: 'Authentication error' });
       if (!user) return res.status(401).json({ error: info?.message || 'Invalid credentials' });
@@ -130,7 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ user: userWithoutPassword });
   });
 
-  app.post('/api/auth/register', async (req, res) => {
+  app.post('/api/auth/register', registerLimiter, async (req, res) => {
     try {
       const { email, password, name, phone } = req.body;
       if (!email || !password || !name) {
@@ -167,7 +225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ===== CONTACT FORM ROUTE =====
 
-  app.post('/api/contact', async (req, res) => {
+  app.post('/api/contact', contactLimiter, async (req, res) => {
     try {
       const { name, email, phone, subject, message } = req.body;
       if (!name || !email || !subject || !message) {
@@ -267,11 +325,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/admin/vehicles/:id', isAdmin, upload.array('images', 10), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const updateData: any = { ...req.body };
-      if (req.body.year) updateData.year = parseInt(req.body.year);
-      if (req.body.mileage) updateData.mileage = parseInt(req.body.mileage);
-      if (req.body.featured !== undefined) updateData.featured = req.body.featured === 'true';
-      if (req.body.available !== undefined) updateData.available = req.body.available !== 'false';
+      const normalized: any = { ...req.body };
+      if (req.body.year) normalized.year = parseInt(req.body.year);
+      if (req.body.mileage) normalized.mileage = parseInt(req.body.mileage);
+      if (req.body.featured !== undefined) normalized.featured = req.body.featured === 'true';
+      if (req.body.available !== undefined) normalized.available = req.body.available !== 'false';
+      // Validate against insert schema (partial — patch may set any subset)
+      const updateData = insertVehicleSchema.partial().parse(normalized);
       const vehicle = await storage.updateVehicle(id, updateData);
       if (!vehicle) return res.status(404).json({ error: 'Vehicle not found' });
       const files = req.files as Express.Multer.File[];
@@ -376,7 +436,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/admin/offers/:id', isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const offer = await storage.updateOffer(id, req.body);
+      const updateData = insertVehicleOfferSchema.partial().parse(req.body);
+      const offer = await storage.updateOffer(id, updateData);
       if (!offer) return res.status(404).json({ error: 'Offer not found' });
       res.json({ offer });
     } catch (error: any) {
@@ -397,21 +458,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ===== TRANSACTION ROUTES =====
 
   // Initiate transaction (customer/guest — dealership vehicle)
-  app.post('/api/transactions', async (req, res) => {
+  app.post('/api/transactions', transactionLimiter, async (req, res) => {
     try {
-      // Schema enforces: buyerPaymentMethod must be 'bank'|'crypto';
-      // buyerPreferredCoin/Network are trimmed and length-capped.
-      const transactionData = insertTransactionSchema.parse(req.body);
+      // Strict whitelist — never trust client-supplied amount, status, tokens,
+      // seller fields, payment fields, or buyerId.
+      const input = buyerTransactionInputSchema.parse(req.body);
+
+      // Resolve vehicle and derive amount server-side.
+      const vehicle = await storage.getVehicle(input.vehicleId);
+      if (!vehicle) return res.status(404).json({ error: 'Vehicle not found' });
+      if (vehicle.available === false) {
+        return res.status(409).json({ error: 'Vehicle is no longer available' });
+      }
+      const activeOffer = await storage.getActiveOffer(input.vehicleId).catch(() => null);
+      const serverAmount = activeOffer?.discountedPrice || vehicle.price;
+
       const guestToken = req.isAuthenticated() ? null : randomUUID();
       const sellerToken = randomUUID();
 
       const insertData: any = {
-        ...transactionData,
+        vehicleId: input.vehicleId,
+        buyerName: input.buyerName,
+        buyerEmail: input.buyerEmail,
+        buyerPhone: input.buyerPhone,
+        shippingAddress: input.shippingAddress,
+        inspectionDays: input.inspectionDays,
+        amount: String(serverAmount),
         guestToken,
         sellerToken,
         sellerStatus: 'pending',
         status: 'initiated',
       };
+      if (input.buyerPaymentMethod) insertData.buyerPaymentMethod = input.buyerPaymentMethod;
+      if (input.buyerPreferredCoin) insertData.buyerPreferredCoin = input.buyerPreferredCoin;
+      if (input.buyerPreferredNetwork) insertData.buyerPreferredNetwork = input.buyerPreferredNetwork;
+
       if (req.isAuthenticated()) {
         const rawId = (req.user as any).id;
         const parsedId = parseInt(String(rawId), 10);
@@ -459,17 +540,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Initiate custom escrow (private sale)
-  app.post('/api/transactions/custom', async (req, res) => {
+  app.post('/api/transactions/custom', transactionLimiter, async (req, res) => {
     try {
+      const input = customTransactionInputSchema.parse(req.body);
       const {
         customVehicleDescription, amount, buyerName, buyerEmail, buyerPhone,
         shippingAddress, inspectionDays, sellerEmail, sellerName, sellerPhone,
         buyerPaymentMethod, buyerPreferredCoin, buyerPreferredNetwork,
-      } = req.body;
-
-      if (!customVehicleDescription || !amount || !buyerName || !buyerEmail || !buyerPhone || !shippingAddress) {
-        return res.status(400).json({ error: 'Missing required fields' });
-      }
+      } = input;
 
       const guestToken = randomUUID();
       const sellerToken = randomUUID();
@@ -483,29 +561,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sellerToken,
         sellerStatus: 'pending',
         status: 'initiated',
-        buyerName: String(buyerName).trim(),
-        buyerEmail: String(buyerEmail).trim(),
-        buyerPhone: String(buyerPhone).trim(),
-        shippingAddress: String(shippingAddress).trim(),
-        amount: parseFloat(String(amount)).toFixed(2),
-        inspectionDays: parseInt(String(inspectionDays)) || 3,
-        customVehicleDescription: String(customVehicleDescription).trim(),
-        sellerEmail: sellerEmail && String(sellerEmail).trim() ? String(sellerEmail).trim() : null,
-        sellerName: sellerName && String(sellerName).trim() ? String(sellerName).trim() : null,
-        sellerPhone: sellerPhone && String(sellerPhone).trim() ? String(sellerPhone).trim() : null,
+        buyerName,
+        buyerEmail,
+        buyerPhone,
+        shippingAddress,
+        amount: amount.toFixed(2),
+        inspectionDays,
+        customVehicleDescription,
+        sellerEmail: sellerEmail || null,
+        sellerName: sellerName || null,
+        sellerPhone: sellerPhone || null,
         notes: 'Custom escrow transaction for private sale',
       };
 
-      // Buyer payment preference (whitelisted, optional)
-      if (buyerPaymentMethod === 'bank' || buyerPaymentMethod === 'crypto') {
-        transactionData.buyerPaymentMethod = buyerPaymentMethod;
-      }
-      if (buyerPreferredCoin && typeof buyerPreferredCoin === 'string') {
-        transactionData.buyerPreferredCoin = String(buyerPreferredCoin).trim().slice(0, 20);
-      }
-      if (buyerPreferredNetwork && typeof buyerPreferredNetwork === 'string') {
-        transactionData.buyerPreferredNetwork = String(buyerPreferredNetwork).trim().slice(0, 40);
-      }
+      if (buyerPaymentMethod) transactionData.buyerPaymentMethod = buyerPaymentMethod;
+      if (buyerPreferredCoin) transactionData.buyerPreferredCoin = buyerPreferredCoin;
+      if (buyerPreferredNetwork) transactionData.buyerPreferredNetwork = buyerPreferredNetwork;
 
       if (safeBuyerId !== null) transactionData.buyerId = safeBuyerId;
 
@@ -579,7 +650,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Seller accepts transaction (one-click GET from email link)
-  app.get('/api/seller/:token/accept', async (req, res) => {
+  app.get('/api/seller/:token/accept', sellerActionLimiter, async (req, res) => {
     try {
       let transaction = null;
       try { transaction = await storage.getTransactionBySellerToken(req.params.token); } catch (_) {}
@@ -623,7 +694,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Seller rejects transaction (one-click GET from email link)
-  app.get('/api/seller/:token/reject', async (req, res) => {
+  app.get('/api/seller/:token/reject', sellerActionLimiter, async (req, res) => {
     try {
       let transaction = null;
       try { transaction = await storage.getTransactionBySellerToken(req.params.token); } catch (_) {}
@@ -668,7 +739,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ===== PAYMENT PROOF UPLOAD =====
 
-  app.post('/api/transactions/:idOrToken/payment-proof', uploadProof.single('proof'), async (req, res) => {
+  app.post('/api/transactions/:idOrToken/payment-proof', transactionLimiter, uploadProof.single('proof'), async (req, res) => {
     try {
       const { idOrToken } = req.params;
       const { bankRef } = req.body;
@@ -795,7 +866,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/admin/transactions/:id', isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const { status, bankInfo, paymentMethod, cryptoAddress, cryptoCoin, notes } = req.body;
+      const parsed = adminUpdateTransactionSchema.parse(req.body);
+      const { status, bankInfo, paymentMethod, cryptoAddress, cryptoCoin, notes } = parsed;
 
       const previousTransaction = await storage.getTransaction(id);
       if (!previousTransaction) return res.status(404).json({ error: 'Transaction not found' });
@@ -922,19 +994,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/admin/testimonials', isAdmin, upload.single('photo'), async (req, res) => {
     try {
       const file = req.file as Express.Multer.File | undefined;
-      const { customerName, vehicle, location, quote, displayOrder, active } = req.body;
-      if (!customerName || !quote) return res.status(400).json({ error: 'customerName and quote are required' });
-      if (!file && !req.body.photoUrl) return res.status(400).json({ error: 'photo is required' });
       const photoUrl = file ? `/uploads/${file.filename}` : req.body.photoUrl;
-      const created = await storage.createTestimonial({
-        customerName,
-        vehicle: vehicle || null,
-        location: location || null,
-        quote,
+      if (!photoUrl) return res.status(400).json({ error: 'photo is required' });
+      const data = insertTestimonialSchema.parse({
+        customerName: req.body.customerName,
+        vehicle: req.body.vehicle || null,
+        location: req.body.location || null,
+        quote: req.body.quote,
         photoUrl,
-        displayOrder: displayOrder ? parseInt(displayOrder) : 0,
-        active: active === 'false' ? false : true,
+        displayOrder: req.body.displayOrder ? parseInt(req.body.displayOrder) : 0,
+        active: req.body.active === 'false' ? false : true,
       });
+      const created = await storage.createTestimonial(data);
       res.status(201).json({ testimonial: created });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -945,15 +1016,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const file = req.file as Express.Multer.File | undefined;
-      const update: any = {};
+      const raw: any = {};
       const { customerName, vehicle, location, quote, displayOrder, active } = req.body;
-      if (customerName !== undefined) update.customerName = customerName;
-      if (vehicle !== undefined) update.vehicle = vehicle || null;
-      if (location !== undefined) update.location = location || null;
-      if (quote !== undefined) update.quote = quote;
-      if (displayOrder !== undefined) update.displayOrder = parseInt(displayOrder) || 0;
-      if (active !== undefined) update.active = active === 'true' || active === true;
-      if (file) update.photoUrl = `/uploads/${file.filename}`;
+      if (customerName !== undefined) raw.customerName = customerName;
+      if (vehicle !== undefined) raw.vehicle = vehicle || null;
+      if (location !== undefined) raw.location = location || null;
+      if (quote !== undefined) raw.quote = quote;
+      if (displayOrder !== undefined) raw.displayOrder = parseInt(displayOrder) || 0;
+      if (active !== undefined) raw.active = active === 'true' || active === true;
+      if (file) raw.photoUrl = `/uploads/${file.filename}`;
+      const update = insertTestimonialSchema.partial().parse(raw);
       const updated = await storage.updateTestimonial(id, update);
       if (!updated) return res.status(404).json({ error: 'Not found' });
       res.json({ testimonial: updated });

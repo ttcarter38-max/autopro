@@ -1,7 +1,11 @@
-// Gmail integration via Replit connectors SDK
+// Email sending — Resend (primary) with Gmail (fallback) via Replit connectors
+import { Resend } from 'resend';
 import { ReplitConnectors } from '@replit/connectors-sdk';
 
 const connectors = new ReplitConnectors();
+const resendApiKey = process.env.RESEND_API_KEY;
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
+const FROM_ADDRESS = process.env.RESEND_FROM || 'AutoPro Escrow <onboarding@resend.dev>';
 
 function getBaseUrl(): string {
   const domain = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN;
@@ -11,7 +15,6 @@ function getBaseUrl(): string {
 interface EmailData { to: string; subject: string; html: string; }
 
 function mimeEncodeSubject(subject: string): string {
-  // MIME encoded-word format for UTF-8 subjects (handles em dashes, special chars)
   return `=?UTF-8?B?${Buffer.from(subject).toString('base64')}?=`;
 }
 
@@ -25,11 +28,10 @@ function buildRawEmail(to: string, subject: string, html: string): string {
     html,
   ];
   const raw = lines.join('\r\n');
-  // base64url encode (Gmail requires base64url, not standard base64)
   return Buffer.from(raw).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-export async function sendEmail(data: EmailData): Promise<boolean> {
+async function sendViaGmail(data: EmailData): Promise<boolean> {
   try {
     const rawMessage = buildRawEmail(data.to, data.subject, data.html);
     const response = await connectors.proxy('google-mail', '/gmail/v1/users/me/messages/send', {
@@ -43,12 +45,43 @@ export async function sendEmail(data: EmailData): Promise<boolean> {
       return false;
     }
     const result = await response.json() as any;
-    console.log(`📧 Email sent via Gmail to ${data.to} (id: ${result.id})`);
+    console.log(`Email sent via Gmail to ${data.to} (id: ${result.id})`);
     return true;
   } catch (err) {
     console.error('Failed to send email via Gmail:', err);
     return false;
   }
+}
+
+async function sendViaResend(data: EmailData): Promise<boolean> {
+  if (!resend) return false;
+  try {
+    const result = await resend.emails.send({
+      from: FROM_ADDRESS,
+      to: data.to,
+      subject: data.subject,
+      html: data.html,
+    });
+    if (result.error) {
+      console.error('Resend send error:', result.error);
+      return false;
+    }
+    console.log(`Email sent via Resend to ${data.to} (id: ${result.data?.id})`);
+    return true;
+  } catch (err) {
+    console.error('Failed to send email via Resend:', err);
+    return false;
+  }
+}
+
+export async function sendEmail(data: EmailData): Promise<boolean> {
+  // Prefer Resend when configured; fall back to Gmail connector.
+  if (resend) {
+    const ok = await sendViaResend(data);
+    if (ok) return true;
+    console.warn('Resend failed — falling back to Gmail connector');
+  }
+  return sendViaGmail(data);
 }
 
 // ── Shared email wrapper ─────────────────────────────────────────────────────
