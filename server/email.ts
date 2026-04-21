@@ -338,6 +338,33 @@ export async function sendSellerFundsReleased(transaction: {
   });
 }
 
+// ── Welcome email — new user registration ────────────────────────────────────
+export async function sendWelcomeEmail(user: { name: string; email: string }) {
+  const base = getBaseUrl();
+  const html = emailWrapper(`
+    <h2 style="color:#111;margin-top:0;">Welcome to AutoPro, ${user.name}!</h2>
+    <p>Thanks for creating an account with us. You're all set to:</p>
+    <ul style="line-height:1.8;">
+      <li>Browse our full inventory of new and used vehicles</li>
+      <li>Start a secure escrow purchase on any listing</li>
+      <li>Initiate a custom escrow for a private vehicle sale</li>
+      <li>Track all of your transactions in one place</li>
+    </ul>
+    ${ctaButton('Browse Vehicles', `${base}/inventory`)}
+    <p style="font-size:14px;color:#555;">
+      Your account email: <strong>${user.email}</strong>
+    </p>
+    <p style="font-size:14px;">
+      If you didn't create this account, please contact us right away.
+    </p>`);
+
+  return sendEmail({
+    to: user.email,
+    subject: `Welcome to AutoPro, ${user.name}`,
+    html,
+  });
+}
+
 // ── Contact form — notify admin ──────────────────────────────────────────────
 export async function sendContactFormEmail(data: {
   name: string; email: string; phone?: string; subject: string; message: string;

@@ -17,6 +17,7 @@ import {
   sendSellerPaymentReceived,
   sendSellerFundsReleased,
   sendContactFormEmail,
+  sendWelcomeEmail,
 } from "./email";
 
 // Seller action password (configurable via env var)
@@ -149,6 +150,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         phone: phone || null,
         role: 'customer',
       });
+      // Fire-and-forget welcome email (do not block registration on email)
+      sendWelcomeEmail({ name: newUser.name, email: newUser.email })
+        .catch(e => console.error('Welcome email failed:', e));
+
       req.logIn(newUser, (err) => {
         if (err) return res.status(500).json({ error: 'Could not log you in after registration' });
         const { password: _pw, ...userWithoutPassword } = newUser as any;
