@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import truckBanner from '@assets/8872a0c0-1aeb-4ad3-a144-7f94de3ad2d5_1776239408426.png';
 import escrowBanner from '@assets/be14b73b-d8b1-4252-8d28-cacc0d9b235e_1776239412239.png';
@@ -90,6 +90,12 @@ export default function HeroSlider() {
           >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
               <div className="text-white max-w-2xl">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 backdrop-blur-sm px-3 py-1 mb-5" data-testid={`badge-exclusive-${index}`}>
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-white">
+                    By Invitation Only · 10 Per Category
+                  </span>
+                </div>
                 <p className="text-xs font-bold tracking-[0.25em] mb-4 text-primary uppercase" data-testid={`text-eyebrow-${index}`}>
                   {slide.eyebrow}
                 </p>
