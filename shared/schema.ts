@@ -159,3 +159,20 @@ export const transactionEvents = pgTable('transaction_events', {
 export const insertTransactionEventSchema = createInsertSchema(transactionEvents).omit({ id: true, createdAt: true });
 export type InsertTransactionEvent = z.infer<typeof insertTransactionEventSchema>;
 export type TransactionEvent = typeof transactionEvents.$inferSelect;
+
+// Customer Testimonials (shown in About page carousel)
+export const testimonials = pgTable('testimonials', {
+  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+  customerName: text('customer_name').notNull(),
+  vehicle: text('vehicle'),               // e.g. "2024 Tesla Model Y"
+  location: text('location'),             // e.g. "Lagos, Nigeria"
+  quote: text('quote').notNull(),
+  photoUrl: text('photo_url').notNull(),
+  displayOrder: integer('display_order').default(0).notNull(),
+  active: boolean('active').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const insertTestimonialSchema = createInsertSchema(testimonials).omit({ id: true, createdAt: true });
+export type InsertTestimonial = z.infer<typeof insertTestimonialSchema>;
+export type Testimonial = typeof testimonials.$inferSelect;

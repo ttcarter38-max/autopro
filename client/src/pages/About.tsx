@@ -1,4 +1,5 @@
 import { Link } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
 import {
   Shield,
   Lock,
@@ -14,11 +15,28 @@ import {
   Bike,
   Tractor,
   ArrowRight,
+  Quote,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+
+interface Testimonial {
+  id: number;
+  customerName: string;
+  vehicle: string | null;
+  location: string | null;
+  quote: string;
+  photoUrl: string;
+}
 
 const VALUES = [
   {
@@ -77,6 +95,11 @@ const CATEGORIES = [
 ];
 
 export default function About() {
+  const { data: tData } = useQuery<{ testimonials: Testimonial[] }>({
+    queryKey: ['/api/testimonials'],
+  });
+  const testimonials = tData?.testimonials || [];
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -173,6 +196,73 @@ export default function About() {
           </div>
         </div>
       </section>
+
+      {/* Customer Testimonials Carousel */}
+      {testimonials.length > 0 && (
+        <section className="bg-black text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
+            <div className="text-center max-w-2xl mx-auto mb-10">
+              <p className="text-primary text-sm font-semibold tracking-widest uppercase mb-3">
+                Happy Customers
+              </p>
+              <h2 className="text-3xl md:text-4xl font-heading font-bold" data-testid="text-testimonials-title">
+                Real people. Real keys in their hands.
+              </h2>
+              <p className="text-gray-400 mt-3">
+                A few of our recent customers with their new rides.
+              </p>
+            </div>
+
+            <Carousel
+              opts={{ align: 'start', loop: testimonials.length > 1 }}
+              className="w-full"
+              data-testid="carousel-testimonials"
+            >
+              <CarouselContent className="-ml-4">
+                {testimonials.map((t) => (
+                  <CarouselItem
+                    key={t.id}
+                    className="pl-4 md:basis-1/2 lg:basis-1/3"
+                    data-testid={`testimonial-item-${t.id}`}
+                  >
+                    <Card className="overflow-hidden h-full bg-zinc-900 border-zinc-800 text-white">
+                      <div className="aspect-[4/3] overflow-hidden bg-zinc-800">
+                        <img
+                          src={t.photoUrl}
+                          alt={`${t.customerName} with their ${t.vehicle || 'new vehicle'}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <CardContent className="p-6 space-y-4">
+                        <Quote className="w-6 h-6 text-primary" />
+                        <p className="text-sm leading-relaxed text-gray-200 italic">
+                          "{t.quote}"
+                        </p>
+                        <div className="pt-3 border-t border-zinc-800">
+                          <div className="font-heading font-semibold" data-testid={`testimonial-name-${t.id}`}>
+                            {t.customerName}
+                          </div>
+                          {(t.vehicle || t.location) && (
+                            <div className="text-xs text-gray-400 mt-0.5">
+                              {[t.vehicle, t.location].filter(Boolean).join(' • ')}
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              {testimonials.length > 1 && (
+                <>
+                  <CarouselPrevious className="hidden sm:flex -left-4 bg-white text-black border-0 hover:bg-white/90" data-testid="button-carousel-prev" />
+                  <CarouselNext className="hidden sm:flex -right-4 bg-white text-black border-0 hover:bg-white/90" data-testid="button-carousel-next" />
+                </>
+              )}
+            </Carousel>
+          </div>
+        </section>
+      )}
 
       {/* Values */}
       <section className="bg-muted/30 border-y">

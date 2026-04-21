@@ -900,6 +900,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== TESTIMONIALS ROUTES =====
+  app.get('/api/testimonials', async (_req, res) => {
+    try {
+      const items = await storage.getActiveTestimonials();
+      res.json({ testimonials: items });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/admin/testimonials', isAdmin, async (_req, res) => {
+    try {
+      const items = await storage.getAllTestimonials();
+      res.json({ testimonials: items });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post('/api/admin/testimonials', isAdmin, upload.single('photo'), async (req, res) => {
+    try {
+      const file = req.file as Express.Multer.File | undefined;
+      const { customerName, vehicle, location, quote, displayOrder, active } = req.body;
+      if (!customerName || !quote) return res.status(400).json({ error: 'customerName and quote are required' });
+      if (!file && !req.body.photoUrl) return res.status(400).json({ error: 'photo is required' });
+      const photoUrl = file ? `/uploads/${file.filename}` : req.body.photoUrl;
+      const created = await storage.createTestimonial({
+        customerName,
+        vehicle: vehicle || null,
+        location: location || null,
+        quote,
+        photoUrl,
+        displayOrder: displayOrder ? parseInt(displayOrder) : 0,
+        active: active === 'false' ? false : true,
+      });
+      res.status(201).json({ testimonial: created });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch('/api/admin/testimonials/:id', isAdmin, upload.single('photo'), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const file = req.file as Express.Multer.File | undefined;
+      const update: any = {};
+      const { customerName, vehicle, location, quote, displayOrder, active } = req.body;
+      if (customerName !== undefined) update.customerName = customerName;
+      if (vehicle !== undefined) update.vehicle = vehicle || null;
+      if (location !== undefined) update.location = location || null;
+      if (quote !== undefined) update.quote = quote;
+      if (displayOrder !== undefined) update.displayOrder = parseInt(displayOrder) || 0;
+      if (active !== undefined) update.active = active === 'true' || active === true;
+      if (file) update.photoUrl = `/uploads/${file.filename}`;
+      const updated = await storage.updateTestimonial(id, update);
+      if (!updated) return res.status(404).json({ error: 'Not found' });
+      res.json({ testimonial: updated });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete('/api/admin/testimonials/:id', isAdmin, async (req, res) => {
+    try {
+      const ok = await storage.deleteTestimonial(parseInt(req.params.id));
+      if (!ok) return res.status(404).json({ error: 'Not found' });
+      res.json({ message: 'Deleted' });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Serve uploaded files
   app.use('/uploads', express.static('uploads'));
 

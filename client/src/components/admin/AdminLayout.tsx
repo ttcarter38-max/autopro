@@ -5,7 +5,8 @@ import {
   LayoutDashboard, 
   Receipt, 
   LogOut,
-  Menu
+  Menu,
+  MessageSquareQuote
 } from 'lucide-react';
 import {
   Sidebar,
@@ -41,6 +42,11 @@ const menuItems = [
     title: 'Escrow Transactions',
     url: '/admin/transactions',
     icon: Receipt,
+  },
+  {
+    title: 'Testimonials',
+    url: '/admin/testimonials',
+    icon: MessageSquareQuote,
   },
 ];
 

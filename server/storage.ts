@@ -1,12 +1,13 @@
 import { db } from './db';
 import { 
-  users, vehicles, vehicleImages, vehicleOffers, transactions, transactionEvents,
+  users, vehicles, vehicleImages, vehicleOffers, transactions, transactionEvents, testimonials,
   type User, type InsertUser,
   type Vehicle, type InsertVehicle,
   type VehicleImage, type InsertVehicleImage,
   type VehicleOffer, type InsertVehicleOffer,
   type Transaction, type InsertTransaction,
-  type TransactionEvent, type InsertTransactionEvent
+  type TransactionEvent, type InsertTransactionEvent,
+  type Testimonial, type InsertTestimonial
 } from '@shared/schema';
 import { eq, and, desc, inArray } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
@@ -58,6 +59,14 @@ export interface IStorage {
   // Transaction event operations
   getTransactionEvents(transactionId: number): Promise<TransactionEvent[]>;
   addTransactionEvent(event: InsertTransactionEvent): Promise<TransactionEvent>;
+
+  // Testimonial operations
+  getActiveTestimonials(): Promise<Testimonial[]>;
+  getAllTestimonials(): Promise<Testimonial[]>;
+  getTestimonial(id: number): Promise<Testimonial | undefined>;
+  createTestimonial(t: InsertTestimonial): Promise<Testimonial>;
+  updateTestimonial(id: number, t: Partial<InsertTestimonial>): Promise<Testimonial | undefined>;
+  deleteTestimonial(id: number): Promise<boolean>;
 }
 
 export class PostgresStorage implements IStorage {
@@ -356,6 +365,30 @@ export class PostgresStorage implements IStorage {
       .orderBy(desc(transactionEvents.id))
       .limit(1);
     return existing;
+  }
+
+  // Testimonial operations
+  async getActiveTestimonials(): Promise<Testimonial[]> {
+    return await db.select().from(testimonials).where(eq(testimonials.active, true)).orderBy(testimonials.displayOrder, desc(testimonials.id));
+  }
+  async getAllTestimonials(): Promise<Testimonial[]> {
+    return await db.select().from(testimonials).orderBy(testimonials.displayOrder, desc(testimonials.id));
+  }
+  async getTestimonial(id: number): Promise<Testimonial | undefined> {
+    const r = await db.select().from(testimonials).where(eq(testimonials.id, id));
+    return r[0];
+  }
+  async createTestimonial(t: InsertTestimonial): Promise<Testimonial> {
+    const r = await db.insert(testimonials).values(t).returning();
+    return r[0];
+  }
+  async updateTestimonial(id: number, t: Partial<InsertTestimonial>): Promise<Testimonial | undefined> {
+    const r = await db.update(testimonials).set(t).where(eq(testimonials.id, id)).returning();
+    return r[0];
+  }
+  async deleteTestimonial(id: number): Promise<boolean> {
+    const r = await db.delete(testimonials).where(eq(testimonials.id, id)).returning();
+    return r.length > 0;
   }
 }
 

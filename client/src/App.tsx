@@ -14,6 +14,7 @@ import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminVehicles from "@/pages/admin/Vehicles";
 import VehicleForm from "@/pages/admin/VehicleForm";
 import AdminTransactions from "@/pages/admin/Transactions";
+import AdminTestimonials from "@/pages/admin/Testimonials";
 import Contact from "@/pages/Contact";
 import About from "@/pages/About";
 import Login from "@/pages/Login";
@@ -58,6 +59,7 @@ function Router() {
       <Route path="/admin/vehicles/new" component={VehicleForm}/>
       <Route path="/admin/vehicles/:id/edit" component={VehicleForm}/>
       <Route path="/admin/transactions" component={AdminTransactions}/>
+      <Route path="/admin/testimonials" component={AdminTestimonials}/>
       <Route path="/contact" component={Contact}/>
       <Route path="/about" component={About}/>
       <Route path="/login" component={Login}/>
