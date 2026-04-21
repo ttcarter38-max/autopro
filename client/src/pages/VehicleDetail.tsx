@@ -286,7 +286,7 @@ export default function VehicleDetail() {
 
       {/* Purchase Dialog */}
       <Dialog open={purchaseDialogOpen} onOpenChange={setPurchaseDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Purchase {vehicle.name}</DialogTitle>
             <DialogDescription>
