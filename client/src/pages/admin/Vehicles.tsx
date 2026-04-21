@@ -92,6 +92,7 @@ export default function AdminVehicles() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
+                    <TableHead>Category</TableHead>
                     <TableHead>Make/Model</TableHead>
                     <TableHead>Year</TableHead>
                     <TableHead>Price</TableHead>
@@ -104,6 +105,11 @@ export default function AdminVehicles() {
                   {vehicles.map((vehicle: any) => (
                     <TableRow key={vehicle.id}>
                       <TableCell className="font-medium">{vehicle.name}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="capitalize">
+                          {vehicle.category || 'car'}
+                        </Badge>
+                      </TableCell>
                       <TableCell>{vehicle.make} {vehicle.model}</TableCell>
                       <TableCell>{vehicle.year}</TableCell>
                       <TableCell>${parseFloat(vehicle.price).toLocaleString()}</TableCell>

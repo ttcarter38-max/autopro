@@ -185,11 +185,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/vehicles', async (req, res) => {
     try {
-      const { make, condition, minPrice, maxPrice, search } = req.query;
+      const { make, condition, category, minPrice, maxPrice, search } = req.query;
       const vehicles = await storage.getAvailableVehiclesWithImages();
       let filtered = vehicles;
       if (make) filtered = filtered.filter(v => v.make.toLowerCase().includes((make as string).toLowerCase()));
       if (condition) filtered = filtered.filter(v => v.condition === condition);
+      if (category) filtered = filtered.filter(v => (v.category || 'car') === category);
       if (minPrice) filtered = filtered.filter(v => parseFloat(v.price) >= parseFloat(minPrice as string));
       if (maxPrice) filtered = filtered.filter(v => parseFloat(v.price) <= parseFloat(maxPrice as string));
       if (search) {

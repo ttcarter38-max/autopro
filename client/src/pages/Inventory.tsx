@@ -1,9 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { useLocation } from 'wouter';
+import { Search, SlidersHorizontal, X, Car, Caravan, Sailboat, Bike, Tractor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+
+const CATEGORY_META: Record<string, { label: string; title: string; subtitle: string; Icon: any }> = {
+  car: { label: 'Cars', title: 'Cars', subtitle: 'Browse our full collection of cars', Icon: Car },
+  rv: { label: 'RVs', title: 'RVs & Motorhomes', subtitle: 'Explore RVs and motorhomes available with full escrow protection', Icon: Caravan },
+  boat: { label: 'Boats', title: 'Boats', subtitle: 'Find your next boat — secured by AutoPro escrow', Icon: Sailboat },
+  bike: { label: 'Motorcycles', title: 'Motorcycles', subtitle: 'Browse motorcycles available for secure purchase', Icon: Bike },
+  tractor: { label: 'Tractors', title: 'Tractors', subtitle: 'Agricultural and utility tractors available now', Icon: Tractor },
+};
 import {
   Select,
   SelectContent,
@@ -24,6 +33,14 @@ const PRICE_RANGES = [
 ];
 
 export default function Inventory() {
+  const [location] = useLocation();
+  const categoryParam = useMemo(() => {
+    const qs = location.includes('?') ? location.split('?')[1] : '';
+    const params = new URLSearchParams(qs || (typeof window !== 'undefined' ? window.location.search : ''));
+    const c = params.get('category');
+    return c && CATEGORY_META[c] ? c : null;
+  }, [location]);
+
   const [search, setSearch] = useState('');
   const [condition, setCondition] = useState('all');
   const [priceRange, setPriceRange] = useState('all');
@@ -34,10 +51,12 @@ export default function Inventory() {
   });
 
   const allVehicles = data?.vehicles || [];
+  const meta = categoryParam ? CATEGORY_META[categoryParam] : null;
 
   const filteredVehicles = allVehicles
     .filter((v) => {
       if (!v.available) return false;
+      if (categoryParam && (v.category || 'car') !== categoryParam) return false;
       if (condition !== 'all' && v.condition !== condition) return false;
 
       if (priceRange !== 'all') {
@@ -87,11 +106,12 @@ export default function Inventory() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-10">
-          <h1 className="text-4xl font-heading font-bold mb-2" data-testid="text-inventory-title">
-            Vehicle Inventory
+          <h1 className="text-4xl font-heading font-bold mb-2 flex items-center gap-3" data-testid="text-inventory-title">
+            {meta && <meta.Icon className="w-9 h-9 text-primary" />}
+            {meta ? meta.title : 'Vehicle Inventory'}
           </h1>
           <p className="text-muted-foreground">
-            Browse our full collection of premium vehicles
+            {meta ? meta.subtitle : 'Browse our full collection of premium vehicles'}
           </p>
         </div>
 

@@ -34,6 +34,7 @@ const vehicleFormSchema = z.object({
   make: z.string().min(1, 'Make is required'),
   model: z.string().min(1, 'Model is required'),
   year: z.coerce.number().min(1900).max(new Date().getFullYear() + 1),
+  category: z.enum(['car', 'rv', 'boat', 'bike', 'tractor']).default('car'),
   condition: z.enum(['new', 'used']),
   price: z.string().min(1, 'Price is required'),
   mileage: z.coerce.number().optional(),
@@ -70,6 +71,7 @@ export default function VehicleForm() {
       make: '',
       model: '',
       year: new Date().getFullYear(),
+      category: 'car',
       condition: 'new',
       price: '',
       mileage: 0,
@@ -90,6 +92,7 @@ export default function VehicleForm() {
         make: v.make,
         model: v.model,
         year: v.year,
+        category: v.category || 'car',
         condition: v.condition,
         price: v.price.toString(),
         mileage: v.mileage || 0,
@@ -275,6 +278,31 @@ export default function VehicleForm() {
                     )}
                   />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-category">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="car">Car</SelectItem>
+                          <SelectItem value="rv">RV / Motorhome</SelectItem>
+                          <SelectItem value="boat">Boat</SelectItem>
+                          <SelectItem value="bike">Motorcycle</SelectItem>
+                          <SelectItem value="tractor">Tractor</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <div className="grid grid-cols-3 gap-4">
                   <FormField

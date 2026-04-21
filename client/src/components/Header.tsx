@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Menu, X, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { Menu, X, User, LogOut, LayoutDashboard, Car, Caravan, Sailboat, Bike, Tractor, ChevronDown } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,6 +13,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
+
+const VEHICLE_CATEGORIES = [
+  { slug: 'car', label: 'Cars', icon: Car },
+  { slug: 'rv', label: 'RVs', icon: Caravan },
+  { slug: 'boat', label: 'Boats', icon: Sailboat },
+  { slug: 'bike', label: 'Motorcycles', icon: Bike },
+  { slug: 'tractor', label: 'Tractors', icon: Tractor },
+] as const;
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -51,11 +59,31 @@ export default function Header() {
                   HOME
                 </span>
               </Link>
-              <Link href="/inventory">
-                <span className="text-sm font-medium hover-elevate px-3 py-2 rounded-md cursor-pointer" data-testid="button-vehicles-menu">
-                  VEHICLES
-                </span>
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="text-sm font-medium hover-elevate px-3 py-2 rounded-md cursor-pointer flex items-center gap-1" data-testid="button-vehicles-menu">
+                    VEHICLES
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-52">
+                  <DropdownMenuItem asChild data-testid="link-category-all">
+                    <Link href="/inventory">
+                      <LayoutDashboard className="w-4 h-4 mr-2" />
+                      All Vehicles
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {VEHICLE_CATEGORIES.map(({ slug, label, icon: Icon }) => (
+                    <DropdownMenuItem key={slug} asChild data-testid={`link-category-${slug}`}>
+                      <Link href={`/inventory?category=${slug}`}>
+                        <Icon className="w-4 h-4 mr-2" />
+                        {label}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Link href="/escrow">
                 <span className="text-sm font-medium hover-elevate px-3 py-2 rounded-md cursor-pointer" data-testid="button-escrow-menu">
                   ESCROW
@@ -140,15 +168,28 @@ export default function Header() {
                 HOME
               </span>
             </Link>
+            <div className="text-xs font-semibold text-muted-foreground px-3 pt-2 pb-1 uppercase tracking-wider">Vehicles</div>
             <Link href="/inventory">
               <span
                 className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md"
                 onClick={() => setMobileMenuOpen(false)}
                 data-testid="button-mobile-vehicles"
               >
-                VEHICLES
+                All Vehicles
               </span>
             </Link>
+            {VEHICLE_CATEGORIES.map(({ slug, label, icon: Icon }) => (
+              <Link key={slug} href={`/inventory?category=${slug}`}>
+                <span
+                  className="flex items-center gap-2 w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-testid={`button-mobile-category-${slug}`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </span>
+              </Link>
+            ))}
             <Link href="/escrow">
               <span
                 className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md"

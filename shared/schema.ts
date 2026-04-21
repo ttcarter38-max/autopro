@@ -31,6 +31,10 @@ export const insertUserSchema = createInsertSchema(users).omit({ id: true, creat
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
+// Vehicle categories supported by the marketplace
+export const VEHICLE_CATEGORIES = ['car', 'rv', 'boat', 'bike', 'tractor'] as const;
+export type VehicleCategory = typeof VEHICLE_CATEGORIES[number];
+
 // Vehicles table
 export const vehicles = pgTable('vehicles', {
   id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
@@ -38,6 +42,7 @@ export const vehicles = pgTable('vehicles', {
   make: text('make').notNull(),
   model: text('model').notNull(),
   year: integer('year').notNull(),
+  category: text('category').notNull().default('car'), // car / rv / boat / bike / tractor
   condition: vehicleConditionEnum('condition').notNull(),
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),
   mileage: integer('mileage'),
@@ -51,7 +56,9 @@ export const vehicles = pgTable('vehicles', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-export const insertVehicleSchema = createInsertSchema(vehicles).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertVehicleSchema = createInsertSchema(vehicles, {
+  category: z.enum(VEHICLE_CATEGORIES).default('car'),
+}).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertVehicle = z.infer<typeof insertVehicleSchema>;
 export type Vehicle = typeof vehicles.$inferSelect;
 
