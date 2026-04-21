@@ -58,6 +58,7 @@ export default function Footer() {
               <li><a href="/escrow" className="text-gray-400 hover:text-primary transition-colors" data-testid="link-escrow-footer">Escrow</a></li>
               <li><a href="/about" className="text-gray-400 hover:text-primary transition-colors" data-testid="link-about-footer">About Us</a></li>
               <li><a href="/contact" className="text-gray-400 hover:text-primary transition-colors" data-testid="link-contact-footer">Contact</a></li>
+              <li><a href="/faq" className="text-gray-400 hover:text-primary transition-colors" data-testid="link-faq-footer">FAQ</a></li>
             </ul>
           </div>
 

@@ -23,6 +23,7 @@ import MyTransactions from "@/pages/MyTransactions";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
 import Refunds from "@/pages/Refunds";
+import FAQ from "@/pages/FAQ";
 import NotFound from "@/pages/not-found";
 import CookieBanner from "@/components/CookieBanner";
 import { ThemeProvider } from "@/hooks/useTheme";
@@ -73,6 +74,7 @@ function Router() {
       <Route path="/privacy" component={Privacy}/>
       <Route path="/terms" component={Terms}/>
       <Route path="/refunds" component={Refunds}/>
+      <Route path="/faq" component={FAQ}/>
       <Route component={NotFound} />
     </Switch>
   );
