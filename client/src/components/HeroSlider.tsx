@@ -18,24 +18,24 @@ const slides: Slide[] = [
     id: 1,
     image: truckBanner,
     eyebrow: 'NATIONWIDE VEHICLE TRANSPORT',
-    heading: 'YOUR CAR. DELIVERED.',
-    sub: 'Secure door-to-door auto transport across the country',
+    heading: 'YOUR CAR. DELIVERED, WORRY-FREE.',
+    sub: 'Door-to-door auto transport across the country — your payment is safe in escrow until the keys are in your hands.',
     cta: 'START ESCROW',
   },
   {
     id: 2,
     image: escrowBanner,
     eyebrow: 'TRUSTED ESCROW SERVICE',
-    heading: 'BUY & SELL WITH CONFIDENCE',
-    sub: 'Our escrow protects both buyer and seller every step of the way',
+    heading: 'BUY & SELL WITH CONFIDENCE.',
+    sub: 'Funds held safely until both buyer and seller are satisfied. No scams, no surprises — just secure deals.',
     cta: 'HOW IT WORKS',
   },
   {
     id: 3,
     image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1920&q=80',
-    eyebrow: 'PREMIUM INVENTORY',
-    heading: 'FIND YOUR DREAM CAR',
-    sub: 'Browse our curated selection of luxury and performance vehicles',
+    eyebrow: 'HAND-PICKED INVENTORY',
+    heading: 'DRIVE WHAT YOU LOVE.',
+    sub: 'Cars, RVs, boats, motorcycles & tractors — every listing verified, inspection-backed, and escrow-protected.',
     cta: 'VIEW INVENTORY',
   },
 ];
@@ -93,10 +93,15 @@ export default function HeroSlider() {
                 <p className="text-xs font-bold tracking-[0.25em] mb-4 text-primary uppercase" data-testid={`text-eyebrow-${index}`}>
                   {slide.eyebrow}
                 </p>
-                <h2 className="text-5xl md:text-7xl font-heading font-extrabold tracking-wide mb-4 leading-tight" data-testid={`text-heading-${index}`}>
+                <h2
+                  className="text-5xl md:text-7xl font-heading font-extrabold tracking-wide mb-4 leading-tight bg-clip-text text-transparent bg-gradient-to-br from-white via-white to-primary drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]"
+                  data-testid={`text-heading-${index}`}
+                >
                   {slide.heading}
                 </h2>
-                <p className="text-lg text-white/80 mb-8" data-testid={`text-sub-${index}`}>{slide.sub}</p>
+                <p className="text-lg md:text-xl text-white/85 mb-8 max-w-xl leading-relaxed" data-testid={`text-sub-${index}`}>
+                  {slide.sub}
+                </p>
                 <div className="flex gap-4 flex-wrap">
                   <Button
                     variant="default"
