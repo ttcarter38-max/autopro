@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { useSeo } from '@/hooks/useSeo';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
@@ -26,6 +27,11 @@ const contactSchema = z.object({
 type ContactForm = z.infer<typeof contactSchema>;
 
 export default function Contact() {
+  useSeo({
+    title: 'Contact AutoPro',
+    description:
+      'Reach the AutoPro team about a specific vehicle, a custom escrow deal, or any question about our invitation-only marketplace.',
+  });
   const [submitted, setSubmitted] = useState(false);
   const { toast } = useToast();
 

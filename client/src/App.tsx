@@ -25,6 +25,7 @@ import Terms from "@/pages/Terms";
 import Refunds from "@/pages/Refunds";
 import NotFound from "@/pages/not-found";
 import CookieBanner from "@/components/CookieBanner";
+import { ThemeProvider } from "@/hooks/useTheme";
 import { SiWhatsapp } from "react-icons/si";
 
 // ── Change this to your real WhatsApp number (international format, no + or spaces) ──
@@ -80,12 +81,14 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-        <WhatsAppButton />
-        <CookieBanner />
-      </TooltipProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+          <WhatsAppButton />
+          <CookieBanner />
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

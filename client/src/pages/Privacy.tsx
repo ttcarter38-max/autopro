@@ -1,6 +1,7 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { ShieldCheck } from 'lucide-react';
+import { useSeo } from '@/hooks/useSeo';
 
 const LAST_UPDATED = 'April 21, 2026';
 
@@ -212,6 +213,11 @@ const SECTIONS: { id: string; title: string; body: React.ReactNode }[] = [
 ];
 
 export default function Privacy() {
+  useSeo({
+    title: 'Privacy Policy',
+    description:
+      'How AutoPro collects, uses, and protects your personal information across our invitation-only marketplace and escrow service.',
+  });
   return (
     <div className="min-h-screen bg-background">
       <Header />

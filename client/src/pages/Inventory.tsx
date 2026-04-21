@@ -5,6 +5,7 @@ import { Car, Caravan, Sailboat, Bike, Tractor, LayoutGrid, ShieldCheck } from '
 import VehicleCard from '@/components/VehicleCard';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { useSeo } from '@/hooks/useSeo';
 
 const CATEGORY_TABS: { slug: string | null; label: string; Icon: any }[] = [
   { slug: null, label: 'All', Icon: LayoutGrid },
@@ -18,6 +19,11 @@ const CATEGORY_TABS: { slug: string | null; label: string; Icon: any }[] = [
 const VALID_SLUGS = new Set(['car', 'rv', 'boat', 'bike', 'tractor']);
 
 export default function Inventory() {
+  useSeo({
+    title: 'Inventory — Curated Vehicles',
+    description:
+      'Browse our curated inventory of cars, RVs, boats, motorcycles, and tractors. Maximum 10 per category. Every listing is verified and inspection-ready.',
+  });
   const search_str = useSearch();
   const [, setLocation] = useLocation();
 

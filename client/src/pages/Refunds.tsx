@@ -1,6 +1,7 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { RefreshCw } from 'lucide-react';
+import { useSeo } from '@/hooks/useSeo';
 
 const LAST_UPDATED = 'April 21, 2026';
 
@@ -226,6 +227,11 @@ const SECTIONS: { id: string; title: string; body: React.ReactNode }[] = [
 ];
 
 export default function Refunds() {
+  useSeo({
+    title: 'Refund & Cancellation Policy',
+    description:
+      'How refunds, disputes, and cancellations work within AutoPro’s escrow service — including inspection windows and resolution process.',
+  });
   return (
     <div className="min-h-screen bg-background">
       <Header />

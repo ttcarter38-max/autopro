@@ -28,6 +28,7 @@ import { apiRequest } from '@/lib/queryClient';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PaymentMethodPicker, { type PaymentMethodValue } from '@/components/PaymentMethodPicker';
+import { useSeo } from '@/hooks/useSeo';
 
 export default function VehicleDetail() {
   const [, params] = useRoute('/vehicle/:id');
@@ -43,9 +44,27 @@ export default function VehicleDetail() {
   const [inspectionDays, setInspectionDays] = useState('3');
   const [paymentPref, setPaymentPref] = useState<PaymentMethodValue>({ buyerPaymentMethod: 'bank' });
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<any>({
     queryKey: ['/api/vehicles', vehicleId],
     enabled: !!vehicleId,
+  });
+
+  const v = data?.vehicle;
+  const seoTitle = v
+    ? `${v.year ?? ''} ${v.make ?? ''} ${v.model ?? ''}`.trim() || 'Vehicle Detail'
+    : 'Vehicle Detail';
+  const seoDescription = v
+    ? `${seoTitle} — ${v.price ? `$${Number(v.price).toLocaleString()}` : 'Price on request'}. Verified, inspection-backed, escrow-protected at AutoPro.`
+    : 'A curated vehicle listing at AutoPro — verified, inspection-backed, escrow-protected.';
+  const seoImage =
+    data?.images?.find((i: any) => i.isPrimary)?.imageUrl ||
+    data?.images?.[0]?.imageUrl;
+
+  useSeo({
+    title: seoTitle,
+    description: seoDescription,
+    image: seoImage,
+    type: 'product',
   });
 
   const purchaseMutation = useMutation({

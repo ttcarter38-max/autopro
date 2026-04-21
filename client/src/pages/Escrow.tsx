@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { useSeo } from '@/hooks/useSeo';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/hooks/useAuth';
@@ -35,6 +36,11 @@ const customEscrowSchema = z.object({
 type CustomEscrowForm = z.infer<typeof customEscrowSchema>;
 
 export default function Escrow() {
+  useSeo({
+    title: 'Escrow — How AutoPro Protects Your Money',
+    description:
+      'AutoPro escrow holds your funds safely from purchase through delivery. Track transactions, fund with bank or card, release on inspection.',
+  });
   const [trackingInput, setTrackingInput] = useState('');
   const [, setLocation] = useLocation();
   const { toast } = useToast();

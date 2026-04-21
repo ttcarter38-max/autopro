@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/carousel';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { useSeo } from '@/hooks/useSeo';
 
 interface Testimonial {
   id: number;
@@ -95,6 +96,11 @@ const CATEGORIES = [
 ];
 
 export default function About() {
+  useSeo({
+    title: 'About AutoPro — Why We Built a Curated Marketplace',
+    description:
+      'Why AutoPro exists: a small, curated, invitation-only marketplace for cars, RVs, boats, motorcycles, and tractors — with escrow protection on every deal.',
+  });
   const { data: tData } = useQuery<{ testimonials: Testimonial[] }>({
     queryKey: ['/api/testimonials'],
   });
