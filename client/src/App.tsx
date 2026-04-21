@@ -20,6 +20,8 @@ import About from "@/pages/About";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import MyTransactions from "@/pages/MyTransactions";
+import Privacy from "@/pages/Privacy";
+import Terms from "@/pages/Terms";
 import NotFound from "@/pages/not-found";
 import { SiWhatsapp } from "react-icons/si";
 
@@ -65,6 +67,8 @@ function Router() {
       <Route path="/login" component={Login}/>
       <Route path="/register" component={Register}/>
       <Route path="/my-transactions" component={MyTransactions}/>
+      <Route path="/privacy" component={Privacy}/>
+      <Route path="/terms" component={Terms}/>
       <Route component={NotFound} />
     </Switch>
   );
