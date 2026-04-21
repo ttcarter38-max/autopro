@@ -89,6 +89,11 @@ export default function Header() {
                   ESCROW
                 </span>
               </Link>
+              <Link href="/about">
+                <span className="text-sm font-medium hover-elevate px-3 py-2 rounded-md cursor-pointer" data-testid="button-about-menu">
+                  ABOUT
+                </span>
+              </Link>
               <Link href="/contact">
                 <span className="text-sm font-medium hover-elevate px-3 py-2 rounded-md cursor-pointer" data-testid="button-contact-menu">
                   CONTACT
@@ -197,6 +202,15 @@ export default function Header() {
                 data-testid="button-mobile-escrow"
               >
                 ESCROW
+              </span>
+            </Link>
+            <Link href="/about">
+              <span
+                className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md cursor-pointer"
+                onClick={() => setMobileMenuOpen(false)}
+                data-testid="button-mobile-about"
+              >
+                ABOUT
               </span>
             </Link>
             <Link href="/contact">

@@ -15,6 +15,7 @@ import AdminVehicles from "@/pages/admin/Vehicles";
 import VehicleForm from "@/pages/admin/VehicleForm";
 import AdminTransactions from "@/pages/admin/Transactions";
 import Contact from "@/pages/Contact";
+import About from "@/pages/About";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import MyTransactions from "@/pages/MyTransactions";
@@ -58,6 +59,7 @@ function Router() {
       <Route path="/admin/vehicles/:id/edit" component={VehicleForm}/>
       <Route path="/admin/transactions" component={AdminTransactions}/>
       <Route path="/contact" component={Contact}/>
+      <Route path="/about" component={About}/>
       <Route path="/login" component={Login}/>
       <Route path="/register" component={Register}/>
       <Route path="/my-transactions" component={MyTransactions}/>
