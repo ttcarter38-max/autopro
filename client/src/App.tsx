@@ -22,7 +22,9 @@ import Register from "@/pages/Register";
 import MyTransactions from "@/pages/MyTransactions";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
+import Refunds from "@/pages/Refunds";
 import NotFound from "@/pages/not-found";
+import CookieBanner from "@/components/CookieBanner";
 import { SiWhatsapp } from "react-icons/si";
 
 // ── Change this to your real WhatsApp number (international format, no + or spaces) ──
@@ -69,6 +71,7 @@ function Router() {
       <Route path="/my-transactions" component={MyTransactions}/>
       <Route path="/privacy" component={Privacy}/>
       <Route path="/terms" component={Terms}/>
+      <Route path="/refunds" component={Refunds}/>
       <Route component={NotFound} />
     </Switch>
   );
@@ -81,6 +84,7 @@ function App() {
         <Toaster />
         <Router />
         <WhatsAppButton />
+        <CookieBanner />
       </TooltipProvider>
     </QueryClientProvider>
   );
