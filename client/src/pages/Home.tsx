@@ -1,6 +1,5 @@
 import Header from '@/components/Header';
 import HeroSlider from '@/components/HeroSlider';
-import VehicleSearchBar from '@/components/VehicleSearchBar';
 import SpecialOffers from '@/components/SpecialOffers';
 import StatisticsSection from '@/components/StatisticsSection';
 import FeaturedVehicles from '@/components/FeaturedVehicles';
@@ -11,7 +10,6 @@ export default function Home() {
     <div className="min-h-screen">
       <Header />
       <HeroSlider />
-      <VehicleSearchBar />
       <SpecialOffers />
       <StatisticsSection />
       <FeaturedVehicles />
