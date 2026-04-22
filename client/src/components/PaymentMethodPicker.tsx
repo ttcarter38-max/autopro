@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Building2, Bitcoin, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -24,6 +25,7 @@ const COMMON_COINS = ['BTC', 'ETH', 'USDT', 'BNB', 'SOL'];
 
 export default function PaymentMethodPicker({ value, onChange, showCryptoInfoCard = true }: Props) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const { t } = useTranslation();
 
   const setMethod = (method: 'bank' | 'crypto') => {
     onChange({ ...value, buyerPaymentMethod: method });
@@ -31,7 +33,7 @@ export default function PaymentMethodPicker({ value, onChange, showCryptoInfoCar
 
   return (
     <div className="space-y-3">
-      <Label>How would you like to pay?</Label>
+      <Label>{t('payment.howPay')}</Label>
       <div className="grid grid-cols-2 gap-3">
         <Button
           type="button"
@@ -41,8 +43,8 @@ export default function PaymentMethodPicker({ value, onChange, showCryptoInfoCar
           data-testid="button-pay-bank"
         >
           <Building2 className="w-6 h-6" />
-          <span className="font-semibold">Bank Transfer</span>
-          <span className="text-xs opacity-80">Wire / SEPA / ACH</span>
+          <span className="font-semibold">{t('payment.bank')}</span>
+          <span className="text-xs opacity-80">{t('payment.bankSub')}</span>
         </Button>
         <Button
           type="button"
@@ -52,8 +54,8 @@ export default function PaymentMethodPicker({ value, onChange, showCryptoInfoCar
           data-testid="button-pay-crypto"
         >
           <Bitcoin className="w-6 h-6" />
-          <span className="font-semibold">Cryptocurrency</span>
-          <span className="text-xs opacity-80">BTC, ETH, USDT…</span>
+          <span className="font-semibold">{t('payment.crypto')}</span>
+          <span className="text-xs opacity-80">{t('payment.cryptoSub')}</span>
         </Button>
       </div>
 
@@ -68,22 +70,22 @@ export default function PaymentMethodPicker({ value, onChange, showCryptoInfoCar
             data-testid="button-toggle-crypto-advanced"
           >
             {advancedOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            Advanced (preferred coin / network)
+            {t('payment.advanced')}
           </Button>
 
           {advancedOpen && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 border rounded-md bg-muted/30">
               <div className="space-y-1">
-                <Label htmlFor="preferred-coin" className="text-xs">Preferred Coin</Label>
+                <Label htmlFor="preferred-coin" className="text-xs">{t('payment.preferredCoin')}</Label>
                 <Select
                   value={value.buyerPreferredCoin || '__any__'}
                   onValueChange={(v) => onChange({ ...value, buyerPreferredCoin: v === '__any__' ? undefined : v })}
                 >
                   <SelectTrigger id="preferred-coin" data-testid="select-preferred-coin">
-                    <SelectValue placeholder="Any" />
+                    <SelectValue placeholder={t('payment.any')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__any__">Any / Let admin choose</SelectItem>
+                    <SelectItem value="__any__">{t('payment.anyAdmin')}</SelectItem>
                     {COMMON_COINS.map(c => (
                       <SelectItem key={c} value={c}>{c}</SelectItem>
                     ))}
@@ -91,10 +93,10 @@ export default function PaymentMethodPicker({ value, onChange, showCryptoInfoCar
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label htmlFor="preferred-network" className="text-xs">Preferred Network</Label>
+                <Label htmlFor="preferred-network" className="text-xs">{t('payment.preferredNetwork')}</Label>
                 <Input
                   id="preferred-network"
-                  placeholder="e.g. ERC-20, TRC-20, BEP-20"
+                  placeholder={t('payment.preferredNetworkPh')}
                   value={value.buyerPreferredNetwork || ''}
                   onChange={(e) => onChange({ ...value, buyerPreferredNetwork: e.target.value || undefined })}
                   maxLength={40}
@@ -103,7 +105,7 @@ export default function PaymentMethodPicker({ value, onChange, showCryptoInfoCar
               </div>
               <p className="text-xs text-muted-foreground sm:col-span-2 flex gap-1.5 items-start">
                 <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                Your preference helps our team set up the right wallet. Final coin and network will be confirmed in the payment instructions email.
+                {t('payment.advancedHelp')}
               </p>
             </div>
           )}

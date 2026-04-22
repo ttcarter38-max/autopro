@@ -1,5 +1,6 @@
 import { Star } from 'lucide-react';
 import { Link } from 'wouter';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +34,8 @@ export default function VehicleCard({
   color,
   topSpeed,
 }: VehicleCardProps) {
+  const { t } = useTranslation();
+  const conditionLabel = condition === 'New' ? t('vehicleCard.new') : t('vehicleCard.used');
   return (
     <Card className="overflow-hidden hover-elevate transition-all hover:shadow-xl" data-testid={`card-vehicle-${id}`}>
       <Link href={`/vehicle/${id}`} className="block">
@@ -45,7 +48,7 @@ export default function VehicleCard({
           />
           {originalPrice && (
             <Badge variant="destructive" className="absolute top-4 right-4" data-testid={`badge-sale-${id}`}>
-              SALE
+              {t('vehicleCard.sale')}
             </Badge>
           )}
         </div>
@@ -79,12 +82,12 @@ export default function VehicleCard({
           </div>
 
           <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-            Premium luxury vehicle with exceptional performance and comfort.
+            {t('vehicleCard.description')}
           </p>
 
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="font-semibold">{condition}</Badge>
+              <Badge variant="secondary" className="font-semibold">{conditionLabel}</Badge>
             </div>
             <div className="text-muted-foreground" data-testid={`text-year-${id}`}>{year}</div>
             <div className="text-muted-foreground" data-testid={`text-transmission-${id}`}>{transmission}</div>
@@ -101,7 +104,7 @@ export default function VehicleCard({
           asChild
           data-testid={`button-order-${id}`}
         >
-          <Link href={`/vehicle/${id}`}>VIEW DETAILS</Link>
+          <Link href={`/vehicle/${id}`}>{t('vehicleCard.viewDetails')}</Link>
         </Button>
       </CardFooter>
     </Card>

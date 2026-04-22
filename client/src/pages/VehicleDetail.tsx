@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from 'react-i18next';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import VehicleCard from '@/components/VehicleCard';
@@ -45,6 +46,7 @@ export default function VehicleDetail() {
   const vehicleId = params?.id ? parseInt(params.id) : null;
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
   const [buyerName, setBuyerName] = useState('');
@@ -117,23 +119,23 @@ export default function VehicleDetail() {
     },
     onSuccess: (data) => {
       toast({
-        title: 'Purchase Initiated!',
-        description: 'We have received your request. You will be contacted shortly with payment details.',
+        title: t('vehicleDetail.purchase.successTitle'),
+        description: t('vehicleDetail.purchase.successDesc'),
       });
       setPurchaseDialogOpen(false);
       if (data.guestToken) setLocation(`/track/${data.guestToken}`);
       else if (data.transaction?.id) setLocation(`/track/${data.transaction.id}`);
     },
     onError: (error: any) => {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: t('common.error'), description: error.message, variant: 'destructive' });
     },
   });
 
   const handlePurchase = () => {
     if (!vehicleId || !buyerName || !buyerEmail || !buyerPhone || !shippingAddress) {
       toast({
-        title: 'Missing information',
-        description: 'Please fill in all required fields',
+        title: t('vehicleDetail.purchase.missingTitle'),
+        description: t('vehicleDetail.purchase.missingDesc'),
         variant: 'destructive',
       });
       return;
@@ -157,7 +159,7 @@ export default function VehicleDetail() {
       <div className="min-h-screen">
         <Header />
         <div className="flex items-center justify-center min-h-[60vh]">
-          <p className="text-muted-foreground">Loading vehicle details...</p>
+          <p className="text-muted-foreground">{t('vehicleDetail.loading')}</p>
         </div>
         <Footer />
       </div>
@@ -169,8 +171,8 @@ export default function VehicleDetail() {
       <div className="min-h-screen">
         <Header />
         <div className="flex flex-col items-center justify-center min-h-[60vh]">
-          <p className="text-muted-foreground mb-4">Vehicle not found</p>
-          <Button onClick={() => setLocation('/')}>Back to Home</Button>
+          <p className="text-muted-foreground mb-4">{t('vehicleDetail.notFound')}</p>
+          <Button onClick={() => setLocation('/')}>{t('vehicleDetail.backHome')}</Button>
         </div>
         <Footer />
       </div>
@@ -196,15 +198,15 @@ export default function VehicleDetail() {
     ? parseFloat(offer.discountedPrice)
     : parseFloat(vehicle.price);
 
-  const specs: { label: string; value: string | number | null | undefined }[] = [
-    { label: 'Year', value: vehicle.year },
-    { label: 'Condition', value: vehicle.condition },
-    { label: 'Make', value: vehicle.make },
-    { label: 'Model', value: vehicle.model },
-    { label: 'Color', value: vehicle.color },
-    { label: 'Transmission', value: vehicle.transmission },
-    { label: 'Mileage', value: vehicle.mileage ? `${vehicle.mileage.toLocaleString()} miles` : null },
-    { label: 'Top Speed', value: vehicle.topSpeed },
+  const specs: { label: string; key: string; value: string | number | null | undefined }[] = [
+    { label: t('vehicleDetail.specs.year'), key: 'year', value: vehicle.year },
+    { label: t('vehicleDetail.specs.condition'), key: 'condition', value: vehicle.condition },
+    { label: t('vehicleDetail.specs.make'), key: 'make', value: vehicle.make },
+    { label: t('vehicleDetail.specs.model'), key: 'model', value: vehicle.model },
+    { label: t('vehicleDetail.specs.color'), key: 'color', value: vehicle.color },
+    { label: t('vehicleDetail.specs.transmission'), key: 'transmission', value: vehicle.transmission },
+    { label: t('vehicleDetail.specs.mileage'), key: 'mileage', value: vehicle.mileage ? t('vehicleDetail.specs.miles', { count: vehicle.mileage }) : null },
+    { label: t('vehicleDetail.specs.topSpeed'), key: 'topSpeed', value: vehicle.topSpeed },
   ].filter((s) => s.value !== null && s.value !== undefined && s.value !== '');
 
   return (
@@ -219,7 +221,7 @@ export default function VehicleDetail() {
           data-testid="button-back"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Inventory
+          {t('vehicleDetail.back')}
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12">
@@ -230,7 +232,7 @@ export default function VehicleDetail() {
               onClick={() => sortedImages.length && setLightboxOpen(true)}
               className="block w-full aspect-square bg-white rounded-md p-6 border overflow-hidden group relative"
               data-testid="button-open-lightbox"
-              aria-label="Open image gallery"
+              aria-label={t('vehicleDetail.openGallery')}
             >
               <img
                 src={activeImage?.imageUrl || '/placeholder-car.png'}
@@ -258,7 +260,7 @@ export default function VehicleDetail() {
                         : 'hover-elevate'
                     }`}
                     data-testid={`button-thumb-${idx}`}
-                    aria-label={`Show image ${idx + 1}`}
+                    aria-label={t('vehicleDetail.showImage', { n: idx + 1 })}
                   >
                     <img
                       src={image.imageUrl}
@@ -278,11 +280,11 @@ export default function VehicleDetail() {
                 <Badge variant={vehicle.condition === 'new' ? 'default' : 'secondary'}>
                   {vehicle.condition}
                 </Badge>
-                {vehicle.featured && <Badge variant="default">Featured</Badge>}
-                {!vehicle.available && <Badge variant="destructive">Sold</Badge>}
+                {vehicle.featured && <Badge variant="default">{t('vehicleDetail.featured')}</Badge>}
+                {!vehicle.available && <Badge variant="destructive">{t('vehicleDetail.sold')}</Badge>}
                 <Badge variant="secondary" className="gap-1">
                   <ShieldCheck className="w-3 h-3" />
-                  Escrow Protected
+                  {t('vehicleDetail.escrowProtected')}
                 </Badge>
               </div>
               <h1 className="text-3xl md:text-4xl font-heading font-bold mb-1" data-testid="text-name">
@@ -303,7 +305,7 @@ export default function VehicleDetail() {
                     <p className="text-4xl font-bold text-primary" data-testid="text-price">
                       ${displayedPrice.toLocaleString()}
                     </p>
-                    <Badge variant="destructive">SALE</Badge>
+                    <Badge variant="destructive">{t('vehicleDetail.sale')}</Badge>
                   </div>
                   {offer.offerText && (
                     <p className="text-sm text-muted-foreground mt-2">{offer.offerText}</p>
@@ -320,14 +322,14 @@ export default function VehicleDetail() {
             <Card>
               <CardContent className="p-0">
                 <div className="px-6 pt-5 pb-3">
-                  <h3 className="font-semibold text-base">Specifications</h3>
+                  <h3 className="font-semibold text-base">{t('vehicleDetail.specifications')}</h3>
                 </div>
                 <dl className="divide-y divide-border border-t border-border" data-testid="spec-table">
                   {specs.map((s) => (
                     <div
                       key={s.label}
                       className="grid grid-cols-3 gap-4 px-6 py-3 text-sm"
-                      data-testid={`spec-row-${s.label.toLowerCase().replace(/\s+/g, '-')}`}
+                      data-testid={`spec-row-${s.key}`}
                     >
                       <dt className="text-muted-foreground">{s.label}</dt>
                       <dd className="col-span-2 font-medium capitalize">{String(s.value)}</dd>
@@ -340,7 +342,7 @@ export default function VehicleDetail() {
             {vehicle.description && (
               <Card>
                 <CardContent className="p-6">
-                  <h3 className="font-semibold mb-3">Description</h3>
+                  <h3 className="font-semibold mb-3">{t('vehicleDetail.description')}</h3>
                   <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
                     {vehicle.description}
                   </p>
@@ -351,9 +353,9 @@ export default function VehicleDetail() {
             {/* Reassurance row */}
             <div className="grid grid-cols-3 gap-3">
               {[
-                { Icon: ShieldCheck, label: 'Escrow Protected' },
-                { Icon: ClipboardCheck, label: 'Inspection Window' },
-                { Icon: Truck, label: 'Insured Transport' },
+                { Icon: ShieldCheck, label: t('vehicleDetail.reassurance.escrow') },
+                { Icon: ClipboardCheck, label: t('vehicleDetail.reassurance.inspection') },
+                { Icon: Truck, label: t('vehicleDetail.reassurance.transport') },
               ].map(({ Icon, label }) => (
                 <div
                   key={label}
@@ -373,10 +375,10 @@ export default function VehicleDetail() {
                 disabled={!vehicle.available}
                 data-testid="button-purchase"
               >
-                {vehicle.available ? 'Reserve with Escrow' : 'Sold Out'}
+                {vehicle.available ? t('vehicleDetail.reserve') : t('vehicleDetail.soldOut')}
               </Button>
               <Button size="lg" variant="outline" asChild data-testid="button-contact">
-                <Link href="/contact">Ask a Question</Link>
+                <Link href="/contact">{t('vehicleDetail.askQuestion')}</Link>
               </Button>
             </div>
           </div>
@@ -388,14 +390,14 @@ export default function VehicleDetail() {
             <div className="flex items-end justify-between mb-6 gap-4 flex-wrap">
               <div>
                 <p className="text-xs font-semibold tracking-widest uppercase text-primary mb-1">
-                  Continue Browsing
+                  {t('vehicleDetail.continueBrowsing')}
                 </p>
                 <h2 className="text-2xl md:text-3xl font-heading font-bold">
-                  Similar Vehicles
+                  {t('vehicleDetail.similarVehicles')}
                 </h2>
               </div>
               <Button variant="outline" asChild>
-                <Link href={`/inventory?category=${vehicle.category}`}>View All</Link>
+                <Link href={`/inventory?category=${vehicle.category}`}>{t('vehicleDetail.viewAll')}</Link>
               </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -443,7 +445,7 @@ export default function VehicleDetail() {
               onClick={() => setPurchaseDialogOpen(true)}
               data-testid="button-sticky-reserve"
             >
-              Reserve with Escrow
+              {t('vehicleDetail.reserve')}
             </Button>
           </div>
         </div>
@@ -456,7 +458,7 @@ export default function VehicleDetail() {
           data-testid="lightbox"
         >
           <DialogHeader className="sr-only">
-            <DialogTitle>{vehicle.name} — image {activeImageIdx + 1}</DialogTitle>
+            <DialogTitle>{vehicle.name} — {t('vehicleDetail.imageOf', { a: activeImageIdx + 1, b: sortedImages.length })}</DialogTitle>
           </DialogHeader>
           <div className="relative w-full aspect-video bg-black flex items-center justify-center">
             <img
@@ -469,7 +471,7 @@ export default function VehicleDetail() {
               type="button"
               onClick={() => setLightboxOpen(false)}
               className="absolute top-3 right-3 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/15 text-white hover:bg-white/25"
-              aria-label="Close"
+              aria-label={t('vehicleDetail.close')}
               data-testid="button-lightbox-close"
             >
               <X className="w-5 h-5" />
@@ -480,7 +482,7 @@ export default function VehicleDetail() {
                   type="button"
                   onClick={prevImage}
                   className="absolute left-3 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/15 text-white hover:bg-white/25"
-                  aria-label="Previous image"
+                  aria-label={t('vehicleDetail.previousImage')}
                   data-testid="button-lightbox-prev"
                 >
                   <ChevronLeft className="w-6 h-6" />
@@ -489,13 +491,13 @@ export default function VehicleDetail() {
                   type="button"
                   onClick={nextImage}
                   className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/15 text-white hover:bg-white/25"
-                  aria-label="Next image"
+                  aria-label={t('vehicleDetail.nextImage')}
                   data-testid="button-lightbox-next"
                 >
                   <ChevronRight className="w-6 h-6" />
                 </button>
                 <span className="absolute bottom-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full bg-white/15 text-white text-xs font-medium px-3 py-1">
-                  {activeImageIdx + 1} / {sortedImages.length}
+                  {t('vehicleDetail.imageOf', { a: activeImageIdx + 1, b: sortedImages.length })}
                 </span>
               </>
             )}
@@ -507,9 +509,9 @@ export default function VehicleDetail() {
       <Dialog open={purchaseDialogOpen} onOpenChange={setPurchaseDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Reserve {vehicle.name}</DialogTitle>
+            <DialogTitle>{t('vehicleDetail.purchase.title', { name: vehicle.name })}</DialogTitle>
             <DialogDescription>
-              Complete this form to initiate the secure escrow purchase process
+              {t('vehicleDetail.purchase.description')}
             </DialogDescription>
           </DialogHeader>
 
@@ -517,77 +519,77 @@ export default function VehicleDetail() {
             <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-md border border-blue-200 dark:border-blue-800">
               <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
                 <CheckCircle className="w-4 h-4 inline mr-1" />
-                How Escrow Works:
+                {t('vehicleDetail.purchase.howItWorks')}
               </p>
               <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-decimal list-inside">
-                <li>Submit your information below</li>
-                <li>We'll send you secure payment instructions</li>
-                <li>Vehicle ships after payment confirmation</li>
-                <li>You inspect the vehicle (1-5 days of your choice)</li>
-                <li>Approve purchase, and we release payment to seller</li>
+                <li>{t('vehicleDetail.purchase.step1')}</li>
+                <li>{t('vehicleDetail.purchase.step2')}</li>
+                <li>{t('vehicleDetail.purchase.step3')}</li>
+                <li>{t('vehicleDetail.purchase.step4')}</li>
+                <li>{t('vehicleDetail.purchase.step5')}</li>
               </ol>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="buyerName">Full Name *</Label>
+                <Label htmlFor="buyerName">{t('vehicleDetail.purchase.fullName')}</Label>
                 <Input
                   id="buyerName"
                   value={buyerName}
                   onChange={(e) => setBuyerName(e.target.value)}
-                  placeholder="John Doe"
+                  placeholder={t('vehicleDetail.purchase.fullNamePh')}
                   data-testid="input-buyer-name"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="buyerPhone">Phone *</Label>
+                <Label htmlFor="buyerPhone">{t('vehicleDetail.purchase.phone')}</Label>
                 <Input
                   id="buyerPhone"
                   type="tel"
                   value={buyerPhone}
                   onChange={(e) => setBuyerPhone(e.target.value)}
-                  placeholder="+1 (555) 123-4567"
+                  placeholder={t('vehicleDetail.purchase.phonePh')}
                   data-testid="input-buyer-phone"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="buyerEmail">Email *</Label>
+              <Label htmlFor="buyerEmail">{t('vehicleDetail.purchase.email')}</Label>
               <Input
                 id="buyerEmail"
                 type="email"
                 value={buyerEmail}
                 onChange={(e) => setBuyerEmail(e.target.value)}
-                placeholder="john@example.com"
+                placeholder={t('vehicleDetail.purchase.emailPh')}
                 data-testid="input-buyer-email"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="shippingAddress">Shipping Address *</Label>
+              <Label htmlFor="shippingAddress">{t('vehicleDetail.purchase.shippingAddress')}</Label>
               <Textarea
                 id="shippingAddress"
                 value={shippingAddress}
                 onChange={(e) => setShippingAddress(e.target.value)}
-                placeholder="123 Main St, City, State, ZIP"
+                placeholder={t('vehicleDetail.purchase.shippingAddressPh')}
                 data-testid="input-shipping-address"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="inspectionDays">Inspection Period</Label>
+              <Label htmlFor="inspectionDays">{t('vehicleDetail.purchase.inspectionPeriod')}</Label>
               <Select value={inspectionDays} onValueChange={setInspectionDays}>
                 <SelectTrigger data-testid="select-inspection-days">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">1 Day</SelectItem>
-                  <SelectItem value="2">2 Days</SelectItem>
-                  <SelectItem value="3">3 Days (Recommended)</SelectItem>
-                  <SelectItem value="4">4 Days</SelectItem>
-                  <SelectItem value="5">5 Days</SelectItem>
+                  <SelectItem value="1">{t('vehicleDetail.purchase.day1')}</SelectItem>
+                  <SelectItem value="2">{t('vehicleDetail.purchase.day2')}</SelectItem>
+                  <SelectItem value="3">{t('vehicleDetail.purchase.day3')}</SelectItem>
+                  <SelectItem value="4">{t('vehicleDetail.purchase.day4')}</SelectItem>
+                  <SelectItem value="5">{t('vehicleDetail.purchase.day5')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -603,14 +605,14 @@ export default function VehicleDetail() {
               onClick={() => setPurchaseDialogOpen(false)}
               data-testid="button-cancel-purchase"
             >
-              Cancel
+              {t('vehicleDetail.purchase.cancel')}
             </Button>
             <Button
               onClick={handlePurchase}
               disabled={purchaseMutation.isPending}
               data-testid="button-submit-purchase"
             >
-              {purchaseMutation.isPending ? 'Processing...' : 'Initiate Purchase'}
+              {purchaseMutation.isPending ? t('vehicleDetail.purchase.processing') : t('vehicleDetail.purchase.submit')}
             </Button>
           </DialogFooter>
         </DialogContent>

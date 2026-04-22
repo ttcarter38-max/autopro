@@ -1,24 +1,26 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearch, useLocation, Link } from 'wouter';
+import { useTranslation } from 'react-i18next';
 import { Car, Caravan, Sailboat, Bike, Tractor, LayoutGrid, ShieldCheck } from 'lucide-react';
 import VehicleCard from '@/components/VehicleCard';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useSeo } from '@/hooks/useSeo';
 
-const CATEGORY_TABS: { slug: string | null; label: string; Icon: any }[] = [
-  { slug: null, label: 'All', Icon: LayoutGrid },
-  { slug: 'car', label: 'Cars', Icon: Car },
-  { slug: 'rv', label: 'RVs', Icon: Caravan },
-  { slug: 'boat', label: 'Boats', Icon: Sailboat },
-  { slug: 'bike', label: 'Motorcycles', Icon: Bike },
-  { slug: 'tractor', label: 'Tractors', Icon: Tractor },
+const CATEGORY_TABS: { slug: string | null; key: string; Icon: any }[] = [
+  { slug: null, key: 'all', Icon: LayoutGrid },
+  { slug: 'car', key: 'car', Icon: Car },
+  { slug: 'rv', key: 'rv', Icon: Caravan },
+  { slug: 'boat', key: 'boat', Icon: Sailboat },
+  { slug: 'bike', key: 'bike', Icon: Bike },
+  { slug: 'tractor', key: 'tractor', Icon: Tractor },
 ];
 
 const VALID_SLUGS = new Set(['car', 'rv', 'boat', 'bike', 'tractor']);
 
 export default function Inventory() {
+  const { t } = useTranslation();
   useSeo({
     title: 'Inventory — Curated Vehicles',
     description:
@@ -51,7 +53,7 @@ export default function Inventory() {
   const goTo = (slug: string | null) =>
     setLocation(slug ? `/inventory?category=${slug}` : '/inventory');
 
-  const activeMeta = CATEGORY_TABS.find((t) => t.slug === categoryParam) || CATEGORY_TABS[0];
+  const activeMeta = CATEGORY_TABS.find((tab) => tab.slug === categoryParam) || CATEGORY_TABS[0];
 
   return (
     <div className="min-h-screen bg-background">
@@ -60,20 +62,20 @@ export default function Inventory() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8 text-center">
           <p className="text-xs font-bold tracking-[0.25em] text-primary uppercase mb-2">
-            CURATED COLLECTION
+            {t('inventory.eyebrow')}
           </p>
           <h1 className="text-4xl md:text-5xl font-heading font-bold mb-3" data-testid="text-inventory-title">
-            {activeMeta.slug ? activeMeta.label : 'The Full Selection'}
+            {activeMeta.slug ? t(`inventory.categories.${activeMeta.key}`) : t('inventory.fullSelection')}
           </h1>
           <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
             <ShieldCheck className="w-4 h-4 text-primary" />
-            Hand-picked, verified & escrow-protected — max 10 per category
+            {t('inventory.tagline')}
           </p>
         </div>
 
         {/* Category tabs */}
         <div className="flex flex-wrap justify-center gap-2 mb-10" data-testid="tabs-categories">
-          {CATEGORY_TABS.map(({ slug, label, Icon }) => {
+          {CATEGORY_TABS.map(({ slug, key, Icon }) => {
             const isActive = (slug ?? null) === categoryParam;
             const count = countFor(slug);
             return (
@@ -88,7 +90,7 @@ export default function Inventory() {
                 }`}
               >
                 <Icon className="w-4 h-4" />
-                <span>{label}</span>
+                <span>{t(`inventory.categories.${key}`)}</span>
                 <span className={`ml-1 text-xs ${isActive ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
                   {count}
                 </span>
@@ -106,16 +108,16 @@ export default function Inventory() {
           </div>
         ) : filteredVehicles.length === 0 ? (
           <div className="text-center py-24">
-            <p className="text-2xl font-semibold mb-3">Nothing here yet</p>
+            <p className="text-2xl font-semibold mb-3">{t('inventory.emptyTitle')}</p>
             <p className="text-muted-foreground mb-6">
-              This category doesn't have any listings right now. Check back soon, or browse the full selection.
+              {t('inventory.emptyDesc')}
             </p>
             <Link
               href="/inventory"
               className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold hover-elevate active-elevate-2"
               data-testid="button-view-all"
             >
-              View All
+              {t('inventory.viewAll')}
             </Link>
           </div>
         ) : (

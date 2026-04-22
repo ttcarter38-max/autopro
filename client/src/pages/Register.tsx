@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +15,7 @@ import Footer from '@/components/Footer';
 export default function Register() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -32,7 +34,7 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirm) {
-      toast({ title: 'Passwords do not match', variant: 'destructive' });
+      toast({ title: t('auth.register.passwordsMismatch'), variant: 'destructive' });
       return;
     }
     setLoading(true);
@@ -44,13 +46,13 @@ export default function Register() {
         body: JSON.stringify({ name, email, phone, password }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Registration failed');
+      if (!res.ok) throw new Error(data.error || t('auth.register.failedDefault'));
 
       await queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
-      toast({ title: 'Welcome to AutoPro!', description: `Account created for ${data.user.name}.` });
+      toast({ title: t('auth.register.welcomeTitle'), description: t('auth.register.welcomeDesc', { name: data.user.name }) });
       setLocation('/my-transactions');
     } catch (err: any) {
-      toast({ title: 'Registration failed', description: err.message, variant: 'destructive' });
+      toast({ title: t('auth.register.failedTitle'), description: err.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -67,40 +69,38 @@ export default function Register() {
                 <UserPlus className="w-8 h-8 text-white" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-heading">Create Account</CardTitle>
-            <CardDescription>
-              Track all your escrow transactions in one place
-            </CardDescription>
+            <CardTitle className="text-2xl font-heading">{t('auth.register.title')}</CardTitle>
+            <CardDescription>{t('auth.register.desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">{t('auth.register.name')}</Label>
                 <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required data-testid="input-name" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('auth.register.email')}</Label>
                 <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required data-testid="input-email" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone (Optional)</Label>
+                <Label htmlFor="phone">{t('auth.register.phone')}</Label>
                 <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} data-testid="input-phone" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('auth.register.password')}</Label>
                 <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} data-testid="input-password" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm">Confirm Password</Label>
+                <Label htmlFor="confirm">{t('auth.register.confirm')}</Label>
                 <Input id="confirm" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required data-testid="input-confirm" />
               </div>
               <Button type="submit" className="w-full" disabled={loading} data-testid="button-register">
-                {loading ? 'Creating account...' : 'Create Account'}
+                {loading ? t('auth.register.submitting') : t('auth.register.submit')}
               </Button>
               <p className="text-sm text-muted-foreground text-center">
-                Already have an account?{' '}
+                {t('auth.register.haveAccount')}{' '}
                 <Link href="/login">
-                  <span className="text-primary hover:underline cursor-pointer" data-testid="link-login">Sign in</span>
+                  <span className="text-primary hover:underline cursor-pointer" data-testid="link-login">{t('auth.register.signIn')}</span>
                 </Link>
               </p>
             </form>

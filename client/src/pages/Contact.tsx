@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,17 +17,8 @@ import { useSeo } from '@/hooks/useSeo';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
-const contactSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Please enter a valid email address'),
-  phone: z.string().optional(),
-  subject: z.string().min(1, 'Please select a subject'),
-  message: z.string().min(10, 'Message must be at least 10 characters'),
-});
-
-type ContactForm = z.infer<typeof contactSchema>;
-
 export default function Contact() {
+  const { t } = useTranslation();
   useSeo({
     title: 'Contact AutoPro',
     description:
@@ -34,6 +26,16 @@ export default function Contact() {
   });
   const [submitted, setSubmitted] = useState(false);
   const { toast } = useToast();
+
+  const contactSchema = z.object({
+    name: z.string().min(2, t('contact.errors.name')),
+    email: z.string().email(t('contact.errors.email')),
+    phone: z.string().optional(),
+    subject: z.string().min(1, t('contact.errors.subject')),
+    message: z.string().min(10, t('contact.errors.message')),
+  });
+
+  type ContactForm = z.infer<typeof contactSchema>;
 
   const form = useForm<ContactForm>({
     resolver: zodResolver(contactSchema),
@@ -57,8 +59,8 @@ export default function Contact() {
     },
     onError: () => {
       toast({
-        title: 'Error',
-        description: 'Failed to send your message. Please try again or reach us via WhatsApp.',
+        title: t('contact.errorTitle'),
+        description: t('contact.errorText'),
         variant: 'destructive',
       });
     },
@@ -75,12 +77,12 @@ export default function Contact() {
       {/* Hero */}
       <div className="bg-black text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-xs font-bold tracking-[0.25em] text-primary uppercase mb-4">GET IN TOUCH</p>
+          <p className="text-xs font-bold tracking-[0.25em] text-primary uppercase mb-4">{t('contact.eyebrow')}</p>
           <h1 className="text-4xl md:text-5xl font-heading font-extrabold mb-4" data-testid="text-contact-title">
-            Contact Us
+            {t('contact.title')}
           </h1>
           <p className="text-lg text-white/70 max-w-2xl mx-auto">
-            Have a question about a vehicle, our escrow service, or anything else? We're here to help.
+            {t('contact.subtitle')}
           </p>
         </div>
       </div>
@@ -92,7 +94,7 @@ export default function Contact() {
             {/* Contact Info */}
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-heading font-bold mb-6">Our Information</h2>
+                <h2 className="text-2xl font-heading font-bold mb-6">{t('contact.infoTitle')}</h2>
               </div>
 
               <Card>
@@ -101,8 +103,8 @@ export default function Contact() {
                     <MapPin className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Location</h3>
-                    <p className="text-sm text-muted-foreground">123 Auto Drive<br />Los Angeles, CA 90001<br />United States</p>
+                    <h3 className="font-semibold mb-1">{t('contact.locationTitle')}</h3>
+                    <p className="text-sm text-muted-foreground whitespace-pre-line">{t('contact.locationText')}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -113,9 +115,9 @@ export default function Contact() {
                     <Phone className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Phone</h3>
-                    <p className="text-sm text-muted-foreground">+1 (555) 123-4567</p>
-                    <p className="text-sm text-muted-foreground">Mon–Fri, 9am–6pm PST</p>
+                    <h3 className="font-semibold mb-1">{t('contact.phoneTitle')}</h3>
+                    <p className="text-sm text-muted-foreground">{t('contact.phoneNumber')}</p>
+                    <p className="text-sm text-muted-foreground">{t('contact.phoneHours')}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -126,7 +128,7 @@ export default function Contact() {
                     <Mail className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Email</h3>
+                    <h3 className="font-semibold mb-1">{t('contact.emailTitle')}</h3>
                     <p className="text-sm text-muted-foreground">info@autopro.com</p>
                     <p className="text-sm text-muted-foreground">support@autopro.com</p>
                   </div>
@@ -139,10 +141,10 @@ export default function Contact() {
                     <Clock className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Business Hours</h3>
-                    <p className="text-sm text-muted-foreground">Monday – Friday: 9am – 6pm</p>
-                    <p className="text-sm text-muted-foreground">Saturday: 10am – 4pm</p>
-                    <p className="text-sm text-muted-foreground">Sunday: Closed</p>
+                    <h3 className="font-semibold mb-1">{t('contact.hoursTitle')}</h3>
+                    <p className="text-sm text-muted-foreground">{t('contact.hoursWeekdays')}</p>
+                    <p className="text-sm text-muted-foreground">{t('contact.hoursSaturday')}</p>
+                    <p className="text-sm text-muted-foreground">{t('contact.hoursSunday')}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -156,23 +158,23 @@ export default function Contact() {
                     <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                       <CheckCircle className="w-8 h-8 text-green-600" />
                     </div>
-                    <h2 className="text-2xl font-heading font-bold" data-testid="text-contact-success">Message Sent!</h2>
+                    <h2 className="text-2xl font-heading font-bold" data-testid="text-contact-success">{t('contact.successTitle')}</h2>
                     <p className="text-muted-foreground max-w-md">
-                      Thank you for reaching out. We've received your message and will get back to you within 1 business day.
+                      {t('contact.successText')}
                     </p>
                     <Button
                       variant="outline"
                       onClick={() => setSubmitted(false)}
                       data-testid="button-send-another"
                     >
-                      Send Another Message
+                      {t('contact.sendAnother')}
                     </Button>
                   </CardContent>
                 </Card>
               ) : (
                 <Card>
                   <CardContent className="pt-8">
-                    <h2 className="text-2xl font-heading font-bold mb-6">Send Us a Message</h2>
+                    <h2 className="text-2xl font-heading font-bold mb-6">{t('contact.formTitle')}</h2>
                     <Form {...form}>
                       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -181,9 +183,9 @@ export default function Contact() {
                             name="name"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Full Name</FormLabel>
+                                <FormLabel>{t('contact.fullName')}</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="John Smith" data-testid="input-contact-name" {...field} />
+                                  <Input placeholder={t('contact.fullNamePh')} data-testid="input-contact-name" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -194,9 +196,9 @@ export default function Contact() {
                             name="email"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Email Address</FormLabel>
+                                <FormLabel>{t('contact.email')}</FormLabel>
                                 <FormControl>
-                                  <Input type="email" placeholder="john@example.com" data-testid="input-contact-email" {...field} />
+                                  <Input type="email" placeholder={t('contact.emailPh')} data-testid="input-contact-email" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -210,9 +212,9 @@ export default function Contact() {
                             name="phone"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Phone (Optional)</FormLabel>
+                                <FormLabel>{t('contact.phone')}</FormLabel>
                                 <FormControl>
-                                  <Input type="tel" placeholder="+1 (555) 123-4567" data-testid="input-contact-phone" {...field} />
+                                  <Input type="tel" placeholder={t('contact.phonePh')} data-testid="input-contact-phone" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -223,20 +225,20 @@ export default function Contact() {
                             name="subject"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Subject</FormLabel>
+                                <FormLabel>{t('contact.subject')}</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
                                     <SelectTrigger data-testid="select-contact-subject">
-                                      <SelectValue placeholder="Select a subject" />
+                                      <SelectValue placeholder={t('contact.subjectPh')} />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value="vehicle-inquiry">Vehicle Inquiry</SelectItem>
-                                    <SelectItem value="escrow-question">Escrow Question</SelectItem>
-                                    <SelectItem value="test-drive">Schedule a Test Drive</SelectItem>
-                                    <SelectItem value="financing">Financing Options</SelectItem>
-                                    <SelectItem value="sell-vehicle">Sell My Vehicle</SelectItem>
-                                    <SelectItem value="other">Other</SelectItem>
+                                    <SelectItem value="vehicle-inquiry">{t('contact.subjects.vehicleInquiry')}</SelectItem>
+                                    <SelectItem value="escrow-question">{t('contact.subjects.escrowQuestion')}</SelectItem>
+                                    <SelectItem value="test-drive">{t('contact.subjects.testDrive')}</SelectItem>
+                                    <SelectItem value="financing">{t('contact.subjects.financing')}</SelectItem>
+                                    <SelectItem value="sell-vehicle">{t('contact.subjects.sellVehicle')}</SelectItem>
+                                    <SelectItem value="other">{t('contact.subjects.other')}</SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -250,10 +252,10 @@ export default function Contact() {
                           name="message"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Message</FormLabel>
+                              <FormLabel>{t('contact.message')}</FormLabel>
                               <FormControl>
                                 <Textarea
-                                  placeholder="Tell us how we can help you..."
+                                  placeholder={t('contact.messagePh')}
                                   className="min-h-36"
                                   data-testid="input-contact-message"
                                   {...field}
@@ -272,11 +274,11 @@ export default function Contact() {
                           data-testid="button-contact-submit"
                         >
                           {contactMutation.isPending ? (
-                            'Sending...'
+                            t('contact.sending')
                           ) : (
                             <>
                               <Send className="w-4 h-4 mr-2" />
-                              Send Message
+                              {t('contact.send')}
                             </>
                           )}
                         </Button>

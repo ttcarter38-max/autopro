@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Cookie, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 
 const STORAGE_KEY = 'autopro-cookie-consent';
 
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     try {
@@ -38,15 +40,15 @@ export default function CookieBanner() {
         <div className="flex items-start gap-2">
           <Cookie className="w-4 h-4 text-primary mt-0.5 shrink-0" />
           <p className="text-xs text-muted-foreground flex-1 leading-snug">
-            We use cookies to keep you signed in and improve the site.{' '}
+            {t('cookies.text')}{' '}
             <a href="/privacy" className="text-primary hover:underline">
-              Learn more
+              {t('cookies.learnMore')}
             </a>
             .
           </p>
           <button
             onClick={() => decide('declined')}
-            aria-label="Dismiss"
+            aria-label={t('cookies.dismiss')}
             className="text-muted-foreground hover-elevate rounded-md p-0.5 shrink-0"
             data-testid="button-cookie-close"
           >
@@ -60,7 +62,7 @@ export default function CookieBanner() {
             onClick={() => decide('declined')}
             data-testid="button-cookie-decline"
           >
-            Decline
+            {t('cookies.decline')}
           </Button>
           <Button
             variant="default"
@@ -68,7 +70,7 @@ export default function CookieBanner() {
             onClick={() => decide('accepted')}
             data-testid="button-cookie-accept"
           >
-            Accept
+            {t('cookies.accept')}
           </Button>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +15,7 @@ import Footer from '@/components/Footer';
 export default function Login() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -37,17 +39,17 @@ export default function Login() {
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Login failed');
+      if (!res.ok) throw new Error(data.error || t('auth.login.failedDefault'));
 
       await queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
-      toast({ title: 'Welcome back', description: `Hi ${data.user.name}!` });
+      toast({ title: t('auth.login.welcomeTitle'), description: t('auth.login.welcomeDesc', { name: data.user.name }) });
       if (data.user.role === 'admin') {
         setLocation('/admin/dashboard');
       } else {
         setLocation('/my-transactions');
       }
     } catch (err: any) {
-      toast({ title: 'Login failed', description: err.message, variant: 'destructive' });
+      toast({ title: t('auth.login.failedTitle'), description: err.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -64,28 +66,26 @@ export default function Login() {
                 <LogIn className="w-8 h-8 text-white" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-heading">Sign In</CardTitle>
-            <CardDescription>
-              Access your dashboard and track your escrow transactions
-            </CardDescription>
+            <CardTitle className="text-2xl font-heading">{t('auth.login.title')}</CardTitle>
+            <CardDescription>{t('auth.login.desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('auth.login.email')}</Label>
                 <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required data-testid="input-email" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('auth.login.password')}</Label>
                 <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required data-testid="input-password" />
               </div>
               <Button type="submit" className="w-full" disabled={loading} data-testid="button-login">
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading ? t('auth.login.submitting') : t('auth.login.submit')}
               </Button>
               <p className="text-sm text-muted-foreground text-center">
-                Don't have an account?{' '}
+                {t('auth.login.noAccount')}{' '}
                 <Link href="/register">
-                  <span className="text-primary hover:underline cursor-pointer" data-testid="link-register">Create one</span>
+                  <span className="text-primary hover:underline cursor-pointer" data-testid="link-register">{t('auth.login.createOne')}</span>
                 </Link>
               </p>
             </form>

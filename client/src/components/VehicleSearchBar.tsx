@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -24,31 +25,30 @@ export default function VehicleSearchBar({ onSearch }: VehicleSearchBarProps) {
   const [model, setModel] = useState<string>('');
   const [priceRange, setPriceRange] = useState<string>('');
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const makes = getMakes();
   const models = getModels(make);
 
   const handleSearch = () => {
-    console.log('Search triggered:', { make, model, priceRange });
-    
     if (!make && !model && !priceRange) {
       toast({
-        title: "Search Criteria Needed",
-        description: "Please select at least one filter to search for vehicles.",
+        title: t('searchBar.needCriteriaTitle'),
+        description: t('searchBar.needCriteriaDesc'),
         variant: "destructive",
       });
       return;
     }
 
     const searchText = [
-      make && `Make: ${make}`,
-      model && `Model: ${model}`,
-      priceRange && `Price: ${priceRange}`,
+      make && `${t('searchBar.make')}: ${make}`,
+      model && `${t('searchBar.model')}: ${model}`,
+      priceRange && `${t('searchBar.priceRange')}: ${priceRange}`,
     ].filter(Boolean).join(', ');
 
     toast({
-      title: "Search Results",
-      description: `Found vehicles matching: ${searchText}. Contact us at 1-800-CAR-DEAL for availability.`,
+      title: t('searchBar.resultsTitle'),
+      description: t('searchBar.resultsDesc', { criteria: searchText }),
     });
 
     if (onSearch) {
@@ -60,7 +60,7 @@ export default function VehicleSearchBar({ onSearch }: VehicleSearchBarProps) {
     <div className="bg-background py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h3 className="text-center text-xl md:text-2xl font-semibold mb-8 text-muted-foreground" data-testid="text-search-title">
-          UNSURE WHICH VEHICLE YOU ARE LOOKING FOR? FIND IT HERE
+          {t('searchBar.title')}
         </h3>
 
         <div className="bg-card border border-card-border rounded-md p-6 shadow-lg">
@@ -70,7 +70,7 @@ export default function VehicleSearchBar({ onSearch }: VehicleSearchBarProps) {
               setModel('');
             }}>
               <SelectTrigger data-testid="select-make">
-                <SelectValue placeholder="Make" />
+                <SelectValue placeholder={t('searchBar.make')} />
               </SelectTrigger>
               <SelectContent>
                 {makes.map((m) => (
@@ -81,7 +81,7 @@ export default function VehicleSearchBar({ onSearch }: VehicleSearchBarProps) {
 
             <Select value={model} onValueChange={setModel} disabled={!make}>
               <SelectTrigger data-testid="select-model">
-                <SelectValue placeholder="Model" />
+                <SelectValue placeholder={t('searchBar.model')} />
               </SelectTrigger>
               <SelectContent>
                 {models.map((m) => (
@@ -92,7 +92,7 @@ export default function VehicleSearchBar({ onSearch }: VehicleSearchBarProps) {
 
             <Select value={priceRange} onValueChange={setPriceRange}>
               <SelectTrigger data-testid="select-price">
-                <SelectValue placeholder="Price Range" />
+                <SelectValue placeholder={t('searchBar.priceRange')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="0-50000">$0 - $50,000</SelectItem>
@@ -104,7 +104,7 @@ export default function VehicleSearchBar({ onSearch }: VehicleSearchBarProps) {
 
             <Button className="w-full" onClick={handleSearch} data-testid="button-search-vehicles">
               <Search className="w-4 h-4 mr-2" />
-              SEARCH VEHICLES
+              {t('searchBar.search')}
             </Button>
           </div>
         </div>

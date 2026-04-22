@@ -1,5 +1,6 @@
 import { Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   Shield,
   Lock,
@@ -39,63 +40,43 @@ interface Testimonial {
   photoUrl: string;
 }
 
-const VALUES = [
-  {
-    Icon: Shield,
-    title: 'Trust First',
-    text: 'Every transaction is protected end-to-end by our escrow service. Funds never move until both buyer and seller are satisfied.',
-  },
-  {
-    Icon: HeartHandshake,
-    title: 'Buyer & Seller Equal',
-    text: 'We work for both sides. Clear communication, fair process, and full transparency from listing to delivery.',
-  },
-  {
-    Icon: Lock,
-    title: 'Secure by Design',
-    text: 'Bank transfers and crypto options, encrypted communications, identity verification, and a full audit trail on every deal.',
-  },
-  {
-    Icon: Globe,
-    title: 'Worldwide Reach',
-    text: 'We ship across borders and handle the paperwork, customs, and logistics so your purchase arrives smoothly.',
-  },
+const VALUES_META = [
+  { Icon: Shield, key: 'trust' },
+  { Icon: HeartHandshake, key: 'fair' },
+  { Icon: Lock, key: 'secure' },
+  { Icon: Globe, key: 'global' },
 ];
 
-const STATS = [
-  { value: '10K+', label: 'Successful Transactions' },
-  { value: '50+', label: 'Countries Served' },
-  { value: '$250M+', label: 'In Escrow Volume' },
-  { value: '99.8%', label: 'Customer Satisfaction' },
+const STATS_META = [
+  { value: '10K+', key: 'transactions' },
+  { value: '50+', key: 'countries' },
+  { value: '$250M+', key: 'volume' },
+  { value: '99.8%', key: 'satisfaction' },
 ];
 
-const STEPS = [
-  {
-    n: '01',
-    title: 'Browse & Select',
-    text: 'Pick from our verified inventory of cars, RVs, boats, motorcycles, and tractors — or send us a custom request.',
-  },
-  {
-    n: '02',
-    title: 'Open Escrow',
-    text: 'Funds are placed in our protected escrow account. The seller is notified and prepares the vehicle for shipment.',
-  },
-  {
-    n: '03',
-    title: 'Inspect & Receive',
-    text: 'You inspect on arrival. Only when you confirm everything is as agreed, we release payment to the seller.',
-  },
+const STEPS_META = [
+  { n: '01', key: 's1' },
+  { n: '02', key: 's2' },
+  { n: '03', key: 's3' },
 ];
 
 const CATEGORIES = [
-  { Icon: Car, label: 'Cars', slug: 'car' },
-  { Icon: Caravan, label: 'RVs', slug: 'rv' },
-  { Icon: Sailboat, label: 'Boats', slug: 'boat' },
-  { Icon: Bike, label: 'Motorcycles', slug: 'bike' },
-  { Icon: Tractor, label: 'Tractors', slug: 'tractor' },
+  { Icon: Car, key: 'car', slug: 'car' },
+  { Icon: Caravan, key: 'rv', slug: 'rv' },
+  { Icon: Sailboat, key: 'boat', slug: 'boat' },
+  { Icon: Bike, key: 'bike', slug: 'bike' },
+  { Icon: Tractor, key: 'tractor', slug: 'tractor' },
+];
+
+const STORY_BADGES = [
+  { Icon: Award, key: 'licensed' },
+  { Icon: Users, key: 'team' },
+  { Icon: Truck, key: 'logistics' },
+  { Icon: CheckCircle2, key: 'verified' },
 ];
 
 export default function About() {
+  const { t } = useTranslation();
   useSeo({
     title: 'About AutoPro — Why We Built a Curated Marketplace',
     description:
@@ -116,19 +97,17 @@ export default function About() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
           <div className="max-w-3xl">
             <p className="text-primary text-sm font-semibold tracking-widest uppercase mb-4" data-testid="text-about-eyebrow">
-              About AutoPro
+              {t('about.eyebrow')}
             </p>
             <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6 leading-tight" data-testid="text-about-title">
-              Buying vehicles across borders shouldn't be scary.
+              {t('about.title')}
             </h1>
             <p className="text-lg md:text-xl text-gray-300 mb-8" data-testid="text-about-subtitle">
-              AutoPro is a global marketplace and escrow service for cars, RVs, boats, motorcycles, and
-              tractors. We hold the funds, verify the deal, and only release payment when you're satisfied —
-              so you can buy with confidence from anywhere in the world.
+              {t('about.subtitle')}
             </p>
             <div className="flex flex-wrap gap-3">
               <Button asChild size="lg" data-testid="button-about-browse">
-                <Link href="/inventory">Browse Inventory</Link>
+                <Link href="/inventory">{t('about.browseInventory')}</Link>
               </Button>
               <Button
                 asChild
@@ -137,7 +116,7 @@ export default function About() {
                 className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20"
                 data-testid="button-about-escrow"
               >
-                <Link href="/escrow">How Escrow Works</Link>
+                <Link href="/escrow">{t('about.howEscrowWorks')}</Link>
               </Button>
             </div>
           </div>
@@ -148,10 +127,10 @@ export default function About() {
       <section className="border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {STATS.map((s) => (
-              <div key={s.label} className="text-center" data-testid={`stat-${s.label.toLowerCase().replace(/\s+/g, '-')}`}>
+            {STATS_META.map((s) => (
+              <div key={s.key} className="text-center" data-testid={`stat-${s.key}`}>
                 <div className="text-3xl md:text-4xl font-heading font-bold text-primary mb-1">{s.value}</div>
-                <div className="text-sm text-muted-foreground">{s.label}</div>
+                <div className="text-sm text-muted-foreground">{t(`about.stats.${s.key}`)}</div>
               </div>
             ))}
           </div>
@@ -162,40 +141,25 @@ export default function About() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div>
-            <p className="text-primary text-sm font-semibold tracking-widest uppercase mb-3">Our Story</p>
+            <p className="text-primary text-sm font-semibold tracking-widest uppercase mb-3">{t('about.story.eyebrow')}</p>
             <h2 className="text-3xl md:text-4xl font-heading font-bold mb-6" data-testid="text-story-title">
-              Built by people who got burned buying online.
+              {t('about.story.title')}
             </h2>
             <div className="space-y-4 text-muted-foreground">
-              <p>
-                AutoPro started after our founders watched too many friends lose deposits on vehicles they
-                never received. The pattern was always the same — wire the money, then silence.
-              </p>
-              <p>
-                We built AutoPro to fix that. Every deal on our platform runs through a regulated escrow
-                process. The seller can't disappear with your money, and you can't reject a vehicle without
-                cause. Both sides are protected.
-              </p>
-              <p>
-                Today we're trusted by thousands of buyers and sellers across more than fifty countries to
-                handle everything from a daily-driver sedan to a 60-foot yacht.
-              </p>
+              <p>{t('about.story.p1')}</p>
+              <p>{t('about.story.p2')}</p>
+              <p>{t('about.story.p3')}</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            {[
-              { Icon: Award, title: 'Licensed Dealer', text: 'Fully licensed and insured.' },
-              { Icon: Users, title: 'Dedicated Team', text: 'Concierge support on every deal.' },
-              { Icon: Truck, title: 'Global Logistics', text: 'Door-to-door, anywhere.' },
-              { Icon: CheckCircle2, title: 'Verified Listings', text: 'Every vehicle checked.' },
-            ].map((b) => (
-              <Card key={b.title}>
+            {STORY_BADGES.map((b) => (
+              <Card key={b.key}>
                 <CardContent className="p-6">
                   <b.Icon className="w-8 h-8 text-primary mb-3" />
-                  <div className="font-heading font-semibold mb-1" data-testid={`badge-${b.title.toLowerCase().replace(/\s+/g, '-')}`}>
-                    {b.title}
+                  <div className="font-heading font-semibold mb-1" data-testid={`badge-${b.key}`}>
+                    {t(`about.story.badges.${b.key}Title`)}
                   </div>
-                  <p className="text-sm text-muted-foreground">{b.text}</p>
+                  <p className="text-sm text-muted-foreground">{t(`about.story.badges.${b.key}Text`)}</p>
                 </CardContent>
               </Card>
             ))}
@@ -209,13 +173,13 @@ export default function About() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
             <div className="text-center max-w-2xl mx-auto mb-10">
               <p className="text-primary text-sm font-semibold tracking-widest uppercase mb-3">
-                Happy Customers
+                {t('about.testimonials.eyebrow')}
               </p>
               <h2 className="text-3xl md:text-4xl font-heading font-bold" data-testid="text-testimonials-title">
-                Real people. Real keys in their hands.
+                {t('about.testimonials.title')}
               </h2>
               <p className="text-gray-400 mt-3">
-                A few of our recent customers with their new rides.
+                {t('about.testimonials.sub')}
               </p>
             </div>
 
@@ -225,32 +189,32 @@ export default function About() {
               data-testid="carousel-testimonials"
             >
               <CarouselContent className="-ml-4">
-                {testimonials.map((t) => (
+                {testimonials.map((tItem) => (
                   <CarouselItem
-                    key={t.id}
+                    key={tItem.id}
                     className="pl-4 md:basis-1/2 lg:basis-1/3"
-                    data-testid={`testimonial-item-${t.id}`}
+                    data-testid={`testimonial-item-${tItem.id}`}
                   >
                     <Card className="overflow-hidden h-full bg-zinc-900 border-zinc-800 text-white">
                       <div className="aspect-[4/3] overflow-hidden bg-zinc-800">
                         <img
-                          src={t.photoUrl}
-                          alt={`${t.customerName} with their ${t.vehicle || 'new vehicle'}`}
+                          src={tItem.photoUrl}
+                          alt={`${tItem.customerName} with their ${tItem.vehicle || ''}`}
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <CardContent className="p-6 space-y-4">
                         <Quote className="w-6 h-6 text-primary" />
                         <p className="text-sm leading-relaxed text-gray-200 italic">
-                          "{t.quote}"
+                          "{tItem.quote}"
                         </p>
                         <div className="pt-3 border-t border-zinc-800">
-                          <div className="font-heading font-semibold" data-testid={`testimonial-name-${t.id}`}>
-                            {t.customerName}
+                          <div className="font-heading font-semibold" data-testid={`testimonial-name-${tItem.id}`}>
+                            {tItem.customerName}
                           </div>
-                          {(t.vehicle || t.location) && (
+                          {(tItem.vehicle || tItem.location) && (
                             <div className="text-xs text-gray-400 mt-0.5">
-                              {[t.vehicle, t.location].filter(Boolean).join(' • ')}
+                              {[tItem.vehicle, tItem.location].filter(Boolean).join(' • ')}
                             </div>
                           )}
                         </div>
@@ -274,22 +238,22 @@ export default function About() {
       <section className="bg-muted/30 border-y">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <p className="text-primary text-sm font-semibold tracking-widest uppercase mb-3">What We Stand For</p>
+            <p className="text-primary text-sm font-semibold tracking-widest uppercase mb-3">{t('about.values.eyebrow')}</p>
             <h2 className="text-3xl md:text-4xl font-heading font-bold" data-testid="text-values-title">
-              Four principles guide every transaction.
+              {t('about.values.title')}
             </h2>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {VALUES.map((v) => (
-              <Card key={v.title} className="hover-elevate">
+            {VALUES_META.map((v) => (
+              <Card key={v.key} className="hover-elevate">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center mb-4">
                     <v.Icon className="w-6 h-6 text-primary" />
                   </div>
-                  <h3 className="font-heading font-semibold text-lg mb-2" data-testid={`value-${v.title.toLowerCase().replace(/\s+/g, '-')}`}>
-                    {v.title}
+                  <h3 className="font-heading font-semibold text-lg mb-2" data-testid={`value-${v.key}`}>
+                    {t(`about.values.${v.key}Title`)}
                   </h3>
-                  <p className="text-sm text-muted-foreground">{v.text}</p>
+                  <p className="text-sm text-muted-foreground">{t(`about.values.${v.key}Text`)}</p>
                 </CardContent>
               </Card>
             ))}
@@ -300,20 +264,20 @@ export default function About() {
       {/* How it works */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <p className="text-primary text-sm font-semibold tracking-widest uppercase mb-3">How It Works</p>
+          <p className="text-primary text-sm font-semibold tracking-widest uppercase mb-3">{t('about.how.eyebrow')}</p>
           <h2 className="text-3xl md:text-4xl font-heading font-bold" data-testid="text-how-title">
-            Three simple steps. Zero guesswork.
+            {t('about.how.title')}
           </h2>
         </div>
         <div className="grid md:grid-cols-3 gap-6">
-          {STEPS.map((s) => (
+          {STEPS_META.map((s) => (
             <Card key={s.n}>
               <CardContent className="p-8">
                 <div className="text-5xl font-heading font-bold text-primary/30 mb-4">{s.n}</div>
                 <h3 className="font-heading font-semibold text-xl mb-3" data-testid={`step-${s.n}`}>
-                  {s.title}
+                  {t(`about.how.${s.key}Title`)}
                 </h3>
-                <p className="text-muted-foreground">{s.text}</p>
+                <p className="text-muted-foreground">{t(`about.how.${s.key}Text`)}</p>
               </CardContent>
             </Card>
           ))}
@@ -321,7 +285,7 @@ export default function About() {
         <div className="text-center mt-10">
           <Button asChild variant="outline" size="lg" data-testid="button-learn-escrow">
             <Link href="/escrow">
-              Learn more about our escrow service
+              {t('about.how.learnMore')}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
           </Button>
@@ -332,22 +296,22 @@ export default function About() {
       <section className="bg-muted/30 border-y">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <p className="text-primary text-sm font-semibold tracking-widest uppercase mb-3">What We Sell</p>
+            <p className="text-primary text-sm font-semibold tracking-widest uppercase mb-3">{t('about.categories.eyebrow')}</p>
             <h2 className="text-3xl md:text-4xl font-heading font-bold" data-testid="text-categories-title">
-              From daily drivers to weekend toys.
+              {t('about.categories.title')}
             </h2>
             <p className="text-muted-foreground mt-3">
-              Same secure process across every category we offer.
+              {t('about.categories.sub')}
             </p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {CATEGORIES.map(({ Icon, label, slug }) => (
+            {CATEGORIES.map(({ Icon, key, slug }) => (
               <Link key={slug} href={`/inventory?category=${slug}`}>
                 <Card className="hover-elevate cursor-pointer h-full">
                   <CardContent className="p-6 flex flex-col items-center text-center">
                     <Icon className="w-10 h-10 text-primary mb-3" />
                     <div className="font-heading font-semibold" data-testid={`about-cat-${slug}`}>
-                      {label}
+                      {t(`inventory.categories.${key}`)}
                     </div>
                   </CardContent>
                 </Card>
@@ -361,15 +325,14 @@ export default function About() {
       <section className="bg-black text-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20 text-center">
           <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4" data-testid="text-cta-title">
-            Ready to buy with confidence?
+            {t('about.cta.title')}
           </h2>
           <p className="text-gray-300 max-w-2xl mx-auto mb-8">
-            Browse our inventory or talk to our team about a custom search. We're here to make your next
-            purchase the easiest one yet.
+            {t('about.cta.sub')}
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
             <Button asChild size="lg" data-testid="button-cta-browse">
-              <Link href="/inventory">View Inventory</Link>
+              <Link href="/inventory">{t('about.cta.browse')}</Link>
             </Button>
             <Button
               asChild
@@ -378,7 +341,7 @@ export default function About() {
               className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20"
               data-testid="button-cta-contact"
             >
-              <Link href="/contact">Contact Us</Link>
+              <Link href="/contact">{t('about.cta.contact')}</Link>
             </Button>
           </div>
         </div>

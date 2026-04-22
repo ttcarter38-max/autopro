@@ -1,9 +1,23 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, Info } from 'lucide-react';
 import { useSeo } from '@/hooks/useSeo';
+import { useTranslation } from 'react-i18next';
 
 const LAST_UPDATED = 'April 21, 2026';
+
+function EnglishOnlyBanner() {
+  const { t, i18n } = useTranslation();
+  if (i18n.language?.startsWith('en')) return null;
+  return (
+    <div className="bg-muted border-y border-border">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-start gap-2 text-sm text-muted-foreground" data-testid="banner-english-only">
+        <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <p>{t('legal.englishOnlyNote')}</p>
+      </div>
+    </div>
+  );
+}
 
 const SECTIONS: { id: string; title: string; body: React.ReactNode }[] = [
   {
@@ -234,6 +248,8 @@ export default function Privacy() {
           <p className="text-white/70 text-sm">Last updated: {LAST_UPDATED}</p>
         </div>
       </div>
+
+      <EnglishOnlyBanner />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-12">
         <aside className="hidden lg:block">
