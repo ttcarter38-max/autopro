@@ -1,0 +1,105 @@
+{
+  "nav": {
+    "home": "STARTSEITE",
+    "vehicles": "FAHRZEUGE",
+    "escrow": "TREUHAND",
+    "about": "ÜBER UNS",
+    "contact": "KONTAKT",
+    "allVehicles": "Alle Fahrzeuge",
+    "cars": "Autos",
+    "rvs": "Wohnmobile",
+    "boats": "Boote",
+    "motorcycles": "Motorräder",
+    "tractors": "Traktoren",
+    "signIn": "Anmelden",
+    "register": "Registrieren",
+    "signOut": "Abmelden",
+    "adminDashboard": "Admin-Dashboard",
+    "myTransactions": "Meine Transaktionen"
+  },
+  "footer": {
+    "description": "Ihr vertrauenswürdiger Partner für das perfekte Luxusfahrzeug. Wir bieten Premium-Fahrzeuge mit außergewöhnlichem Service.",
+    "quickLinks": "Schnellzugriff",
+    "inventory": "Bestand",
+    "escrow": "Treuhand",
+    "about": "Über uns",
+    "contact": "Kontakt",
+    "faq": "FAQ",
+    "contactInfo": "Kontaktinformationen",
+    "newsletter": "Newsletter",
+    "newsletterText": "Abonnieren Sie unseren Newsletter für Neuheiten und Sonderangebote.",
+    "emailPlaceholder": "Ihre E-Mail",
+    "subscribe": "Abonnieren",
+    "subscribed": "Abonniert!",
+    "subscribedDesc": "Vielen Dank für Ihr Abonnement unseres Newsletters.",
+    "emailRequired": "E-Mail erforderlich",
+    "emailRequiredDesc": "Bitte geben Sie Ihre E-Mail-Adresse ein.",
+    "copyright": "© {{year}} AutoPro. Alle Rechte vorbehalten.",
+    "privacy": "Datenschutzerklärung",
+    "terms": "Nutzungsbedingungen",
+    "refunds": "Rückerstattungsrichtlinie"
+  },
+  "hero": {
+    "badge": "Nur auf Einladung · 10 pro Kategorie",
+    "browseVehicles": "FAHRZEUGE ANSEHEN",
+    "slide1": {
+      "eyebrow": "LANDESWEITER FAHRZEUGTRANSPORT",
+      "heading": "IHR AUTO. SORGENFREI GELIEFERT.",
+      "sub": "Tür-zu-Tür Autotransport im ganzen Land — Ihre Zahlung ist sicher im Treuhandkonto, bis Sie die Schlüssel in der Hand halten.",
+      "cta": "TREUHAND STARTEN"
+    },
+    "slide2": {
+      "eyebrow": "VERTRAUENSWÜRDIGER TREUHANDDIENST",
+      "heading": "MIT VERTRAUEN KAUFEN UND VERKAUFEN.",
+      "sub": "Gelder werden sicher verwahrt, bis Käufer und Verkäufer zufrieden sind. Keine Betrügereien, keine Überraschungen — nur sichere Geschäfte.",
+      "cta": "SO FUNKTIONIERT ES"
+    },
+    "slide3": {
+      "eyebrow": "HANDVERLESENER BESTAND",
+      "heading": "FAHREN SIE, WAS SIE LIEBEN.",
+      "sub": "Autos, Wohnmobile, Boote, Motorräder & Traktoren — jedes Inserat geprüft, inspektionsgesichert und treuhandgeschützt.",
+      "cta": "BESTAND ANSEHEN"
+    }
+  },
+  "trust": {
+    "escrowProtected": "Treuhandgeschützt",
+    "escrowProtectedSub": "Gelder erst bei Lieferung freigegeben",
+    "inspectionBacked": "Inspektionsgesichert",
+    "inspectionBackedSub": "Unabhängiger Vorkaufsbericht",
+    "verifiedSellers": "Verifizierte Verkäufer",
+    "verifiedSellersSub": "Titel & Eigentum bestätigt",
+    "insuredTransport": "Versicherter Transport",
+    "insuredTransportSub": "Tür zu Tür, voll abgedeckt"
+  },
+  "featured": {
+    "eyebrow": "KURATIERT · MONATLICH ERNEUERT",
+    "title": "AUSWAHL DES MONATS",
+    "loading": "Wird geladen…",
+    "meta": "{{count}} verifiziert · treuhandgeschützt · nur auf Einladung",
+    "empty": "Keine Fahrzeuge verfügbar. Melden Sie sich im Admin-Panel an, um Fahrzeuge hinzuzufügen!",
+    "viewAll": "GESAMTE AUSWAHL ANSEHEN"
+  },
+  "offers": {
+    "eyebrow": "MEISTGEFRAGTES ANGEBOT",
+    "title": "SONDERANGEBOTE",
+    "loading": "Fahrzeuge werden geladen...",
+    "empty": "Derzeit keine Sonderangebote. Schauen Sie bald wieder vorbei!"
+  },
+  "stats": {
+    "eyebrow": "ÜBER AUTOPRO",
+    "title": "WILLKOMMEN BEI AUTOPRO AUTOHAUS",
+    "newCars": "NEUWAGEN AUF LAGER",
+    "usedCars": "GEBRAUCHTWAGEN AUF LAGER",
+    "happyClients": "ZUFRIEDENE KUNDEN",
+    "spareParts": "AUTO-ERSATZTEILE",
+    "haveQuestion": "HABEN SIE EINE FRAGE?",
+    "callUs": "RUFEN SIE UNS AN: 1-800-CAR-DEAL",
+    "learnMore": "MEHR ERFAHREN"
+  },
+  "common": {
+    "language": "Sprache",
+    "signedOut": "Abgemeldet",
+    "logoutFailed": "Abmeldung fehlgeschlagen",
+    "tryAgain": "Bitte erneut versuchen"
+  }
+}

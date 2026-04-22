@@ -1,12 +1,14 @@
 import { Car, Users, Wrench, Award } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 
 export default function StatisticsSection() {
+  const { t } = useTranslation();
   const stats = [
-    { icon: Car, value: '1886', label: 'NEW CARS IN STOCK' },
-    { icon: Car, value: '1248', label: 'USED CARS IN STOCK' },
-    { icon: Users, value: '12,481', label: 'HAPPY CLIENTS' },
-    { icon: Wrench, value: '28,681', label: 'CARS SPARE PARTS' },
+    { icon: Car, value: '1886', label: t('stats.newCars') },
+    { icon: Car, value: '1248', label: t('stats.usedCars') },
+    { icon: Users, value: '12,481', label: t('stats.happyClients') },
+    { icon: Wrench, value: '28,681', label: t('stats.spareParts') },
   ];
 
   return (
@@ -14,10 +16,10 @@ export default function StatisticsSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <p className="text-sm text-primary font-semibold tracking-widest mb-2" data-testid="text-about-eyebrow">
-            ABOUT AUTOPRO
+            {t('stats.eyebrow')}
           </p>
           <h2 className="text-3xl md:text-4xl font-heading font-bold" data-testid="text-about-title">
-            WELCOME TO AUTOPRO CAR DEALER
+            {t('stats.title')}
           </h2>
         </div>
 
@@ -42,12 +44,12 @@ export default function StatisticsSection() {
           <div className="flex items-center gap-4">
             <Award className="w-16 h-16 text-primary" />
             <div>
-              <p className="text-sm font-semibold mb-1" data-testid="text-question">HAVE A QUESTION?</p>
-              <p className="text-2xl font-bold" data-testid="text-call-us">CALL US: 1-800-CAR-DEAL</p>
+              <p className="text-sm font-semibold mb-1" data-testid="text-question">{t('stats.haveQuestion')}</p>
+              <p className="text-2xl font-bold" data-testid="text-call-us">{t('stats.callUs')}</p>
             </div>
           </div>
           <Button size="lg" variant="default" data-testid="button-learn-more">
-            LEARN MORE
+            {t('stats.learnMore')}
           </Button>
         </div>
       </div>

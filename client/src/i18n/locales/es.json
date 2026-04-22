@@ -1,0 +1,105 @@
+{
+  "nav": {
+    "home": "INICIO",
+    "vehicles": "VEHÍCULOS",
+    "escrow": "DEPÓSITO",
+    "about": "NOSOTROS",
+    "contact": "CONTACTO",
+    "allVehicles": "Todos los vehículos",
+    "cars": "Coches",
+    "rvs": "Autocaravanas",
+    "boats": "Barcos",
+    "motorcycles": "Motocicletas",
+    "tractors": "Tractores",
+    "signIn": "Iniciar sesión",
+    "register": "Registrarse",
+    "signOut": "Cerrar sesión",
+    "adminDashboard": "Panel de administración",
+    "myTransactions": "Mis transacciones"
+  },
+  "footer": {
+    "description": "Su socio de confianza para encontrar el vehículo de lujo perfecto. Ofrecemos coches premium con un servicio excepcional.",
+    "quickLinks": "Enlaces rápidos",
+    "inventory": "Inventario",
+    "escrow": "Depósito en garantía",
+    "about": "Sobre nosotros",
+    "contact": "Contacto",
+    "faq": "Preguntas frecuentes",
+    "contactInfo": "Información de contacto",
+    "newsletter": "Boletín",
+    "newsletterText": "Suscríbase para recibir novedades y ofertas especiales.",
+    "emailPlaceholder": "Su correo electrónico",
+    "subscribe": "Suscribirse",
+    "subscribed": "¡Suscrito!",
+    "subscribedDesc": "Gracias por suscribirse a nuestro boletín.",
+    "emailRequired": "Correo electrónico requerido",
+    "emailRequiredDesc": "Por favor, introduzca su dirección de correo electrónico.",
+    "copyright": "© {{year}} AutoPro. Todos los derechos reservados.",
+    "privacy": "Política de privacidad",
+    "terms": "Términos del servicio",
+    "refunds": "Política de reembolsos"
+  },
+  "hero": {
+    "badge": "Solo por invitación · 10 por categoría",
+    "browseVehicles": "VER VEHÍCULOS",
+    "slide1": {
+      "eyebrow": "TRANSPORTE NACIONAL DE VEHÍCULOS",
+      "heading": "SU COCHE. ENTREGADO, SIN PREOCUPACIONES.",
+      "sub": "Transporte de coches puerta a puerta por todo el país — su pago está seguro en depósito hasta que tenga las llaves en sus manos.",
+      "cta": "INICIAR DEPÓSITO"
+    },
+    "slide2": {
+      "eyebrow": "SERVICIO DE DEPÓSITO DE CONFIANZA",
+      "heading": "COMPRE Y VENDA CON CONFIANZA.",
+      "sub": "Fondos retenidos de forma segura hasta que tanto el comprador como el vendedor estén satisfechos. Sin estafas, sin sorpresas — solo acuerdos seguros.",
+      "cta": "CÓMO FUNCIONA"
+    },
+    "slide3": {
+      "eyebrow": "INVENTARIO SELECCIONADO A MANO",
+      "heading": "CONDUZCA LO QUE AMA.",
+      "sub": "Coches, autocaravanas, barcos, motos y tractores — cada anuncio verificado, respaldado por inspección y protegido por depósito.",
+      "cta": "VER INVENTARIO"
+    }
+  },
+  "trust": {
+    "escrowProtected": "Protegido por depósito",
+    "escrowProtectedSub": "Fondos liberados solo al entregar",
+    "inspectionBacked": "Respaldado por inspección",
+    "inspectionBackedSub": "Informe independiente previo a la compra",
+    "verifiedSellers": "Vendedores verificados",
+    "verifiedSellersSub": "Título y propiedad confirmados",
+    "insuredTransport": "Transporte asegurado",
+    "insuredTransportSub": "Puerta a puerta, totalmente cubierto"
+  },
+  "featured": {
+    "eyebrow": "SELECCIONADO · ACTUALIZADO MENSUALMENTE",
+    "title": "SELECCIÓN DEL MES",
+    "loading": "Cargando…",
+    "meta": "{{count}} verificados · protegidos por depósito · solo por invitación",
+    "empty": "No hay vehículos disponibles. ¡Inicie sesión en el panel de administración para añadir vehículos!",
+    "viewAll": "VER LA SELECCIÓN COMPLETA"
+  },
+  "offers": {
+    "eyebrow": "ARTÍCULO MÁS DESEADO",
+    "title": "OFERTAS ESPECIALES",
+    "loading": "Cargando vehículos...",
+    "empty": "No hay ofertas especiales en este momento. ¡Vuelva pronto!"
+  },
+  "stats": {
+    "eyebrow": "SOBRE AUTOPRO",
+    "title": "BIENVENIDO A AUTOPRO CONCESIONARIO",
+    "newCars": "COCHES NUEVOS EN STOCK",
+    "usedCars": "COCHES USADOS EN STOCK",
+    "happyClients": "CLIENTES SATISFECHOS",
+    "spareParts": "REPUESTOS DE COCHES",
+    "haveQuestion": "¿TIENE UNA PREGUNTA?",
+    "callUs": "LLÁMENOS: 1-800-CAR-DEAL",
+    "learnMore": "MÁS INFORMACIÓN"
+  },
+  "common": {
+    "language": "Idioma",
+    "signedOut": "Sesión cerrada",
+    "logoutFailed": "Error al cerrar sesión",
+    "tryAgain": "Por favor, inténtelo de nuevo"
+  }
+}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Menu, X, User, LogOut, LayoutDashboard, Car, Caravan, Sailboat, Bike, Tractor, ChevronDown } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
@@ -14,14 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import ThemeToggle from '@/components/ThemeToggle';
-
-const VEHICLE_CATEGORIES = [
-  { slug: 'car', label: 'Cars', icon: Car },
-  { slug: 'rv', label: 'RVs', icon: Caravan },
-  { slug: 'boat', label: 'Boats', icon: Sailboat },
-  { slug: 'bike', label: 'Motorcycles', icon: Bike },
-  { slug: 'tractor', label: 'Tractors', icon: Tractor },
-] as const;
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -29,6 +23,15 @@ export default function Header() {
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { t } = useTranslation();
+
+  const VEHICLE_CATEGORIES = [
+    { slug: 'car', label: t('nav.cars'), icon: Car },
+    { slug: 'rv', label: t('nav.rvs'), icon: Caravan },
+    { slug: 'boat', label: t('nav.boats'), icon: Sailboat },
+    { slug: 'bike', label: t('nav.motorcycles'), icon: Bike },
+    { slug: 'tractor', label: t('nav.tractors'), icon: Tractor },
+  ];
 
   const handleLogout = async () => {
     try {
@@ -36,10 +39,10 @@ export default function Header() {
       if (!res.ok) throw new Error('Logout failed');
       await queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
       queryClient.removeQueries({ queryKey: ['/api/transactions'] });
-      toast({ title: 'Signed out' });
+      toast({ title: t('common.signedOut') });
       setLocation('/');
     } catch {
-      toast({ title: 'Logout failed', description: 'Please try again', variant: 'destructive' });
+      toast({ title: t('common.logoutFailed'), description: t('common.tryAgain'), variant: 'destructive' });
     }
   };
 
@@ -57,13 +60,13 @@ export default function Header() {
             <nav className="hidden md:flex items-center gap-6">
               <Link href="/">
                 <span className="text-sm font-medium hover-elevate px-3 py-2 rounded-md cursor-pointer" data-testid="button-home-menu">
-                  HOME
+                  {t('nav.home')}
                 </span>
               </Link>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="text-sm font-medium hover-elevate px-3 py-2 rounded-md cursor-pointer flex items-center gap-1" data-testid="button-vehicles-menu">
-                    VEHICLES
+                    {t('nav.vehicles')}
                     <ChevronDown className="w-3.5 h-3.5" />
                   </button>
                 </DropdownMenuTrigger>
@@ -71,7 +74,7 @@ export default function Header() {
                   <DropdownMenuItem asChild data-testid="link-category-all">
                     <Link href="/inventory">
                       <LayoutDashboard className="w-4 h-4 mr-2" />
-                      All Vehicles
+                      {t('nav.allVehicles')}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -87,23 +90,24 @@ export default function Header() {
               </DropdownMenu>
               <Link href="/escrow">
                 <span className="text-sm font-medium hover-elevate px-3 py-2 rounded-md cursor-pointer" data-testid="button-escrow-menu">
-                  ESCROW
+                  {t('nav.escrow')}
                 </span>
               </Link>
               <Link href="/about">
                 <span className="text-sm font-medium hover-elevate px-3 py-2 rounded-md cursor-pointer" data-testid="button-about-menu">
-                  ABOUT
+                  {t('nav.about')}
                 </span>
               </Link>
               <Link href="/contact">
                 <span className="text-sm font-medium hover-elevate px-3 py-2 rounded-md cursor-pointer" data-testid="button-contact-menu">
-                  CONTACT
+                  {t('nav.contact')}
                 </span>
               </Link>
             </nav>
           </div>
 
           <div className="hidden md:flex items-center gap-3">
+            <LanguageSwitcher variant="header" />
             <ThemeToggle />
             {isAuthenticated && user ? (
               <DropdownMenu>
@@ -123,43 +127,45 @@ export default function Header() {
                     <DropdownMenuItem asChild data-testid="link-admin-dashboard">
                       <Link href="/admin/dashboard">
                         <LayoutDashboard className="w-4 h-4 mr-2" />
-                        Admin Dashboard
+                        {t('nav.adminDashboard')}
                       </Link>
                     </DropdownMenuItem>
                   ) : (
                     <DropdownMenuItem asChild data-testid="link-my-transactions">
                       <Link href="/my-transactions">
                         <LayoutDashboard className="w-4 h-4 mr-2" />
-                        My Transactions
+                        {t('nav.myTransactions')}
                       </Link>
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} data-testid="button-logout">
                     <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
+                    {t('nav.signOut')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <>
                 <Button variant="ghost" size="sm" asChild className="text-white hover:bg-white/10" data-testid="button-signin">
-                  <Link href="/login">Sign In</Link>
+                  <Link href="/login">{t('nav.signIn')}</Link>
                 </Button>
                 <Button variant="default" size="sm" asChild data-testid="button-register">
-                  <Link href="/register">Register</Link>
+                  <Link href="/register">{t('nav.register')}</Link>
                 </Button>
               </>
             )}
           </div>
 
-          <button
-            className="md:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            data-testid="button-mobile-menu"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          <div className="flex items-center gap-2 md:hidden">
+            <LanguageSwitcher variant="header" />
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              data-testid="button-mobile-menu"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -172,17 +178,17 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
                 data-testid="button-mobile-home"
               >
-                HOME
+                {t('nav.home')}
               </span>
             </Link>
-            <div className="text-xs font-semibold text-muted-foreground px-3 pt-2 pb-1 uppercase tracking-wider">Vehicles</div>
+            <div className="text-xs font-semibold text-muted-foreground px-3 pt-2 pb-1 uppercase tracking-wider">{t('nav.vehicles')}</div>
             <Link href="/inventory">
               <span
                 className="block w-full text-left py-2 text-sm font-medium hover-elevate px-3 rounded-md"
                 onClick={() => setMobileMenuOpen(false)}
                 data-testid="button-mobile-vehicles"
               >
-                All Vehicles
+                {t('nav.allVehicles')}
               </span>
             </Link>
             {VEHICLE_CATEGORIES.map(({ slug, label, icon: Icon }) => (
@@ -203,7 +209,7 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
                 data-testid="button-mobile-escrow"
               >
-                ESCROW
+                {t('nav.escrow')}
               </span>
             </Link>
             <Link href="/about">
@@ -212,7 +218,7 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
                 data-testid="button-mobile-about"
               >
-                ABOUT
+                {t('nav.about')}
               </span>
             </Link>
             <Link href="/contact">
@@ -221,7 +227,7 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
                 data-testid="button-mobile-contact"
               >
-                CONTACT
+                {t('nav.contact')}
               </span>
             </Link>
 
@@ -234,7 +240,7 @@ export default function Header() {
                       onClick={() => setMobileMenuOpen(false)}
                       data-testid="button-mobile-dashboard"
                     >
-                      {user.role === 'admin' ? 'ADMIN DASHBOARD' : 'MY TRANSACTIONS'}
+                      {user.role === 'admin' ? t('nav.adminDashboard') : t('nav.myTransactions')}
                     </span>
                   </Link>
                   <button
@@ -242,7 +248,7 @@ export default function Header() {
                     onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
                     data-testid="button-mobile-logout"
                   >
-                    SIGN OUT
+                    {t('nav.signOut')}
                   </button>
                 </>
               ) : (
@@ -253,7 +259,7 @@ export default function Header() {
                       onClick={() => setMobileMenuOpen(false)}
                       data-testid="button-mobile-signin"
                     >
-                      SIGN IN
+                      {t('nav.signIn')}
                     </span>
                   </Link>
                   <Link href="/register">
@@ -262,7 +268,7 @@ export default function Header() {
                       onClick={() => setMobileMenuOpen(false)}
                       data-testid="button-mobile-register"
                     >
-                      REGISTER
+                      {t('nav.register')}
                     </span>
                   </Link>
                 </>

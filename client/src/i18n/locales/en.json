@@ -1,0 +1,105 @@
+{
+  "nav": {
+    "home": "HOME",
+    "vehicles": "VEHICLES",
+    "escrow": "ESCROW",
+    "about": "ABOUT",
+    "contact": "CONTACT",
+    "allVehicles": "All Vehicles",
+    "cars": "Cars",
+    "rvs": "RVs",
+    "boats": "Boats",
+    "motorcycles": "Motorcycles",
+    "tractors": "Tractors",
+    "signIn": "Sign In",
+    "register": "Register",
+    "signOut": "Sign Out",
+    "adminDashboard": "Admin Dashboard",
+    "myTransactions": "My Transactions"
+  },
+  "footer": {
+    "description": "Your trusted partner in finding the perfect luxury vehicle. We offer premium cars with exceptional service.",
+    "quickLinks": "Quick Links",
+    "inventory": "Inventory",
+    "escrow": "Escrow",
+    "about": "About Us",
+    "contact": "Contact",
+    "faq": "FAQ",
+    "contactInfo": "Contact Info",
+    "newsletter": "Newsletter",
+    "newsletterText": "Subscribe to get updates on new arrivals and special offers.",
+    "emailPlaceholder": "Your email",
+    "subscribe": "Subscribe",
+    "subscribed": "Subscribed!",
+    "subscribedDesc": "Thank you for subscribing to our newsletter.",
+    "emailRequired": "Email required",
+    "emailRequiredDesc": "Please enter your email address.",
+    "copyright": "© {{year}} AutoPro. All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "refunds": "Refund Policy"
+  },
+  "hero": {
+    "badge": "By Invitation Only · 10 Per Category",
+    "browseVehicles": "BROWSE VEHICLES",
+    "slide1": {
+      "eyebrow": "NATIONWIDE VEHICLE TRANSPORT",
+      "heading": "YOUR CAR. DELIVERED, WORRY-FREE.",
+      "sub": "Door-to-door auto transport across the country — your payment is safe in escrow until the keys are in your hands.",
+      "cta": "START ESCROW"
+    },
+    "slide2": {
+      "eyebrow": "TRUSTED ESCROW SERVICE",
+      "heading": "BUY & SELL WITH CONFIDENCE.",
+      "sub": "Funds held safely until both buyer and seller are satisfied. No scams, no surprises — just secure deals.",
+      "cta": "HOW IT WORKS"
+    },
+    "slide3": {
+      "eyebrow": "HAND-PICKED INVENTORY",
+      "heading": "DRIVE WHAT YOU LOVE.",
+      "sub": "Cars, RVs, boats, motorcycles & tractors — every listing verified, inspection-backed, and escrow-protected.",
+      "cta": "VIEW INVENTORY"
+    }
+  },
+  "trust": {
+    "escrowProtected": "Escrow Protected",
+    "escrowProtectedSub": "Funds released only on delivery",
+    "inspectionBacked": "Inspection Backed",
+    "inspectionBackedSub": "Independent pre-purchase report",
+    "verifiedSellers": "Verified Sellers",
+    "verifiedSellersSub": "Title & ownership confirmed",
+    "insuredTransport": "Insured Transport",
+    "insuredTransportSub": "Door-to-door, fully covered"
+  },
+  "featured": {
+    "eyebrow": "CURATED · REFRESHED MONTHLY",
+    "title": "THIS MONTH'S SELECTION",
+    "loading": "Loading…",
+    "meta": "{{count}} verified · escrow-protected · invitation only",
+    "empty": "No vehicles available. Log in to the admin panel to add vehicles!",
+    "viewAll": "VIEW THE FULL SELECTION"
+  },
+  "offers": {
+    "eyebrow": "MOST WANTED ITEM",
+    "title": "SPECIAL OFFERS",
+    "loading": "Loading vehicles...",
+    "empty": "No special offers at the moment. Check back soon!"
+  },
+  "stats": {
+    "eyebrow": "ABOUT AUTOPRO",
+    "title": "WELCOME TO AUTOPRO CAR DEALER",
+    "newCars": "NEW CARS IN STOCK",
+    "usedCars": "USED CARS IN STOCK",
+    "happyClients": "HAPPY CLIENTS",
+    "spareParts": "CARS SPARE PARTS",
+    "haveQuestion": "HAVE A QUESTION?",
+    "callUs": "CALL US: 1-800-CAR-DEAL",
+    "learnMore": "LEARN MORE"
+  },
+  "common": {
+    "language": "Language",
+    "signedOut": "Signed out",
+    "logoutFailed": "Logout failed",
+    "tryAgain": "Please try again"
+  }
+}

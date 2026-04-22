@@ -1,47 +1,34 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import truckBanner from '@assets/8872a0c0-1aeb-4ad3-a144-7f94de3ad2d5_1776239408426.png';
 import escrowBanner from '@assets/be14b73b-d8b1-4252-8d28-cacc0d9b235e_1776239412239.png';
 
-interface Slide {
-  id: number;
-  image: string;
-  eyebrow: string;
-  heading: string;
-  sub: string;
-  cta: string;
-}
-
-const slides: Slide[] = [
-  {
-    id: 1,
-    image: truckBanner,
-    eyebrow: 'NATIONWIDE VEHICLE TRANSPORT',
-    heading: 'YOUR CAR. DELIVERED, WORRY-FREE.',
-    sub: 'Door-to-door auto transport across the country — your payment is safe in escrow until the keys are in your hands.',
-    cta: 'START ESCROW',
-  },
-  {
-    id: 2,
-    image: escrowBanner,
-    eyebrow: 'TRUSTED ESCROW SERVICE',
-    heading: 'BUY & SELL WITH CONFIDENCE.',
-    sub: 'Funds held safely until both buyer and seller are satisfied. No scams, no surprises — just secure deals.',
-    cta: 'HOW IT WORKS',
-  },
-  {
-    id: 3,
-    image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1920&q=80',
-    eyebrow: 'HAND-PICKED INVENTORY',
-    heading: 'DRIVE WHAT YOU LOVE.',
-    sub: 'Cars, RVs, boats, motorcycles & tractors — every listing verified, inspection-backed, and escrow-protected.',
-    cta: 'VIEW INVENTORY',
-  },
-];
-
 export default function HeroSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const { t } = useTranslation();
+
+  const slides = [
+    {
+      id: 1,
+      image: truckBanner,
+      key: 'slide1',
+      ctaHref: '/escrow',
+    },
+    {
+      id: 2,
+      image: escrowBanner,
+      key: 'slide2',
+      ctaHref: '/escrow',
+    },
+    {
+      id: 3,
+      image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1920&q=80',
+      key: 'slide3',
+      ctaHref: '/inventory',
+    },
+  ];
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -60,12 +47,6 @@ export default function HeroSlider() {
 
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-  };
-
-  const ctaLinks: Record<string, string> = {
-    'START ESCROW': '/escrow',
-    'HOW IT WORKS': '/escrow',
-    'VIEW INVENTORY': '/inventory',
   };
 
   return (
@@ -93,20 +74,20 @@ export default function HeroSlider() {
                 <div className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 backdrop-blur-sm px-3 py-1 mb-5" data-testid={`badge-exclusive-${index}`}>
                   <Sparkles className="w-3.5 h-3.5 text-primary" />
                   <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-white">
-                    By Invitation Only · 10 Per Category
+                    {t('hero.badge')}
                   </span>
                 </div>
                 <p className="text-xs font-bold tracking-[0.25em] mb-4 text-primary uppercase" data-testid={`text-eyebrow-${index}`}>
-                  {slide.eyebrow}
+                  {t(`hero.${slide.key}.eyebrow`)}
                 </p>
                 <h2
                   className="text-5xl md:text-7xl font-heading font-extrabold tracking-wide mb-4 leading-tight bg-clip-text text-transparent bg-gradient-to-br from-white via-white to-primary drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]"
                   data-testid={`text-heading-${index}`}
                 >
-                  {slide.heading}
+                  {t(`hero.${slide.key}.heading`)}
                 </h2>
                 <p className="text-lg md:text-xl text-white/85 mb-8 max-w-xl leading-relaxed" data-testid={`text-sub-${index}`}>
-                  {slide.sub}
+                  {t(`hero.${slide.key}.sub`)}
                 </p>
                 <div className="flex gap-4 flex-wrap">
                   <Button
@@ -115,7 +96,7 @@ export default function HeroSlider() {
                     asChild
                     data-testid={`button-cta-${index}`}
                   >
-                    <a href={ctaLinks[slide.cta] || '/'}>{slide.cta}</a>
+                    <a href={slide.ctaHref}>{t(`hero.${slide.key}.cta`)}</a>
                   </Button>
                   <Button
                     variant="outline"
@@ -124,7 +105,7 @@ export default function HeroSlider() {
                     asChild
                     data-testid={`button-inventory-${index}`}
                   >
-                    <a href="/inventory">BROWSE VEHICLES</a>
+                    <a href="/inventory">{t('hero.browseVehicles')}</a>
                   </Button>
                 </div>
               </div>

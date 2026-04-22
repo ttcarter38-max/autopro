@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
 import { ShieldCheck } from 'lucide-react';
 import VehicleCard from './VehicleCard';
 
 export default function FeaturedVehicles() {
+  const { t } = useTranslation();
   const { data, isLoading } = useQuery<{ vehicles: any[] }>({
     queryKey: ['/api/vehicles/featured'],
   });
@@ -16,15 +18,15 @@ export default function FeaturedVehicles() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <p className="text-sm text-primary font-semibold tracking-widest mb-2" data-testid="text-featured-eyebrow">
-            CURATED · REFRESHED MONTHLY
+            {t('featured.eyebrow')}
           </p>
           <h2 className="text-3xl md:text-5xl font-heading font-bold mb-4" data-testid="text-featured-title">
-            THIS MONTH'S SELECTION
+            {t('featured.title')}
           </h2>
           <div className="inline-flex items-center gap-2 text-sm text-muted-foreground" data-testid="text-featured-meta">
             <ShieldCheck className="w-4 h-4 text-primary" />
             <span>
-              {isLoading ? 'Loading…' : `${vehicles.length} verified · escrow-protected · invitation only`}
+              {isLoading ? t('featured.loading') : t('featured.meta', { count: vehicles.length })}
             </span>
           </div>
         </div>
@@ -38,7 +40,7 @@ export default function FeaturedVehicles() {
         ) : vehicles.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">
-              No vehicles available. Log in to the admin panel to add vehicles!
+              {t('featured.empty')}
             </p>
           </div>
         ) : (
@@ -64,7 +66,7 @@ export default function FeaturedVehicles() {
             </div>
             <div className="text-center">
               <Button variant="default" size="lg" asChild data-testid="button-view-all">
-                <Link href="/inventory">VIEW THE FULL SELECTION</Link>
+                <Link href="/inventory">{t('featured.viewAll')}</Link>
               </Button>
             </div>
           </>

@@ -1,0 +1,105 @@
+{
+  "nav": {
+    "home": "ACCUEIL",
+    "vehicles": "VÉHICULES",
+    "escrow": "SÉQUESTRE",
+    "about": "À PROPOS",
+    "contact": "CONTACT",
+    "allVehicles": "Tous les véhicules",
+    "cars": "Voitures",
+    "rvs": "Camping-cars",
+    "boats": "Bateaux",
+    "motorcycles": "Motos",
+    "tractors": "Tracteurs",
+    "signIn": "Se connecter",
+    "register": "S'inscrire",
+    "signOut": "Se déconnecter",
+    "adminDashboard": "Tableau de bord admin",
+    "myTransactions": "Mes transactions"
+  },
+  "footer": {
+    "description": "Votre partenaire de confiance pour trouver le véhicule de luxe parfait. Nous offrons des voitures premium avec un service exceptionnel.",
+    "quickLinks": "Liens rapides",
+    "inventory": "Inventaire",
+    "escrow": "Séquestre",
+    "about": "À propos",
+    "contact": "Contact",
+    "faq": "FAQ",
+    "contactInfo": "Informations de contact",
+    "newsletter": "Newsletter",
+    "newsletterText": "Abonnez-vous pour recevoir les nouveautés et offres spéciales.",
+    "emailPlaceholder": "Votre e-mail",
+    "subscribe": "S'abonner",
+    "subscribed": "Abonné !",
+    "subscribedDesc": "Merci de vous être abonné à notre newsletter.",
+    "emailRequired": "E-mail requis",
+    "emailRequiredDesc": "Veuillez saisir votre adresse e-mail.",
+    "copyright": "© {{year}} AutoPro. Tous droits réservés.",
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions d'utilisation",
+    "refunds": "Politique de remboursement"
+  },
+  "hero": {
+    "badge": "Sur invitation uniquement · 10 par catégorie",
+    "browseVehicles": "PARCOURIR LES VÉHICULES",
+    "slide1": {
+      "eyebrow": "TRANSPORT DE VÉHICULES NATIONAL",
+      "heading": "VOTRE VOITURE. LIVRÉE, SANS SOUCI.",
+      "sub": "Transport de voitures porte-à-porte à travers tout le pays — votre paiement est en sécurité dans le séquestre jusqu'à ce que vous ayez les clés en main.",
+      "cta": "DÉMARRER LE SÉQUESTRE"
+    },
+    "slide2": {
+      "eyebrow": "SERVICE DE SÉQUESTRE DE CONFIANCE",
+      "heading": "ACHETEZ ET VENDEZ EN TOUTE CONFIANCE.",
+      "sub": "Fonds détenus en toute sécurité jusqu'à ce que l'acheteur et le vendeur soient satisfaits. Pas d'arnaques, pas de surprises — que des transactions sécurisées.",
+      "cta": "COMMENT ÇA MARCHE"
+    },
+    "slide3": {
+      "eyebrow": "INVENTAIRE SÉLECTIONNÉ À LA MAIN",
+      "heading": "CONDUISEZ CE QUE VOUS AIMEZ.",
+      "sub": "Voitures, camping-cars, bateaux, motos et tracteurs — chaque annonce vérifiée, soutenue par une inspection et protégée par séquestre.",
+      "cta": "VOIR L'INVENTAIRE"
+    }
+  },
+  "trust": {
+    "escrowProtected": "Protégé par séquestre",
+    "escrowProtectedSub": "Fonds libérés uniquement à la livraison",
+    "inspectionBacked": "Soutenu par inspection",
+    "inspectionBackedSub": "Rapport indépendant avant achat",
+    "verifiedSellers": "Vendeurs vérifiés",
+    "verifiedSellersSub": "Titre et propriété confirmés",
+    "insuredTransport": "Transport assuré",
+    "insuredTransportSub": "Porte-à-porte, entièrement couvert"
+  },
+  "featured": {
+    "eyebrow": "SÉLECTIONNÉ · RENOUVELÉ MENSUELLEMENT",
+    "title": "SÉLECTION DU MOIS",
+    "loading": "Chargement…",
+    "meta": "{{count}} vérifiés · protégés par séquestre · sur invitation uniquement",
+    "empty": "Aucun véhicule disponible. Connectez-vous au panneau d'administration pour ajouter des véhicules !",
+    "viewAll": "VOIR LA SÉLECTION COMPLÈTE"
+  },
+  "offers": {
+    "eyebrow": "ARTICLE LE PLUS DEMANDÉ",
+    "title": "OFFRES SPÉCIALES",
+    "loading": "Chargement des véhicules...",
+    "empty": "Aucune offre spéciale pour le moment. Revenez bientôt !"
+  },
+  "stats": {
+    "eyebrow": "À PROPOS D'AUTOPRO",
+    "title": "BIENVENUE CHEZ AUTOPRO CONCESSIONNAIRE",
+    "newCars": "VOITURES NEUVES EN STOCK",
+    "usedCars": "VOITURES D'OCCASION EN STOCK",
+    "happyClients": "CLIENTS SATISFAITS",
+    "spareParts": "PIÈCES DÉTACHÉES AUTO",
+    "haveQuestion": "UNE QUESTION ?",
+    "callUs": "APPELEZ-NOUS : 1-800-CAR-DEAL",
+    "learnMore": "EN SAVOIR PLUS"
+  },
+  "common": {
+    "language": "Langue",
+    "signedOut": "Déconnecté",
+    "logoutFailed": "Échec de la déconnexion",
+    "tryAgain": "Veuillez réessayer"
+  }
+}
