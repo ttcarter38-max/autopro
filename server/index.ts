@@ -6,6 +6,9 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
+// Trust the first proxy (Railway, Heroku, etc.) so secure cookies work behind HTTPS terminators
+app.set('trust proxy', 1);
+
 declare module 'http' {
   interface IncomingMessage {
     rawBody: unknown
@@ -19,6 +22,8 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    httpOnly: true,
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
   },
 }));
