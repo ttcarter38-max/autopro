@@ -1,0 +1,104 @@
+I want to start fixing the CRITICAL security vulnerabilities identified in the audit.
+
+Focus ONLY on the following items first.
+
+1. SELLER ACCEPT/REJECT SECURITY
+
+Convert seller accept/reject endpoints from GET to POST.
+
+Implement:
+
+- A confirmation page that loads first
+- A POST request triggered only when the seller clicks a button
+- CSRF protection using a secure nonce token
+- Ensure email scanners cannot trigger state changes
+
+Show:
+
+- Updated route handlers
+- Updated frontend confirmation page
+- CSRF implementation
+
+---
+
+2. FIX STORED XSS VULNERABILITY
+
+Fix the stored XSS issue in sellerResponsePage.
+
+Implement:
+
+- Proper HTML escaping of all user-generated fields
+- Use a safe escaping method
+- Ensure no raw HTML is rendered from database content
+
+Show:
+
+- Updated safe rendering logic
+- Which fields are sanitized
+
+---
+
+3. SECURE PAYMENT PROOF UPLOAD
+
+Fix POST /api/transactions/:idOrToken/payment-proof.
+
+Implement:
+
+- Require authentication OR matching guestToken
+- Prevent uploads using numeric ID alone
+- Validate ownership of transaction
+- Add validation for request body
+
+Show:
+
+- Updated route logic
+- Ownership validation logic
+
+---
+
+4. PROTECT PAYMENT PROOF FILES
+
+Move proof files behind authentication.
+
+Implement:
+
+- Remove public direct access to /uploads/proofs/*
+- Add route to securely fetch proof files
+- Only allow:
+  - Admin
+  - Buyer
+  - Seller with valid token
+
+Show:
+
+- Updated file-serving logic
+
+---
+
+5. IMPLEMENT TRANSACTION STATE MACHINE
+
+Create a centralized state validation system.
+
+Define:
+
+Allowed transitions:
+
+initiated → awaiting_admin_approval  
+awaiting_admin_approval → awaiting_payment_confirmation  
+awaiting_payment_confirmation → in_transit  
+in_transit → inspection  
+inspection → approved  
+approved → released  
+
+Allow:
+
+Any state → cancelled
+
+Block:
+
+All invalid transitions.
+
+Show:
+
+- State transition validation function
+- Integration into transaction update logic
