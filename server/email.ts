@@ -75,6 +75,7 @@ async function sendViaResend(data: EmailData): Promise<boolean> {
 }
 
 export async function sendEmail(data: EmailData): Promise<boolean> {
+  console.log(`[email] dispatch "${data.subject}" -> ${data.to}`);
   // Prefer Resend when configured; fall back to Gmail connector.
   if (resend) {
     const ok = await sendViaResend(data);

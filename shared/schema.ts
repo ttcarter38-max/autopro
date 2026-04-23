@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, timestamp, decimal, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, boolean, timestamp, decimal, pgEnum, index } from 'drizzle-orm/pg-core';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
@@ -54,7 +54,11 @@ export const vehicles = pgTable('vehicles', {
   available: boolean('available').default(true),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  featuredIdx: index('vehicles_featured_idx').on(table.featured),
+  availableIdx: index('vehicles_available_idx').on(table.available),
+  categoryIdx: index('vehicles_category_idx').on(table.category),
+}));
 
 export const insertVehicleSchema = createInsertSchema(vehicles, {
   category: z.enum(VEHICLE_CATEGORIES).default('car'),
@@ -70,7 +74,9 @@ export const vehicleImages = pgTable('vehicle_images', {
   isPrimary: boolean('is_primary').default(false),
   displayOrder: integer('display_order').default(0),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  vehicleIdIdx: index('vehicle_images_vehicle_id_idx').on(table.vehicleId),
+}));
 
 export const insertVehicleImageSchema = createInsertSchema(vehicleImages).omit({ id: true, createdAt: true });
 export type InsertVehicleImage = z.infer<typeof insertVehicleImageSchema>;
@@ -136,7 +142,13 @@ export const transactions = pgTable('transactions', {
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  guestTokenIdx: index('transactions_guest_token_idx').on(table.guestToken),
+  sellerTokenIdx: index('transactions_seller_token_idx').on(table.sellerToken),
+  buyerIdIdx: index('transactions_buyer_id_idx').on(table.buyerId),
+  statusIdx: index('transactions_status_idx').on(table.status),
+  createdAtIdx: index('transactions_created_at_idx').on(table.createdAt),
+}));
 
 export const insertTransactionSchema = createInsertSchema(transactions, {
   buyerPaymentMethod: z.enum(['bank', 'crypto']).optional(),
@@ -154,7 +166,9 @@ export const transactionEvents = pgTable('transaction_events', {
   notes: text('notes'),
   createdBy: integer('created_by').references(() => users.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  transactionIdIdx: index('transaction_events_transaction_id_idx').on(table.transactionId),
+}));
 
 export const insertTransactionEventSchema = createInsertSchema(transactionEvents).omit({ id: true, createdAt: true });
 export type InsertTransactionEvent = z.infer<typeof insertTransactionEventSchema>;

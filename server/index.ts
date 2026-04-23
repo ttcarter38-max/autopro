@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import helmet from "helmet";
 import passport from "./auth";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -8,6 +9,34 @@ const app = express();
 
 // Trust the first proxy (Railway, Heroku, etc.) so secure cookies work behind HTTPS terminators
 app.set('trust proxy', 1);
+
+// Security headers via helmet.
+// In dev we relax CSP and frame protections so the Replit preview iframe and Vite HMR work.
+// In production (Railway) we enable a basic CSP and same-origin frame guard.
+const isProd = process.env.NODE_ENV === 'production';
+app.use(helmet({
+  contentSecurityPolicy: isProd
+    ? {
+        useDefaults: true,
+        directives: {
+          "default-src": ["'self'"],
+          "script-src": ["'self'", "'unsafe-inline'"],
+          "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+          "font-src": ["'self'", "data:", "https://fonts.gstatic.com"],
+          "img-src": ["'self'", "data:", "blob:", "https:"],
+          "connect-src": ["'self'", "https:"],
+          "frame-ancestors": ["'self'"],
+          "object-src": ["'none'"],
+          "base-uri": ["'self'"],
+          "upgrade-insecure-requests": [],
+        },
+      }
+    : false,
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  frameguard: isProd ? { action: 'sameorigin' } : false,
+  hsts: isProd ? { maxAge: 15552000, includeSubDomains: true } : false,
+}));
 
 declare module 'http' {
   interface IncomingMessage {
