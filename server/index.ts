@@ -1,7 +1,9 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import helmet from "helmet";
 import passport from "./auth";
+import { pool } from "./db";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -44,9 +46,25 @@ declare module 'http' {
   }
 }
 
-// Session configuration
+// Session configuration — sessions persisted in Postgres so they survive server restarts.
+const sessionSecret = process.env.SESSION_SECRET;
+if (!sessionSecret || sessionSecret.length < 16) {
+  throw new Error(
+    'SESSION_SECRET must be set to a strong random value (at least 16 characters). ' +
+    'Set it in your environment (e.g. Railway Variables) before starting the server.'
+  );
+}
+
+const PgSessionStore = connectPgSimple(session);
+const sessionStore = new PgSessionStore({
+  pool,
+  tableName: 'session',
+  createTableIfMissing: true,
+});
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'autopro-secret-key-change-in-production',
+  store: sessionStore,
+  secret: sessionSecret,
   resave: false,
   saveUninitialized: false,
   cookie: {
