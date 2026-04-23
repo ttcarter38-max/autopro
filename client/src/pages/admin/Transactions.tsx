@@ -18,7 +18,18 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { FileText, ExternalLink, Bitcoin, Building2, CheckCircle, XCircle, Clock, Trash2 } from 'lucide-react';
+import { FileText, ExternalLink, Bitcoin, Building2, CheckCircle, XCircle, Clock, Trash2, AlertTriangle } from 'lucide-react';
+
+const ALLOWED_NEXT: Record<string, string[]> = {
+  initiated:                     ['awaiting_admin_approval', 'cancelled'],
+  awaiting_admin_approval:       ['awaiting_payment_confirmation', 'cancelled'],
+  awaiting_payment_confirmation: ['in_transit', 'cancelled'],
+  in_transit:                    ['inspection', 'cancelled'],
+  inspection:                    ['approved', 'cancelled'],
+  approved:                      ['released', 'cancelled'],
+  released:                      [],
+  cancelled:                     [],
+};
 
 const STATUS_COLORS: Record<string, 'default' | 'secondary' | 'destructive'> = {
   initiated: 'secondary',
@@ -51,6 +62,8 @@ export default function AdminTransactions() {
   const [cryptoAddress, setCryptoAddress] = useState('');
   const [cryptoCoin, setCryptoCoin] = useState('BTC');
   const [notes, setNotes] = useState('');
+  const [overrideEnabled, setOverrideEnabled] = useState(false);
+  const [overrideReason, setOverrideReason] = useState('');
 
   const { data: transactionsData, isLoading } = useQuery({
     queryKey: ['/api/admin/transactions'],
@@ -60,6 +73,7 @@ export default function AdminTransactions() {
     mutationFn: async (data: {
       id: number; status: string; paymentMethod?: string; bankInfo?: string;
       cryptoAddress?: string; cryptoCoin?: string; notes?: string;
+      override?: boolean; overrideReason?: string;
     }) => {
       return await apiRequest('PATCH', `/api/admin/transactions/${data.id}`, {
         status: data.status,
@@ -68,6 +82,8 @@ export default function AdminTransactions() {
         cryptoAddress: data.cryptoAddress,
         cryptoCoin: data.cryptoCoin,
         notes: data.notes,
+        override: data.override,
+        overrideReason: data.overrideReason,
       });
     },
     onSuccess: () => {
@@ -78,6 +94,8 @@ export default function AdminTransactions() {
       setBankInfo('');
       setCryptoAddress('');
       setNotes('');
+      setOverrideEnabled(false);
+      setOverrideReason('');
     },
     onError: (error: any) => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -99,8 +117,37 @@ export default function AdminTransactions() {
     },
   });
 
+  const currentStatus = selectedTransaction?.status as string | undefined;
+  const allowedNext = currentStatus ? ALLOWED_NEXT[currentStatus] || [] : [];
+  const isSameState = !!currentStatus && newStatus === currentStatus;
+  const needsOverride = !!currentStatus && !isSameState && !allowedNext.includes(newStatus);
+
   const handleUpdateTransaction = () => {
     if (!selectedTransaction || !newStatus) return;
+
+    if (needsOverride) {
+      if (!overrideEnabled) {
+        toast({
+          title: 'Override required',
+          description: `"${currentStatus}" → "${newStatus}" is not a normal step. Enable Admin Override below to proceed.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+      if (overrideReason.trim().length < 5) {
+        toast({
+          title: 'Override reason required',
+          description: 'Please describe why this manual override is needed (at least 5 characters).',
+          variant: 'destructive',
+        });
+        return;
+      }
+      const ok = window.confirm(
+        `ADMIN OVERRIDE\n\nYou are about to force a state change that bypasses the normal flow:\n\n${currentStatus}  →  ${newStatus}\n\nThis will be permanently logged in the audit history. Continue?`
+      );
+      if (!ok) return;
+    }
+
     updateMutation.mutate({
       id: selectedTransaction.id,
       status: newStatus,
@@ -109,6 +156,8 @@ export default function AdminTransactions() {
       cryptoAddress: paymentMethod === 'crypto' ? cryptoAddress : undefined,
       cryptoCoin: paymentMethod === 'crypto' ? cryptoCoin : undefined,
       notes: notes || undefined,
+      override: needsOverride ? true : undefined,
+      overrideReason: needsOverride ? overrideReason.trim() : undefined,
     });
   };
 
@@ -368,7 +417,52 @@ export default function AdminTransactions() {
                     <SelectItem value="cancelled">Cancelled</SelectItem>
                   </SelectContent>
                 </Select>
+                {currentStatus && !isSameState && (
+                  <p className="text-xs text-muted-foreground">
+                    Allowed next steps: {allowedNext.length ? allowedNext.join(', ') : '(none — final state)'}
+                  </p>
+                )}
               </div>
+
+              {/* Admin Override block — appears only when transition is non-standard */}
+              {needsOverride && (
+                <div className="border border-destructive/50 bg-destructive/5 rounded-md p-4 space-y-3">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
+                    <div className="space-y-1">
+                      <p className="font-semibold text-destructive">Admin override required</p>
+                      <p className="text-sm text-muted-foreground">
+                        Moving from <strong>{currentStatus}</strong> to <strong>{newStatus}</strong> is not part of the
+                        normal flow. This will be permanently logged in the transaction history.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="override-toggle"
+                      checked={overrideEnabled}
+                      onChange={(e) => setOverrideEnabled(e.target.checked)}
+                      data-testid="checkbox-override"
+                    />
+                    <Label htmlFor="override-toggle" className="cursor-pointer">
+                      I understand — enable Admin Override
+                    </Label>
+                  </div>
+                  {overrideEnabled && (
+                    <div className="space-y-2">
+                      <Label htmlFor="override-reason">Reason for override (required, min. 5 chars)</Label>
+                      <Textarea
+                        id="override-reason"
+                        value={overrideReason}
+                        onChange={(e) => setOverrideReason(e.target.value)}
+                        placeholder="e.g. Buyer paid out-of-band; jumping straight to in_transit"
+                        data-testid="input-override-reason"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Payment Method Toggle */}
               <div className="space-y-3">

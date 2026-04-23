@@ -51,6 +51,7 @@ export interface IStorage {
   getTransaction(id: number): Promise<Transaction | undefined>;
   getTransactionByToken(token: string): Promise<Transaction | undefined>;
   getTransactionBySellerToken(token: string): Promise<Transaction | undefined>;
+  getTransactionByProofFile(filePath: string): Promise<Transaction | undefined>;
   getUserTransactions(buyerId: number): Promise<Transaction[]>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   updateTransaction(id: number, transaction: Partial<InsertTransaction>): Promise<Transaction | undefined>;
@@ -285,6 +286,11 @@ export class PostgresStorage implements IStorage {
 
   async getTransactionBySellerToken(token: string): Promise<Transaction | undefined> {
     const result = await db.select().from(transactions).where(eq(transactions.sellerToken, token));
+    return result[0];
+  }
+
+  async getTransactionByProofFile(filePath: string): Promise<Transaction | undefined> {
+    const result = await db.select().from(transactions).where(eq(transactions.paymentProofFile, filePath));
     return result[0];
   }
 

@@ -162,8 +162,8 @@ export async function sendSellerTransactionNotification(transaction: {
   const base = getBaseUrl();
   const sellerDisplay = transaction.sellerName || 'Seller';
   const vehicleInfo = transaction.customVehicleDescription || 'Your vehicle';
-  const acceptUrl = `${base}/api/seller/${transaction.sellerToken}/accept`;
-  const rejectUrl = `${base}/api/seller/${transaction.sellerToken}/reject`;
+  const acceptUrl = `${base}/seller/${transaction.sellerToken}?action=accept`;
+  const rejectUrl = `${base}/seller/${transaction.sellerToken}?action=reject`;
 
   const html = emailWrapper(`
     <h2 style="color:#111;margin-top:0;">A Buyer Has Started Escrow for Your Vehicle</h2>

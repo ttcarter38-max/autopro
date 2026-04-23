@@ -43,7 +43,7 @@ export default function SellerAction() {
 
   const acceptMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('POST', `/api/seller/${token}/accept`, { password });
+      return apiRequest('POST', `/api/seller/${token}/accept`, { password, nonce: data?.nonce });
     },
     onSuccess: () => {
       setDone(true);
@@ -57,7 +57,7 @@ export default function SellerAction() {
 
   const rejectMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('POST', `/api/seller/${token}/reject`, { password, reason });
+      return apiRequest('POST', `/api/seller/${token}/reject`, { password, reason, nonce: data?.nonce });
     },
     onSuccess: () => {
       setDone(true);

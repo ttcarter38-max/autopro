@@ -267,7 +267,7 @@ export default function TransactionTracking() {
                                     )}
                                     {transaction.paymentProofFile && (
                                       <a
-                                        href={transaction.paymentProofFile}
+                                        href={`${transaction.paymentProofFile}?token=${transaction.guestToken}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="flex items-center gap-1 text-xs text-primary hover:underline mt-1"

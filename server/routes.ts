@@ -15,6 +15,9 @@ import {
   transactionLimiter,
   sellerActionLimiter,
 } from "./middleware/rateLimit";
+import { escapeHtml } from "./lib/escape";
+import { validateTransition, ALLOWED_TRANSITIONS, type TxStatus } from "./lib/transitions";
+import { issueSellerNonce, consumeSellerNonce } from "./lib/sellerNonce";
 
 // ── Strict input schemas (whitelisted; protect against mass-assignment) ─────
 const buyerTransactionInputSchema = z.object({
@@ -63,6 +66,18 @@ const adminUpdateTransactionSchema = z.object({
   cryptoAddress: z.string().max(200).nullable().optional(),
   cryptoCoin: z.string().max(20).nullable().optional(),
   notes: z.string().max(2000).optional(),
+  override: z.boolean().optional(),
+  overrideReason: z.string().trim().max(500).optional(),
+});
+
+const sellerActionSchema = z.object({
+  nonce: z.string().min(8).max(80),
+  password: z.string().max(200).optional(),
+  reason: z.string().trim().max(500).optional(),
+});
+
+const paymentProofSchema = z.object({
+  bankRef: z.string().trim().max(200).optional(),
 });
 
 import {
@@ -90,12 +105,15 @@ function sellerResponsePage(type: 'success' | 'rejected' | 'info' | 'error', tit
     error: { bg: '#9ca3af', icon: '&#33;' },
   };
   const { bg, icon } = colors[type];
+  // Escape user-controlled inputs to prevent stored XSS via vehicle/seller fields
+  const safeTitle = escapeHtml(title);
+  const safeMessage = escapeHtml(message);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${title} — AutoPro Escrow</title>
+  <title>${safeTitle} — AutoPro Escrow</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, sans-serif; background: #f4f4f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
@@ -111,8 +129,8 @@ function sellerResponsePage(type: 'success' | 'rejected' | 'info' | 'error', tit
   <div class="card">
     <div class="header">AUTOPRO ESCROW</div>
     <div class="icon">${icon}</div>
-    <h1>${title}</h1>
-    <p>${message}</p>
+    <h1>${safeTitle}</h1>
+    <p>${safeMessage}</p>
     <div class="footer">Questions? Contact us: escrow@autopro.com &nbsp;|&nbsp; 1-800-CAR-DEAL</div>
   </div>
 </body>
@@ -627,11 +645,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ===== SELLER ACTION ROUTES (no auth — protected by password + token) =====
 
-  // Get transaction info for seller (public, by seller token)
-  app.get('/api/seller/:token', async (req, res) => {
+  // Get transaction info for seller (public, by seller token).
+  // Also issues a single-use nonce required to POST accept/reject — protects
+  // against email-scanner GET prefetch and CSRF.
+  app.get('/api/seller/:token', sellerActionLimiter, async (req, res) => {
     try {
       const transaction = await storage.getTransactionBySellerToken(req.params.token);
       if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
+      const nonce = issueSellerNonce(req.params.token);
       // Return only safe seller-relevant fields
       res.json({
         id: transaction.id,
@@ -643,97 +664,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: transaction.status,
         inspectionDays: transaction.inspectionDays,
         createdAt: transaction.createdAt,
+        nonce,
       });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
 
-  // Seller accepts transaction (one-click GET from email link)
-  app.get('/api/seller/:token/accept', sellerActionLimiter, async (req, res) => {
-    try {
-      let transaction = null;
-      try { transaction = await storage.getTransactionBySellerToken(req.params.token); } catch (_) {}
+  // Legacy GET accept/reject — kept only to return a friendly page that
+  // redirects to the SPA confirmation flow. NEVER mutates state.
+  app.get('/api/seller/:token/accept', (req, res) => {
+    const safeToken = encodeURIComponent(req.params.token);
+    res.redirect(302, `/seller/${safeToken}?action=accept`);
+  });
+  app.get('/api/seller/:token/reject', (req, res) => {
+    const safeToken = encodeURIComponent(req.params.token);
+    res.redirect(302, `/seller/${safeToken}?action=reject`);
+  });
 
-      if (!transaction) {
-        return res.send(sellerResponsePage('error', 'Invalid Link', 'This link is invalid or has expired. Please contact support.'));
+  // Seller accepts transaction (POST from SPA confirmation page)
+  app.post('/api/seller/:token/accept', sellerActionLimiter, async (req, res) => {
+    try {
+      const parsed = sellerActionSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ error: 'Invalid request' });
+      const { nonce, password } = parsed.data;
+
+      if (!consumeSellerNonce(req.params.token, nonce)) {
+        return res.status(403).json({ error: 'Confirmation expired or already used. Please reload the page and try again.' });
       }
+      if (process.env.SELLER_PASSWORD && password !== process.env.SELLER_PASSWORD) {
+        return res.status(401).json({ error: 'Invalid seller password' });
+      }
+
+      const transaction = await storage.getTransactionBySellerToken(req.params.token);
+      if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
       if (transaction.sellerStatus !== 'pending') {
-        const msg = transaction.sellerStatus === 'accepted'
-          ? 'You have already accepted this transaction. Our team will be in touch shortly.'
-          : 'You have already rejected this transaction.';
-        return res.send(sellerResponsePage('info', 'Already Responded', msg));
+        return res.status(409).json({ error: `Transaction already ${transaction.sellerStatus}` });
       }
+
+      const transition = validateTransition(transaction.status as TxStatus, 'awaiting_admin_approval');
+      if (!transition.ok) return res.status(409).json({ error: transition.error });
 
       await storage.updateTransaction(transaction.id, {
         sellerStatus: 'accepted',
         status: 'awaiting_admin_approval',
       });
-
       await storage.addTransactionEvent({
         transactionId: transaction.id,
         status: 'awaiting_admin_approval',
-        notes: 'Seller accepted the transaction via email link',
+        notes: 'Seller accepted the transaction via confirmation page',
       });
 
-      // Notify buyer that seller accepted
-      try {
-        await sendTransactionStatusUpdate({
-          id: transaction.id,
-          status: 'awaiting_admin_approval',
-          buyerName: transaction.buyerName,
-          buyerEmail: transaction.buyerEmail,
-          guestToken: transaction.guestToken,
-        });
-      } catch (e) { console.error('Email error:', e); }
+      sendTransactionStatusUpdate({
+        id: transaction.id,
+        status: 'awaiting_admin_approval',
+        buyerName: transaction.buyerName,
+        buyerEmail: transaction.buyerEmail,
+        guestToken: transaction.guestToken,
+      }).catch(e => console.error('Email error:', e));
 
-      return res.send(sellerResponsePage('success', 'Transaction Accepted', `Thank you! You have accepted the escrow transaction for <strong>${transaction.customVehicleDescription || 'the vehicle'}</strong> ($${parseFloat(transaction.amount).toLocaleString()}). Our team will now review the transaction and send payment instructions to the buyer. We will keep you updated by email throughout the process.`));
+      return res.json({ success: true, sellerStatus: 'accepted', status: 'awaiting_admin_approval' });
     } catch (error: any) {
-      res.send(sellerResponsePage('error', 'Error', 'Something went wrong. Please try again or contact support.'));
+      console.error('Seller accept error:', error);
+      res.status(500).json({ error: 'Something went wrong. Please contact support.' });
     }
   });
 
-  // Seller rejects transaction (one-click GET from email link)
-  app.get('/api/seller/:token/reject', sellerActionLimiter, async (req, res) => {
+  // Seller rejects transaction (POST from SPA confirmation page)
+  app.post('/api/seller/:token/reject', sellerActionLimiter, async (req, res) => {
     try {
-      let transaction = null;
-      try { transaction = await storage.getTransactionBySellerToken(req.params.token); } catch (_) {}
+      const parsed = sellerActionSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ error: 'Invalid request' });
+      const { nonce, password, reason } = parsed.data;
 
-      if (!transaction) {
-        return res.send(sellerResponsePage('error', 'Invalid Link', 'This link is invalid or has expired. Please contact support.'));
+      if (!consumeSellerNonce(req.params.token, nonce)) {
+        return res.status(403).json({ error: 'Confirmation expired or already used. Please reload the page and try again.' });
       }
+      if (process.env.SELLER_PASSWORD && password !== process.env.SELLER_PASSWORD) {
+        return res.status(401).json({ error: 'Invalid seller password' });
+      }
+
+      const transaction = await storage.getTransactionBySellerToken(req.params.token);
+      if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
       if (transaction.sellerStatus !== 'pending') {
-        const msg = transaction.sellerStatus === 'accepted'
-          ? 'You have already accepted this transaction.'
-          : 'You have already rejected this transaction.';
-        return res.send(sellerResponsePage('info', 'Already Responded', msg));
+        return res.status(409).json({ error: `Transaction already ${transaction.sellerStatus}` });
       }
+
+      // Cancellation is always allowed — but we still go through the validator for consistency
+      const transition = validateTransition(transaction.status as TxStatus, 'cancelled');
+      if (!transition.ok) return res.status(409).json({ error: transition.error });
 
       await storage.updateTransaction(transaction.id, {
         sellerStatus: 'rejected',
         status: 'cancelled',
       });
-
       await storage.addTransactionEvent({
         transactionId: transaction.id,
         status: 'cancelled',
-        notes: 'Seller rejected the transaction via email link',
+        notes: reason
+          ? `Seller rejected the transaction. Reason: ${reason.slice(0, 400)}`
+          : 'Seller rejected the transaction via confirmation page',
       });
 
-      // Notify buyer that seller rejected
-      try {
-        await sendTransactionStatusUpdate({
-          id: transaction.id,
-          status: 'cancelled',
-          buyerName: transaction.buyerName,
-          buyerEmail: transaction.buyerEmail,
-          guestToken: transaction.guestToken,
-        });
-      } catch (e) { console.error('Email error:', e); }
+      sendTransactionStatusUpdate({
+        id: transaction.id,
+        status: 'cancelled',
+        buyerName: transaction.buyerName,
+        buyerEmail: transaction.buyerEmail,
+        guestToken: transaction.guestToken,
+      }).catch(e => console.error('Email error:', e));
 
-      return res.send(sellerResponsePage('rejected', 'Transaction Rejected', `You have rejected the escrow transaction for <strong>${transaction.customVehicleDescription || 'the vehicle'}</strong>. The buyer will be notified. If this was a mistake, please contact our support team immediately.`));
+      return res.json({ success: true, sellerStatus: 'rejected', status: 'cancelled' });
     } catch (error: any) {
-      res.send(sellerResponsePage('error', 'Error', 'Something went wrong. Please try again or contact support.'));
+      console.error('Seller reject error:', error);
+      res.status(500).json({ error: 'Something went wrong. Please contact support.' });
     }
   });
 
@@ -742,15 +786,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/transactions/:idOrToken/payment-proof', transactionLimiter, uploadProof.single('proof'), async (req, res) => {
     try {
       const { idOrToken } = req.params;
-      const { bankRef } = req.body;
+      const parsedBody = paymentProofSchema.safeParse(req.body);
+      if (!parsedBody.success) return res.status(400).json({ error: 'Invalid request' });
+      const { bankRef } = parsedBody.data;
 
       let transaction;
-      if (idOrToken.includes('-')) {
+      const looksLikeToken = idOrToken.includes('-');
+
+      if (looksLikeToken) {
+        // Token path — possession of the guestToken proves ownership
         transaction = await storage.getTransactionByToken(idOrToken);
       } else {
-        transaction = await storage.getTransaction(parseInt(idOrToken));
+        // Numeric ID path — must be authenticated AND own the transaction (or admin)
+        if (!req.isAuthenticated()) {
+          return res.status(401).json({ error: 'Authentication required to submit payment proof by ID' });
+        }
+        const txId = parseInt(idOrToken);
+        if (Number.isNaN(txId)) return res.status(400).json({ error: 'Invalid transaction id' });
+        transaction = await storage.getTransaction(txId);
+        if (transaction) {
+          const user = req.user as any;
+          const isOwner = transaction.buyerId === user.id;
+          const isAdminUser = user.role === 'admin';
+          if (!isOwner && !isAdminUser) {
+            return res.status(403).json({ error: 'You do not have permission to submit proof for this transaction' });
+          }
+        }
       }
       if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
+
+      // Reject proof submission for closed transactions
+      if (transaction.status === 'released' || transaction.status === 'cancelled') {
+        return res.status(409).json({ error: `Cannot submit payment proof for a ${transaction.status} transaction` });
+      }
 
       const updateData: any = {};
       if (bankRef) updateData.bankRef = bankRef;
@@ -867,32 +935,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const parsed = adminUpdateTransactionSchema.parse(req.body);
-      const { status, bankInfo, paymentMethod, cryptoAddress, cryptoCoin, notes } = parsed;
+      const { status, bankInfo, paymentMethod, cryptoAddress, cryptoCoin, notes, override, overrideReason } = parsed;
 
       const previousTransaction = await storage.getTransaction(id);
       if (!previousTransaction) return res.status(404).json({ error: 'Transaction not found' });
 
+      // ── State machine: validate transition (STRICT MODE + ADMIN OVERRIDE) ──
+      let isOverride = false;
+      let isSameState = false;
+      if (status) {
+        const result = validateTransition(
+          previousTransaction.status as TxStatus,
+          status as TxStatus,
+          { override: override === true, overrideReason },
+        );
+        if (!result.ok) return res.status(409).json({ error: result.error });
+        isSameState = result.sameState;
+        // Override is "active" only if it was actually needed (not idempotent, not in allowed list)
+        if (override === true && !isSameState) {
+          const allowed = ALLOWED_TRANSITIONS[previousTransaction.status as TxStatus] || [];
+          isOverride = !allowed.includes(status as TxStatus);
+        }
+      }
+
       const updateData: any = {};
-      if (status) updateData.status = status;
+      // Idempotency: if status didn't actually change, don't write it again
+      if (status && !isSameState) updateData.status = status;
       if (bankInfo !== undefined) updateData.bankInfo = bankInfo;
       if (paymentMethod) updateData.paymentMethod = paymentMethod;
       if (cryptoAddress !== undefined) updateData.cryptoAddress = cryptoAddress;
       if (cryptoCoin !== undefined) updateData.cryptoCoin = cryptoCoin;
       if (notes) updateData.notes = notes;
 
-      const transaction = await storage.updateTransaction(id, updateData);
+      const transaction = Object.keys(updateData).length > 0
+        ? await storage.updateTransaction(id, updateData)
+        : previousTransaction;
       if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
 
-      await storage.addTransactionEvent({
-        transactionId: id,
-        status: status || previousTransaction.status,
-        notes: notes || `Status updated to ${status || previousTransaction.status}`,
-        createdBy: (req.user as any).id,
-      });
+      // Audit log: ONLY log an event if state actually changed or admin added notes
+      const stateChanged = !!status && !isSameState;
+      if (stateChanged || notes) {
+        const adminId = (req.user as any).id;
+        let eventNotes: string;
+        if (isOverride) {
+          eventNotes = `Admin override used to change status from ${previousTransaction.status} to ${status}. Reason: ${(overrideReason || '').trim()}`;
+        } else if (stateChanged) {
+          eventNotes = notes ? `Status: ${previousTransaction.status} → ${status}. ${notes}` : `Status: ${previousTransaction.status} → ${status}`;
+        } else {
+          eventNotes = notes!;
+        }
+        await storage.addTransactionEvent({
+          transactionId: id,
+          status: status || previousTransaction.status,
+          notes: eventNotes,
+          createdBy: adminId,
+        });
+      }
 
-      // Trigger emails based on status change
+      // Trigger emails based on status change — IDEMPOTENT: only if state actually changed
       try {
-        if (status && status !== previousTransaction.status) {
+        if (stateChanged) {
           if (status === 'awaiting_payment_confirmation') {
             // Buyer gets payment instructions
             await sendBuyerPaymentInstructions({
@@ -1045,6 +1147,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Serve uploaded files
+  // ── Protected proof files: enforce auth or matching token before serving ──
+  app.use('/uploads/proofs', async (req, res, next) => {
+    try {
+      // Admin always allowed
+      const user = req.user as any;
+      if (req.isAuthenticated() && user?.role === 'admin') return next();
+
+      // Otherwise require ?token=... (buyer guest token OR seller token)
+      const providedToken = String(req.query.token || '');
+      if (!providedToken) return res.status(401).send('Unauthorized');
+
+      const filename = req.path.replace(/^\/+/, '');
+      if (!/^[A-Za-z0-9._-]+$/.test(filename)) return res.status(400).send('Bad request');
+      const fullPath = `/uploads/proofs/${filename}`;
+      const tx = await storage.getTransactionByProofFile(fullPath);
+      if (!tx) return res.status(404).send('Not found');
+
+      if (tx.guestToken === providedToken || tx.sellerToken === providedToken) return next();
+
+      // Authenticated owner is also allowed
+      if (req.isAuthenticated() && tx.buyerId === user?.id) return next();
+
+      return res.status(403).send('Forbidden');
+    } catch (e) {
+      return res.status(500).send('Server error');
+    }
+  }, express.static('uploads/proofs'));
+
   app.use('/uploads', express.static('uploads'));
 
   const httpServer = createServer(app);
