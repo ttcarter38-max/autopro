@@ -1,7 +1,7 @@
 import Header from '@/components/Header';
 import HeroSlider from '@/components/HeroSlider';
 import TrustStrip from '@/components/TrustStrip';
-import SpecialOffers from '@/components/SpecialOffers';
+import WhyAutoPro from '@/components/WhyAutoPro';
 import StatisticsSection from '@/components/StatisticsSection';
 import FeaturedVehicles from '@/components/FeaturedVehicles';
 import Footer from '@/components/Footer';
@@ -18,7 +18,7 @@ export default function Home() {
       <Header />
       <HeroSlider />
       <TrustStrip />
-      <SpecialOffers />
+      <WhyAutoPro />
       <StatisticsSection />
       <FeaturedVehicles />
       <Footer />

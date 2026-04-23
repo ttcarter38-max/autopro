@@ -79,6 +79,23 @@
     "empty": "No hay vehículos disponibles. ¡Inicie sesión en el panel de administración para añadir vehículos!",
     "viewAll": "VER LA SELECCIÓN COMPLETA"
   },
+  "whyAutoPro": {
+    "eyebrow": "POR QUÉ AUTOPRO",
+    "title": "COMPRE CON CONFIANZA",
+    "subtitle": "Cada compra está protegida de principio a fin: desde el primer depósito hasta las llaves en su mano.",
+    "escrow": {
+      "title": "Protección de Custodia",
+      "body": "Sus fondos se mantienen seguros en una cuenta de custodia regulada y solo se liberan al vendedor una vez que usted confirme que el vehículo es exactamente como se describe."
+    },
+    "delivery": {
+      "title": "Entrega Mundial Segura",
+      "body": "Transporte puerta a puerta totalmente asegurado y rastreado para coches, autocaravanas, barcos, motos y tractores. Nosotros coordinamos todo por usted."
+    },
+    "inspection": {
+      "title": "Respaldado por Inspección",
+      "body": "Cada anuncio es verificado por un inspector independiente antes de la compra. Recibe un informe completo y una ventana de inspección de 48 horas en la entrega."
+    }
+  },
   "offers": {
     "eyebrow": "MÁS BUSCADOS",
     "title": "OFERTAS ESPECIALES",

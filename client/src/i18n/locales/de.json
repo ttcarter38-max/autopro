@@ -79,6 +79,23 @@
     "empty": "Keine Fahrzeuge verfügbar. Im Admin-Bereich anmelden, um Fahrzeuge hinzuzufügen!",
     "viewAll": "GESAMTE AUSWAHL ANSEHEN"
   },
+  "whyAutoPro": {
+    "eyebrow": "WARUM AUTOPRO",
+    "title": "MIT VERTRAUEN KAUFEN",
+    "subtitle": "Jeder Kauf ist durchgehend geschützt — von der ersten Anzahlung bis zur Schlüsselübergabe.",
+    "escrow": {
+      "title": "Treuhandschutz",
+      "body": "Ihre Gelder werden sicher auf einem regulierten Treuhandkonto verwahrt und erst an den Verkäufer freigegeben, wenn Sie bestätigen, dass das Fahrzeug exakt wie beschrieben ist."
+    },
+    "delivery": {
+      "title": "Sicherer weltweiter Versand",
+      "body": "Voll versicherter, verfolgbarer Tür-zu-Tür-Transport für Autos, Wohnmobile, Boote, Motorräder und Traktoren. Wir koordinieren alles für Sie."
+    },
+    "inspection": {
+      "title": "Mit Prüfung abgesichert",
+      "body": "Jede Anzeige wird vor dem Kauf von einem unabhängigen Prüfer verifiziert. Sie erhalten einen vollständigen Bericht und ein 48-Stunden-Prüffenster bei Lieferung."
+    }
+  },
   "offers": {
     "eyebrow": "MEISTGEFRAGT",
     "title": "SONDERANGEBOTE",

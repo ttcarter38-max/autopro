@@ -79,11 +79,22 @@
     "empty": "No vehicles available. Log in to the admin panel to add vehicles!",
     "viewAll": "VIEW THE FULL SELECTION"
   },
-  "offers": {
-    "eyebrow": "MOST WANTED ITEM",
-    "title": "SPECIAL OFFERS",
-    "loading": "Loading vehicles...",
-    "empty": "No special offers at the moment. Check back soon!"
+  "whyAutoPro": {
+    "eyebrow": "WHY AUTOPRO",
+    "title": "BUY WITH CONFIDENCE",
+    "subtitle": "Every purchase is protected end-to-end — from the first deposit to the keys in your hand.",
+    "escrow": {
+      "title": "Escrow Protection",
+      "body": "Your funds are held safely in a regulated escrow account and only released to the seller once you confirm the vehicle is exactly as described."
+    },
+    "delivery": {
+      "title": "Safe Worldwide Delivery",
+      "body": "Fully insured, tracked door-to-door transport for cars, RVs, boats, motorcycles and tractors. We coordinate everything for you."
+    },
+    "inspection": {
+      "title": "Inspection-Backed",
+      "body": "Every listing is verified by an independent inspector before purchase. You receive a full report and a 48-hour inspection window on delivery."
+    }
   },
   "stats": {
     "eyebrow": "ABOUT AUTOPRO",
