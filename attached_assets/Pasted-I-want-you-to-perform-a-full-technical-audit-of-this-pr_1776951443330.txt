@@ -1,0 +1,89 @@
+I want you to perform a full technical audit of this project.
+
+Analyze the entire codebase and provide a structured report with the following sections:
+
+1. PROJECT OVERVIEW
+- What framework(s) are used?
+- What architecture type is this? (monolith, microservices, monorepo, etc.)
+- Main apps/modules in the project
+- How authentication works
+- How authorization (roles/permissions) works
+
+2. DATABASE ANALYSIS
+- List all database tables/models
+- Show relationships between tables
+- Identify missing indexes
+- Identify potential data integrity risks
+- Check if transaction state tracking exists
+- Check if audit logs exist
+
+3. ESCROW / TRANSACTION SYSTEM REVIEW
+- Describe the transaction lifecycle
+- List all transaction states
+- Check if state transitions are validated
+- Identify unsafe transitions
+- Check if financial or escrow logic is protected from invalid updates
+
+4. SECURITY AUDIT
+Check and report:
+
+- Password hashing method used
+- JWT/session handling method
+- Input validation libraries used (Zod/Joi/etc.)
+- API endpoint protection
+- Role validation on sensitive actions
+- SQL injection protection
+- XSS protection
+- CSRF protection
+- Rate limiting presence
+
+Also list:
+- Any security vulnerabilities found
+- Any risky patterns
+
+5. PERFORMANCE REVIEW
+Check:
+
+- Database indexing
+- Pagination usage
+- N+1 query problems
+- Large response payload risks
+- Caching usage (if any)
+
+6. CODE QUALITY REVIEW
+Check:
+
+- Code duplication
+- Unused code
+- Large files that should be split
+- Error handling consistency
+- Logging presence
+
+7. SCALABILITY REVIEW
+Evaluate:
+
+- Whether this system could handle 1,000 users
+- Whether background jobs/queues are used
+- Whether long operations block requests
+- Recommendations for scaling
+
+8. CRITICAL RISKS
+List:
+
+- Top 10 technical risks
+- Top 10 architectural risks
+
+9. RECOMMENDED IMPROVEMENTS
+Provide:
+
+- Quick fixes (1–2 hours)
+- Medium tasks (1–2 days)
+- Major improvements (1–2 weeks)
+
+10. FINAL SUMMARY
+Give:
+
+- Overall system maturity score (1–10)
+- Security score (1–10)
+- Scalability score (1–10)
+- Production readiness score (1–10)
