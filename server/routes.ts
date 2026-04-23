@@ -689,21 +689,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!parsed.success) return res.status(400).json({ error: 'Invalid request' });
       const { nonce, password } = parsed.data;
 
-      if (!consumeSellerNonce(req.params.token, nonce)) {
-        return res.status(403).json({ error: 'Confirmation expired or already used. Please reload the page and try again.' });
-      }
+      // Validate everything we can BEFORE consuming the nonce, so a recoverable
+      // failure (wrong password, already-responded) doesn't burn the user's nonce.
       if (process.env.SELLER_PASSWORD && password !== process.env.SELLER_PASSWORD) {
         return res.status(401).json({ error: 'Invalid seller password' });
       }
-
       const transaction = await storage.getTransactionBySellerToken(req.params.token);
       if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
       if (transaction.sellerStatus !== 'pending') {
         return res.status(409).json({ error: `Transaction already ${transaction.sellerStatus}` });
       }
-
       const transition = validateTransition(transaction.status as TxStatus, 'awaiting_admin_approval');
       if (!transition.ok) return res.status(409).json({ error: transition.error });
+
+      // All preconditions ok — consume the nonce now (atomic, last step before the write)
+      if (!consumeSellerNonce(req.params.token, nonce)) {
+        return res.status(403).json({ error: 'Confirmation expired or already used. Please reload the page and try again.' });
+      }
 
       await storage.updateTransaction(transaction.id, {
         sellerStatus: 'accepted',
@@ -737,22 +739,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!parsed.success) return res.status(400).json({ error: 'Invalid request' });
       const { nonce, password, reason } = parsed.data;
 
-      if (!consumeSellerNonce(req.params.token, nonce)) {
-        return res.status(403).json({ error: 'Confirmation expired or already used. Please reload the page and try again.' });
-      }
+      // Validate before consuming nonce (see /accept for rationale)
       if (process.env.SELLER_PASSWORD && password !== process.env.SELLER_PASSWORD) {
         return res.status(401).json({ error: 'Invalid seller password' });
       }
-
       const transaction = await storage.getTransactionBySellerToken(req.params.token);
       if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
       if (transaction.sellerStatus !== 'pending') {
         return res.status(409).json({ error: `Transaction already ${transaction.sellerStatus}` });
       }
-
-      // Cancellation is always allowed — but we still go through the validator for consistency
       const transition = validateTransition(transaction.status as TxStatus, 'cancelled');
       if (!transition.ok) return res.status(409).json({ error: transition.error });
+
+      if (!consumeSellerNonce(req.params.token, nonce)) {
+        return res.status(403).json({ error: 'Confirmation expired or already used. Please reload the page and try again.' });
+      }
 
       await storage.updateTransaction(transaction.id, {
         sellerStatus: 'rejected',
