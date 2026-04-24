@@ -18,6 +18,9 @@ import {
 import { escapeHtml } from "./lib/escape";
 import { validateTransition, ALLOWED_TRANSITIONS, type TxStatus } from "./lib/transitions";
 import { issueSellerNonce, consumeSellerNonce } from "./lib/sellerNonce";
+import { uploadVehicleImage, uploadPaymentProof, getSignedProofUrl } from "./lib/supabaseStorage";
+import { resizeForUpload } from "./lib/imageProcess";
+import fs from "fs";
 
 // ── Strict input schemas (whitelisted; protect against mass-assignment) ─────
 const buyerTransactionInputSchema = z.object({
@@ -137,15 +140,9 @@ function sellerResponsePage(type: 'success' | 'rejected' | 'info' | 'error', tit
 </html>`;
 }
 
-// Configure multer for vehicle image uploads (images only)
-const imageStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, 'uploads/'),
-  filename: (_req, file, cb) => {
-    cb(null, `${Date.now()}-${randomUUID()}${path.extname(file.originalname)}`);
-  },
-});
+// Multer in-memory storage — file buffers are streamed straight to Supabase, never touch disk
 const upload = multer({
-  storage: imageStorage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (/jpeg|jpg|png|gif|webp/.test(path.extname(file.originalname).toLowerCase()) &&
@@ -157,15 +154,8 @@ const upload = multer({
   },
 });
 
-// Configure multer for payment proof uploads (images + PDF)
-const proofStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, 'uploads/proofs/'),
-  filename: (_req, file, cb) => {
-    cb(null, `proof-${Date.now()}-${randomUUID()}${path.extname(file.originalname)}`);
-  },
-});
 const uploadProof = multer({
-  storage: proofStorage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 16 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
@@ -176,6 +166,13 @@ const uploadProof = multer({
     }
   },
 });
+
+// Helper: process & upload a single vehicle image (resizes, then sends to Supabase). Returns public URL.
+async function processAndUploadVehicleImage(file: Express.Multer.File): Promise<string> {
+  const { buffer, contentType } = await resizeForUpload(file.buffer);
+  const { url } = await uploadVehicleImage(buffer, file.originalname, contentType);
+  return url;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
 
@@ -326,9 +323,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const files = req.files as Express.Multer.File[];
       if (files && files.length > 0) {
         for (let i = 0; i < files.length; i++) {
+          const imageUrl = await processAndUploadVehicleImage(files[i]);
           await storage.addVehicleImage({
             vehicleId: vehicle.id,
-            imageUrl: `/uploads/${files[i].filename}`,
+            imageUrl,
             isPrimary: i === 0,
             displayOrder: i,
           });
@@ -355,9 +353,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const files = req.files as Express.Multer.File[];
       if (files && files.length > 0) {
         for (let i = 0; i < files.length; i++) {
+          const imageUrl = await processAndUploadVehicleImage(files[i]);
           await storage.addVehicleImage({
             vehicleId: vehicle.id,
-            imageUrl: `/uploads/${files[i].filename}`,
+            imageUrl,
             isPrimary: false,
             displayOrder: i,
           });
@@ -387,9 +386,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!file) return res.status(400).json({ error: 'No image file provided' });
       const existingImages = await storage.getVehicleImages(vehicleId);
       const isPrimary = existingImages.length === 0;
+      const imageUrl = await processAndUploadVehicleImage(file);
       const image = await storage.addVehicleImage({
         vehicleId,
-        imageUrl: `/uploads/${file.filename}`,
+        imageUrl,
         isPrimary,
         displayOrder: existingImages.length,
       });
@@ -823,7 +823,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updateData: any = {};
       if (bankRef) updateData.bankRef = bankRef;
-      if (req.file) updateData.paymentProofFile = `/uploads/proofs/${req.file.filename}`;
+      if (req.file) {
+        const { key } = await uploadPaymentProof(req.file.buffer, req.file.originalname, req.file.mimetype);
+        // Store with /uploads/proofs/ prefix so the existing protected serve route handles it
+        updateData.paymentProofFile = `/uploads/proofs/${key}`;
+      }
 
       const updated = await storage.updateTransaction(transaction.id, updateData);
 
@@ -1097,7 +1101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/admin/testimonials', isAdmin, upload.single('photo'), async (req, res) => {
     try {
       const file = req.file as Express.Multer.File | undefined;
-      const photoUrl = file ? `/uploads/${file.filename}` : req.body.photoUrl;
+      const photoUrl = file ? await processAndUploadVehicleImage(file) : req.body.photoUrl;
       if (!photoUrl) return res.status(400).json({ error: 'photo is required' });
       const data = insertTestimonialSchema.parse({
         customerName: req.body.customerName,
@@ -1127,7 +1131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (quote !== undefined) raw.quote = quote;
       if (displayOrder !== undefined) raw.displayOrder = parseInt(displayOrder) || 0;
       if (active !== undefined) raw.active = active === 'true' || active === true;
-      if (file) raw.photoUrl = `/uploads/${file.filename}`;
+      if (file) raw.photoUrl = await processAndUploadVehicleImage(file);
       const update = insertTestimonialSchema.partial().parse(raw);
       const updated = await storage.updateTestimonial(id, update);
       if (!updated) return res.status(404).json({ error: 'Not found' });
@@ -1147,35 +1151,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Serve uploaded files
-  // ── Protected proof files: enforce auth or matching token before serving ──
-  app.use('/uploads/proofs', async (req, res, next) => {
+  // ── Protected proof files ──
+  // Auth gate: admin OR matching ?token= OR authenticated owner.
+  // After auth: legacy files on local disk are served directly; new files (Supabase)
+  // are served via a short-lived signed URL redirect.
+  app.get('/uploads/proofs/:filename', async (req, res) => {
     try {
-      // Admin always allowed
-      const user = req.user as any;
-      if (req.isAuthenticated() && user?.role === 'admin') return next();
-
-      // Otherwise require ?token=... (buyer guest token OR seller token)
-      const providedToken = String(req.query.token || '');
-      if (!providedToken) return res.status(401).send('Unauthorized');
-
-      const filename = req.path.replace(/^\/+/, '');
+      const filename = req.params.filename;
       if (!/^[A-Za-z0-9._-]+$/.test(filename)) return res.status(400).send('Bad request');
-      const fullPath = `/uploads/proofs/${filename}`;
-      const tx = await storage.getTransactionByProofFile(fullPath);
-      if (!tx) return res.status(404).send('Not found');
 
-      if (tx.guestToken === providedToken || tx.sellerToken === providedToken) return next();
+      const user = req.user as any;
+      const isAdminUser = req.isAuthenticated() && user?.role === 'admin';
 
-      // Authenticated owner is also allowed
-      if (req.isAuthenticated() && tx.buyerId === user?.id) return next();
+      let allowed = isAdminUser;
+      if (!allowed) {
+        const fullPath = `/uploads/proofs/${filename}`;
+        const tx = await storage.getTransactionByProofFile(fullPath);
+        if (!tx) return res.status(404).send('Not found');
+        const providedToken = String(req.query.token || '');
+        if (providedToken && (tx.guestToken === providedToken || tx.sellerToken === providedToken)) {
+          allowed = true;
+        } else if (req.isAuthenticated() && tx.buyerId === user?.id) {
+          allowed = true;
+        }
+      }
+      if (!allowed) return res.status(401).send('Unauthorized');
 
-      return res.status(403).send('Forbidden');
-    } catch (e) {
+      // Legacy: file may still exist on local disk (only relevant in dev or before next redeploy)
+      const localPath = path.join(process.cwd(), 'uploads', 'proofs', filename);
+      if (fs.existsSync(localPath)) {
+        return res.sendFile(localPath);
+      }
+
+      // New: file lives in Supabase — redirect to a 5-minute signed URL
+      try {
+        const signedUrl = await getSignedProofUrl(filename, 300);
+        return res.redirect(302, signedUrl);
+      } catch (e: any) {
+        console.error('[proof] sign URL failed:', e?.message);
+        return res.status(404).send('Not found');
+      }
+    } catch (e: any) {
+      console.error('[proof] serve error:', e?.message);
       return res.status(500).send('Server error');
     }
-  }, express.static('uploads/proofs'));
+  });
 
+  // Legacy public-asset fallback (vehicle images / testimonial photos uploaded before the Supabase cutover).
+  // New uploads are full https URLs and bypass this entirely.
   app.use('/uploads', express.static('uploads'));
 
   const httpServer = createServer(app);
