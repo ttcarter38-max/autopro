@@ -141,11 +141,13 @@ export async function sendBuyerTransactionInitiated(transaction: {
       <li>Once payment is confirmed the vehicle ships to your address</li>
       <li>You'll have ${transaction.inspectionDays} day(s) to inspect</li>
     </ol>
-    ${ctaButton('Track My Transaction', `${base}/track/${transaction.guestToken}`)}
-    <div style="background:#e8f4fd;border-left:4px solid #1976d2;padding:14px 18px;border-radius:4px;">
+    ${ctaButton('Track My Transaction', `${base}/track/${transaction.guestToken || transaction.id}`)}
+    ${transaction.guestToken ? `<div style="background:#e8f4fd;border-left:4px solid #1976d2;padding:14px 18px;border-radius:4px;">
       <p style="margin:0;font-size:13px;"><strong>Tracking Token:</strong> ${transaction.guestToken}</p>
       <p style="margin:6px 0 0;font-size:12px;color:#555;">Save this — you'll need it to track your transaction.</p>
-    </div>`);
+    </div>` : `<div style="background:#e8f4fd;border-left:4px solid #1976d2;padding:14px 18px;border-radius:4px;">
+      <p style="margin:0;font-size:13px;">You can also find this transaction anytime under <strong>My Transactions</strong> in your account.</p>
+    </div>`}`);
 
   return sendEmail({
     to: transaction.buyerEmail,

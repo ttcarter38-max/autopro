@@ -88,15 +88,17 @@ export default function Escrow() {
         buyerPreferredNetwork: paymentPref.buyerPreferredNetwork || null,
       });
       const result = await response.json();
-      return result as { id: number; guestToken: string };
+      return result as { id?: number; guestToken?: string | null; transaction?: { id: number; guestToken?: string | null } };
     },
     onSuccess: (data) => {
+      const txId = data.transaction?.id ?? data.id;
+      const token = data.guestToken ?? data.transaction?.guestToken;
       toast({
         title: t('escrow.form.successTitle'),
-        description: t('escrow.form.successDesc', { id: data.id }),
+        description: t('escrow.form.successDesc', { id: txId }),
       });
       form.reset();
-      setLocation(`/track/${data.guestToken}`);
+      setLocation(`/track/${token || txId}`);
     },
     onError: (error: Error) => {
       toast({
