@@ -491,7 +491,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const activeOffer = await storage.getActiveOffer(input.vehicleId).catch(() => null);
       const serverAmount = activeOffer?.discountedPrice || vehicle.price;
 
-      const guestToken = req.isAuthenticated() ? null : randomUUID();
+      // Always issue a guestToken so the email tracking link works regardless of
+      // whether the buyer is logged in when they click it.
+      const guestToken = randomUUID();
       const sellerToken = randomUUID();
 
       const insertData: any = {
