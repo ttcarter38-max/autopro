@@ -8,8 +8,18 @@ const resend = resendApiKey ? new Resend(resendApiKey) : null;
 const FROM_ADDRESS = process.env.RESEND_FROM || 'AutoPro Escrow <onboarding@resend.dev>';
 
 function getBaseUrl(): string {
-  const domain = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN;
-  return domain ? `https://${domain.split(',')[0]}` : 'http://localhost:5000';
+  // Priority: explicit override > Railway public domain > Replit domains > localhost fallback
+  const explicit = process.env.APP_BASE_URL;
+  if (explicit) return explicit.replace(/\/+$/, '');
+
+  const railwayDomain = process.env.RAILWAY_PUBLIC_DOMAIN;
+  if (railwayDomain) return `https://${railwayDomain}`;
+
+  const replitDomain = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN;
+  if (replitDomain) return `https://${replitDomain.split(',')[0]}`;
+
+  console.warn('[email] No public domain detected — falling back to http://localhost:5000. Set APP_BASE_URL.');
+  return 'http://localhost:5000';
 }
 
 interface EmailData { to: string; subject: string; html: string; }
