@@ -163,7 +163,14 @@ export default function AdminTransactions() {
 
   const openDialog = (transaction: any) => {
     setSelectedTransaction(transaction);
-    setNewStatus(transaction.status);
+    // Default to the obvious next step so the admin doesn't have to re-pick the
+    // current status. From `initiated` or `awaiting_admin_approval` the natural
+    // next move is to send payment instructions to the buyer.
+    const defaultNext =
+      transaction.status === 'initiated' || transaction.status === 'awaiting_admin_approval'
+        ? 'awaiting_payment_confirmation'
+        : transaction.status;
+    setNewStatus(defaultNext);
     // Prefer admin's already-configured method (when bankInfo/cryptoAddress is set);
     // otherwise honor the buyer's preference; fall back to 'bank'.
     const adminAlreadyConfigured = !!(transaction.bankInfo || transaction.cryptoAddress);
