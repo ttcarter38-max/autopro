@@ -1,0 +1,33 @@
+What I'll build
+✅ 1. Move file storage to Supabase
+New helper module that knows how to upload files to Supabase Storage and generate signed URLs.
+Vehicle images go into the vehicle-images bucket (public). The full public URL is stored in the database, so the frontend loads them directly.
+Payment proofs go into the payment-proofs bucket (private). Only the file key is stored in the database.
+Unique filenames generated per upload (UUID + timestamp).
+The current /uploads folder on Railway disk is no longer used. Files survive every redeploy.
+✅ 2. Secure payment proof access
+The existing protected route stays in place — admin / buyer / seller-with-token are still the only ones who can request a proof.
+When someone authorized clicks the proof, the server generates a fresh signed URL valid for 5 minutes and redirects them to it. After 5 minutes the link is dead.
+No public URLs for proofs. Even if someone shared the link, it expires.
+Vehicle images stay public (fast loading, no signing overhead).
+✅ 3. Image optimization (vehicle images only)
+Before upload, every vehicle image is resized to max 1600px wide (preserves aspect ratio — won't enlarge smaller images).
+Re-encoded as JPEG quality 82 (good visual quality, much smaller files).
+WebP skipped for now — not worth the edge cases.
+Payment proofs are NOT touched (they may be PDFs or tax docs that need to be pixel-perfect).
+⏭️ 4. Fallback safety (keeping local upload as fallback) — skipped
+This is the one I'm leaving out. Reason: maintaining two upload paths in parallel doubles the code complexity in every upload route and every URL-resolution call, for very little benefit at your scale. You currently have 0 vehicle images on disk and 2 payment proof files that would have been wiped on the next Railway redeploy anyway. Clean cutover is safer.
+
+If anything goes wrong post-deploy, the rollback is one git revert away — no data lost in the database, just need to push the previous commit.
+
+What you'll see after I deploy
+Admin → Add Vehicle → upload a photo → it appears on the public listing, served from Supabase's CDN.
+Buyer uploads a payment proof → it lands in the private bucket, you see it in the Supabase Storage dashboard.
+As admin, click on the proof in the transaction view → you get redirected to a 5-minute signed URL → file loads. Wait 6 minutes, click again → fresh signed URL.
+Push any deploy to Railway → all images and proofs still load. No more disappearing files.
+Confirm before I start
+✅ SUPABASE_URL and SUPABASE_SECRET_KEY set in Replit
+❓ Same two set in Railway as well? (Need both — Replit for me to test before push, Railway for production.)
+❓ Both buckets created in Supabase? vehicle-images (public) and payment-proofs (private)?
+❓ Clean cutover OK with you (no dual-write fallback)?
+Confirm those and I'll build it.
