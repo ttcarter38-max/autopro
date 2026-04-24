@@ -21,7 +21,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { FileText, ExternalLink, Bitcoin, Building2, CheckCircle, XCircle, Clock, Trash2, AlertTriangle } from 'lucide-react';
 
 const ALLOWED_NEXT: Record<string, string[]> = {
-  initiated:                     ['awaiting_admin_approval', 'cancelled'],
+  initiated:                     ['awaiting_admin_approval', 'awaiting_payment_confirmation', 'cancelled'],
   awaiting_admin_approval:       ['awaiting_payment_confirmation', 'cancelled'],
   awaiting_payment_confirmation: ['in_transit', 'cancelled'],
   in_transit:                    ['inspection', 'cancelled'],

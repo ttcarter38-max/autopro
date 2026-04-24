@@ -20,7 +20,7 @@ export const TX_STATUSES: readonly TxStatus[] = [
 ];
 
 export const ALLOWED_TRANSITIONS: Record<TxStatus, TxStatus[]> = {
-  initiated:                     ['awaiting_admin_approval', 'cancelled'],
+  initiated:                     ['awaiting_admin_approval', 'awaiting_payment_confirmation', 'cancelled'],
   awaiting_admin_approval:       ['awaiting_payment_confirmation', 'cancelled'],
   awaiting_payment_confirmation: ['in_transit', 'cancelled'],
   in_transit:                    ['inspection', 'cancelled'],
