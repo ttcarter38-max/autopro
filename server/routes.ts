@@ -47,8 +47,8 @@ const customTransactionInputSchema = z.object({
   sellerName: z.string().trim().max(120).optional().or(z.literal('')),
   sellerPhone: z.string().trim().max(40).optional().or(z.literal('')),
   buyerPaymentMethod: z.enum(['bank', 'crypto']).optional(),
-  buyerPreferredCoin: z.string().trim().max(20).optional(),
-  buyerPreferredNetwork: z.string().trim().max(40).optional(),
+  buyerPreferredCoin: z.string().trim().max(20).nullish(),
+  buyerPreferredNetwork: z.string().trim().max(40).nullish(),
 });
 
 const TX_STATUSES = [
