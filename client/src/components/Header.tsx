@@ -59,12 +59,13 @@ export default function Header() {
               </Link>
               <Link href="/escrow">
                 <span
-                  className="hidden md:inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md border border-emerald-400/40 bg-emerald-400/10 text-emerald-300 hover-elevate cursor-pointer"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium p-1 md:px-2 md:py-1 rounded-md border border-emerald-400/40 bg-emerald-400/10 text-emerald-300 hover-elevate cursor-pointer"
                   data-testid="badge-escrow-protected"
-                  title={t('trust.escrowProtectedSub')}
+                  title={t('trust.escrowBadge')}
+                  aria-label={t('trust.escrowBadge')}
                 >
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  {t('trust.escrowBadge')}
+                  <ShieldCheck className="w-4 h-4 md:w-3.5 md:h-3.5" />
+                  <span className="hidden md:inline">{t('trust.escrowBadge')}</span>
                 </span>
               </Link>
             </div>
