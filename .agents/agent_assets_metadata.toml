@@ -1,8 +1,19 @@
 uploads = []
-generated = []
+
+[[generated]]
+id = "HEE8ooSissC5PUAo0b9py"
+uri = "file://attached_assets/generated_images/hero_transporter_v2.png"
+type = "image"
+title = "hero transporter v2"
 
 [[outputs]]
 id = "K3saQmT5_FNkCX_4DhfY2"
 uri = "file://REBUILD_PROMPT.md"
 type = "text"
 title = "AutoPro — Full Rebuild Prompt"
+
+[[outputs]]
+id = "_2lJeAGj9ogHIMeVzM204"
+uri = "file://attached_assets/generated_images/hero_transporter_v2.png"
+type = "image"
+title = "Hero banner v2 — car transporter on highway"
