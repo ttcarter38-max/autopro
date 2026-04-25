@@ -145,7 +145,14 @@
     "viewDetails": "VER DETALLES",
     "sale": "OFERTA",
     "new": "Nuevo",
-    "used": "Usado"
+    "used": "Usado",
+    "listed": "Publicado {{when}}"
+  },
+  "recentTransactions": {
+    "eyebrow": "DE CONFIANZA PARA LOS COMPRADORES",
+    "title": "Entregas completadas recientemente",
+    "subtitle": "Algunos de los vehículos protegidos por escrow entregados más recientemente a los compradores de AutoPro.",
+    "delivered": "Entregado"
   },
   "searchBar": {
     "title": "¿NO SABE QUÉ VEHÍCULO BUSCA? ENCUÉNTRELO AQUÍ",
@@ -629,6 +636,7 @@
     "inspectionMsg": "Tiene <strong>{{days}} días</strong> para inspeccionar el vehículo. Contáctenos al 1-800-CAR-DEAL para aprobar o reportar problemas.",
     "cancelledTitle": "Transacción cancelada",
     "cancelledMore": "Contáctenos para más información.",
+    "lastUpdated": "Última actualización {{when}}",
     "buyerInfo": "Información del comprador",
     "name": "Nombre",
     "email": "Correo",

@@ -1,6 +1,7 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useRoute, useLocation, Link } from 'wouter';
 import { useEffect, useState } from 'react';
+import { formatDistanceToNowI18n } from '@/lib/dateLocale';
 import {
   ArrowLeft,
   CheckCircle,
@@ -46,7 +47,7 @@ export default function VehicleDetail() {
   const vehicleId = params?.id ? parseInt(params.id) : null;
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
   const [buyerName, setBuyerName] = useState('');
@@ -293,6 +294,16 @@ export default function VehicleDetail() {
               <p className="text-lg text-muted-foreground" data-testid="text-make-model">
                 {vehicle.make} {vehicle.model} • {vehicle.year}
               </p>
+              {vehicle.createdAt && (
+                <p
+                  className="text-xs text-muted-foreground mt-2"
+                  data-testid="text-vehicle-listed"
+                >
+                  {t('vehicleCard.listed', {
+                    when: formatDistanceToNowI18n(new Date(vehicle.createdAt), i18n.language),
+                  })}
+                </p>
+              )}
             </div>
 
             <div className="border-t border-border pt-5">
@@ -417,6 +428,7 @@ export default function VehicleDetail() {
                     transmission={sv.transmission}
                     color={sv.color}
                     topSpeed={sv.topSpeed || ''}
+                    createdAt={sv.createdAt}
                   />
                 );
               })}

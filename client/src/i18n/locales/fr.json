@@ -145,7 +145,14 @@
     "viewDetails": "VOIR LES DÉTAILS",
     "sale": "PROMO",
     "new": "Neuf",
-    "used": "Occasion"
+    "used": "Occasion",
+    "listed": "Mis en ligne {{when}}"
+  },
+  "recentTransactions": {
+    "eyebrow": "RECOMMANDÉ PAR LES ACHETEURS",
+    "title": "Livraisons récemment finalisées",
+    "subtitle": "Quelques-uns des véhicules protégés par séquestre récemment livrés aux acheteurs AutoPro.",
+    "delivered": "Livré"
   },
   "searchBar": {
     "title": "VOUS NE SAVEZ PAS QUEL VÉHICULE CHERCHER ? TROUVEZ-LE ICI",
@@ -629,6 +636,7 @@
     "inspectionMsg": "Vous avez <strong>{{days}} jours</strong> pour inspecter le véhicule. Contactez-nous au 1-800-CAR-DEAL pour approuver ou signaler des problèmes.",
     "cancelledTitle": "Transaction annulée",
     "cancelledMore": "Contactez-nous pour plus d'informations.",
+    "lastUpdated": "Dernière mise à jour {{when}}",
     "buyerInfo": "Informations sur l'acheteur",
     "name": "Nom",
     "email": "E-mail",

@@ -1,6 +1,7 @@
 import { Star } from 'lucide-react';
 import { Link } from 'wouter';
 import { useTranslation } from 'react-i18next';
+import { formatDistanceToNowI18n } from '@/lib/dateLocale';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +19,7 @@ interface VehicleCardProps {
   transmission: string;
   color: string;
   topSpeed: string;
+  createdAt?: string | Date | null;
 }
 
 export default function VehicleCard({
@@ -33,9 +35,13 @@ export default function VehicleCard({
   transmission,
   color,
   topSpeed,
+  createdAt,
 }: VehicleCardProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const conditionLabel = condition === 'New' ? t('vehicleCard.new') : t('vehicleCard.used');
+  const listedAgo = createdAt
+    ? formatDistanceToNowI18n(new Date(createdAt), i18n.language)
+    : null;
   return (
     <Card className="overflow-hidden hover-elevate transition-all hover:shadow-xl" data-testid={`card-vehicle-${id}`}>
       <Link href={`/vehicle/${id}`} className="block">
@@ -94,6 +100,15 @@ export default function VehicleCard({
             <div className="text-muted-foreground" data-testid={`text-color-${id}`}>{color}</div>
             <div className="text-muted-foreground col-span-2" data-testid={`text-speed-${id}`}>{topSpeed}</div>
           </div>
+
+          {listedAgo && (
+            <p
+              className="text-xs text-muted-foreground mt-3"
+              data-testid={`text-listed-${id}`}
+            >
+              {t('vehicleCard.listed', { when: listedAgo })}
+            </p>
+          )}
         </CardContent>
       </Link>
 

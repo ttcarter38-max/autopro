@@ -15,7 +15,9 @@ import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BuyerCryptoInfo from '@/components/BuyerCryptoInfo';
+import StatusTimeline from '@/components/StatusTimeline';
 import { queryClient } from '@/lib/queryClient';
+import { formatDistanceToNowI18n } from '@/lib/dateLocale';
 
 const STATUS_STEPS = [
   { key: 'initiated', tKey: 'initiated', icon: CheckCircle },
@@ -32,7 +34,7 @@ export default function TransactionTracking() {
   const idOrToken = params?.idOrToken;
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [bankRef, setBankRef] = useState('');
   const [proofFile, setProofFile] = useState<File | null>(null);
@@ -171,6 +173,23 @@ export default function TransactionTracking() {
                 </div>
               ) : (
                 <p className="text-muted-foreground">{t('tracking.vehicleNotAvailable')}</p>
+              )}
+
+              {/* Status timeline overview */}
+              <div className="mt-4">
+                <StatusTimeline status={transaction.status} compact />
+              </div>
+
+              {/* Last updated */}
+              {transaction.updatedAt && (
+                <p
+                  className="text-xs text-muted-foreground mt-3"
+                  data-testid="text-tx-updated"
+                >
+                  {t('tracking.lastUpdated', {
+                    when: formatDistanceToNowI18n(new Date(transaction.updatedAt), i18n.language),
+                  })}
+                </p>
               )}
             </CardContent>
           </Card>

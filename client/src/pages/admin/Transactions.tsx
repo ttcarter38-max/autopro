@@ -18,7 +18,10 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import AdminLayout from '@/components/admin/AdminLayout';
+import StatusTimeline from '@/components/StatusTimeline';
 import { FileText, ExternalLink, Bitcoin, Building2, CheckCircle, XCircle, Clock, Trash2, AlertTriangle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { formatDistanceToNowI18n } from '@/lib/dateLocale';
 
 const ALLOWED_NEXT: Record<string, string[]> = {
   initiated:                     ['awaiting_admin_approval', 'awaiting_payment_confirmation', 'cancelled'],
@@ -52,6 +55,7 @@ const CRYPTO_COINS = ['BTC', 'ETH', 'USDT', 'USDC', 'BNB', 'SOL', 'LTC', 'XRP'];
 
 export default function AdminTransactions() {
   const { toast } = useToast();
+  const { i18n } = useTranslation();
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
@@ -328,6 +332,14 @@ export default function AdminTransactions() {
 
           {selectedTransaction && (
             <div className="space-y-4">
+              {/* Status timeline */}
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                  Status Timeline
+                </p>
+                <StatusTimeline status={selectedTransaction.status} compact />
+              </div>
+
               {/* Summary */}
               <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-md text-sm">
                 <div>
@@ -344,6 +356,11 @@ export default function AdminTransactions() {
                   <Badge variant={STATUS_COLORS[selectedTransaction.status] || 'default'}>
                     {selectedTransaction.status.replace(/_/g, ' ')}
                   </Badge>
+                  {selectedTransaction.updatedAt && (
+                    <p className="text-xs text-muted-foreground mt-1" data-testid="text-admin-tx-updated">
+                      Updated {formatDistanceToNowI18n(new Date(selectedTransaction.updatedAt), i18n.language)}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-muted-foreground">Seller Status</p>

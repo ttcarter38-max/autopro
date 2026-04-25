@@ -139,7 +139,14 @@
     "viewDetails": "VIEW DETAILS",
     "sale": "SALE",
     "new": "New",
-    "used": "Used"
+    "used": "Used",
+    "listed": "Listed {{when}}"
+  },
+  "recentTransactions": {
+    "eyebrow": "TRUSTED BY BUYERS",
+    "title": "Recently completed deliveries",
+    "subtitle": "A few of the most recent escrow-protected vehicles delivered to AutoPro buyers.",
+    "delivered": "Delivered"
   },
   "searchBar": {
     "title": "UNSURE WHICH VEHICLE YOU ARE LOOKING FOR? FIND IT HERE",
@@ -623,6 +630,7 @@
     "inspectionMsg": "You have <strong>{{days}} days</strong> to inspect the vehicle. Contact us at 1-800-CAR-DEAL to approve or report any issues.",
     "cancelledTitle": "Transaction Cancelled",
     "cancelledMore": "Contact us for more information.",
+    "lastUpdated": "Last updated {{when}}",
     "buyerInfo": "Buyer Information",
     "name": "Name",
     "email": "Email",

@@ -48,6 +48,11 @@ export interface IStorage {
   
   // Transaction operations
   getAllTransactions(): Promise<Transaction[]>;
+  getRecentCompletedTransactions(limit: number): Promise<Array<{
+    completedAt: Date;
+    vehicleLabel: string;
+    category: string | null;
+  }>>;
   getTransaction(id: number): Promise<Transaction | undefined>;
   getTransactionByToken(token: string): Promise<Transaction | undefined>;
   getTransactionBySellerToken(token: string): Promise<Transaction | undefined>;
@@ -272,6 +277,37 @@ export class PostgresStorage implements IStorage {
   async getAllTransactions(): Promise<Transaction[]> {
     const result = await db.select().from(transactions).orderBy(desc(transactions.createdAt));
     return result ?? [];
+  }
+
+  async getRecentCompletedTransactions(limit: number): Promise<Array<{
+    completedAt: Date;
+    vehicleLabel: string;
+    category: string | null;
+  }>> {
+    const rows = await db
+      .select({
+        completedAt: transactions.updatedAt,
+        vehicleYear: vehicles.year,
+        vehicleMake: vehicles.make,
+        vehicleModel: vehicles.model,
+        vehicleCategory: vehicles.category,
+      })
+      .from(transactions)
+      .leftJoin(vehicles, eq(transactions.vehicleId, vehicles.id))
+      .where(eq(transactions.status, 'released'))
+      .orderBy(desc(transactions.updatedAt))
+      .limit(limit);
+
+    return (rows ?? []).map((r: any) => {
+      const vehicleLabel = r.vehicleMake
+        ? `${r.vehicleYear} ${r.vehicleMake} ${r.vehicleModel}`.trim()
+        : 'Private vehicle';
+      return {
+        completedAt: r.completedAt,
+        vehicleLabel,
+        category: r.vehicleCategory ?? null,
+      };
+    });
   }
 
   async getTransaction(id: number): Promise<Transaction | undefined> {

@@ -4,6 +4,7 @@ import TrustStrip from '@/components/TrustStrip';
 import WhyAutoPro from '@/components/WhyAutoPro';
 import StatisticsSection from '@/components/StatisticsSection';
 import FeaturedVehicles from '@/components/FeaturedVehicles';
+import RecentTransactions from '@/components/RecentTransactions';
 import Footer from '@/components/Footer';
 import { useSeo } from '@/hooks/useSeo';
 
@@ -21,6 +22,7 @@ export default function Home() {
       <WhyAutoPro />
       <StatisticsSection />
       <FeaturedVehicles />
+      <RecentTransactions />
       <Footer />
     </div>
   );

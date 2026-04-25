@@ -145,7 +145,14 @@
     "viewDetails": "DETAILS ANZEIGEN",
     "sale": "ANGEBOT",
     "new": "Neu",
-    "used": "Gebraucht"
+    "used": "Gebraucht",
+    "listed": "Eingestellt {{when}}"
+  },
+  "recentTransactions": {
+    "eyebrow": "VON KÄUFERN VERTRAUT",
+    "title": "Kürzlich abgeschlossene Lieferungen",
+    "subtitle": "Eine Auswahl der zuletzt mit Treuhandschutz an AutoPro-Käufer ausgelieferten Fahrzeuge.",
+    "delivered": "Geliefert"
   },
   "searchBar": {
     "title": "UNSICHER, WELCHES FAHRZEUG SIE SUCHEN? FINDEN SIE ES HIER",
@@ -629,6 +636,7 @@
     "inspectionMsg": "Sie haben <strong>{{days}} Tage</strong>, um das Fahrzeug zu prüfen. Kontaktieren Sie uns unter 1-800-CAR-DEAL zur Freigabe oder zur Meldung von Problemen.",
     "cancelledTitle": "Transaktion storniert",
     "cancelledMore": "Kontaktieren Sie uns für weitere Informationen.",
+    "lastUpdated": "Zuletzt aktualisiert {{when}}",
     "buyerInfo": "Käuferinformationen",
     "name": "Name",
     "email": "E-Mail",

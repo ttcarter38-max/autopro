@@ -61,6 +61,7 @@ export default function FeaturedVehicles() {
                   transmission={vehicle.transmission}
                   color={vehicle.color}
                   topSpeed={vehicle.topSpeed || 'N/A'}
+                  createdAt={vehicle.createdAt}
                 />
               ))}
             </div>
