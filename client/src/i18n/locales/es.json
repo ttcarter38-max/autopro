@@ -148,12 +148,6 @@
     "used": "Usado",
     "listed": "Publicado {{when}}"
   },
-  "recentTransactions": {
-    "eyebrow": "DE CONFIANZA PARA LOS COMPRADORES",
-    "title": "Entregas completadas recientemente",
-    "subtitle": "Algunos de los vehículos protegidos por escrow entregados más recientemente a los compradores de AutoPro.",
-    "delivered": "Entregado"
-  },
   "searchBar": {
     "title": "¿NO SABE QUÉ VEHÍCULO BUSCA? ENCUÉNTRELO AQUÍ",
     "make": "Marca",

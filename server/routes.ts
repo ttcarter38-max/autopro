@@ -871,16 +871,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Public: list of recent completed transactions (for homepage social-proof)
-  app.get('/api/transactions/recent-completed', async (_req, res) => {
-    try {
-      const items = await storage.getRecentCompletedTransactions(5);
-      res.json({ items });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-
   // Get transaction by ID or token
   app.get('/api/transactions/:idOrToken', async (req, res) => {
     try {

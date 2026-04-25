@@ -142,12 +142,6 @@
     "used": "Used",
     "listed": "Listed {{when}}"
   },
-  "recentTransactions": {
-    "eyebrow": "TRUSTED BY BUYERS",
-    "title": "Recently completed deliveries",
-    "subtitle": "A few of the most recent escrow-protected vehicles delivered to AutoPro buyers.",
-    "delivered": "Delivered"
-  },
   "searchBar": {
     "title": "UNSURE WHICH VEHICLE YOU ARE LOOKING FOR? FIND IT HERE",
     "make": "Make",

@@ -148,12 +148,6 @@
     "used": "Gebraucht",
     "listed": "Eingestellt {{when}}"
   },
-  "recentTransactions": {
-    "eyebrow": "VON KÄUFERN VERTRAUT",
-    "title": "Kürzlich abgeschlossene Lieferungen",
-    "subtitle": "Eine Auswahl der zuletzt mit Treuhandschutz an AutoPro-Käufer ausgelieferten Fahrzeuge.",
-    "delivered": "Geliefert"
-  },
   "searchBar": {
     "title": "UNSICHER, WELCHES FAHRZEUG SIE SUCHEN? FINDEN SIE ES HIER",
     "make": "Marke",

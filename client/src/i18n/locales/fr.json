@@ -148,12 +148,6 @@
     "used": "Occasion",
     "listed": "Mis en ligne {{when}}"
   },
-  "recentTransactions": {
-    "eyebrow": "RECOMMANDÉ PAR LES ACHETEURS",
-    "title": "Livraisons récemment finalisées",
-    "subtitle": "Quelques-uns des véhicules protégés par séquestre récemment livrés aux acheteurs AutoPro.",
-    "delivered": "Livré"
-  },
   "searchBar": {
     "title": "VOUS NE SAVEZ PAS QUEL VÉHICULE CHERCHER ? TROUVEZ-LE ICI",
     "make": "Marque",
