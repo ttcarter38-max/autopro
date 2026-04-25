@@ -6,6 +6,12 @@ uri = "file://attached_assets/generated_images/hero_transporter_v2.png"
 type = "image"
 title = "hero transporter v2"
 
+[[generated]]
+id = "6KzQt7bUR4b0zKBHHkpjc"
+uri = "file://attached_assets/generated_images/hero_delivery_v1.png"
+type = "image"
+title = "hero delivery v1"
+
 [[outputs]]
 id = "K3saQmT5_FNkCX_4DhfY2"
 uri = "file://REBUILD_PROMPT.md"
@@ -17,3 +23,9 @@ id = "_2lJeAGj9ogHIMeVzM204"
 uri = "file://attached_assets/generated_images/hero_transporter_v2.png"
 type = "image"
 title = "Hero banner v2 — car transporter on highway"
+
+[[outputs]]
+id = "rGRIK0Gimi7s7MU88VYuH"
+uri = "file://attached_assets/generated_images/hero_delivery_v1.png"
+type = "image"
+title = "Hero banner — SUV being delivered to driveway"
