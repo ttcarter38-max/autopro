@@ -1,0 +1,134 @@
+I want to implement several UX and trust improvements to improve user confidence and clarity.
+
+Focus on these 5 features.
+
+-------------------------------------
+
+1. RECENT COMPLETED TRANSACTIONS (PUBLIC SAFE DISPLAY)
+
+Create a section on the homepage showing recent completed transactions.
+
+Requirements:
+
+- Only show transactions with status = released
+- Show limited public-safe data:
+  - Vehicle title (year + make + model)
+  - Status (Completed / Released)
+  - Completion date
+- Do NOT show:
+  - Buyer name
+  - Seller name
+  - Payment details
+  - Transaction IDs
+
+Limit:
+
+- Show last 3–5 completed transactions
+- Sort by most recent first
+
+Optional:
+
+- Add placeholder demo data if few real transactions exist
+
+-------------------------------------
+
+2. TRANSACTION STATUS TIMELINE UI
+
+Replace simple text status with a visual step timeline.
+
+Statuses:
+
+initiated  
+awaiting_admin_approval  
+awaiting_payment_confirmation  
+in_transit  
+inspection  
+approved  
+released  
+
+Requirements:
+
+- Show completed steps as filled
+- Show current step as highlighted
+- Show future steps as empty
+- Should work on:
+  - Buyer transaction page
+  - Admin transaction page
+
+Goal:
+
+Make transaction progress visually clear.
+
+-------------------------------------
+
+3. VEHICLE TRUST BADGES
+
+Add trust indicators to vehicle detail pages.
+
+Display:
+
+- "Escrow Eligible"
+- "Secure Transaction Available"
+- "Verified Listing"
+
+These should appear:
+
+- Near the "Start Transaction" button
+- Styled as small badges
+
+Goal:
+
+Increase confidence before transaction start.
+
+-------------------------------------
+
+4. LAST UPDATED TIMESTAMPS
+
+Add visible timestamps to:
+
+- Vehicles
+- Transactions
+
+Display format example:
+
+Last updated: 2 hours ago
+
+Requirements:
+
+- Use createdAt or updatedAt fields
+- Format timestamps in human-readable format
+- Update automatically when records change
+
+Goal:
+
+Show that listings and transactions are active.
+
+-------------------------------------
+
+5. GLOBAL TRANSACTION COUNTER
+
+Add a visible metric showing total completed transactions.
+
+Example:
+
+"127 Secure Transactions Completed"
+
+Requirements:
+
+- Count transactions where status = released
+- Display on homepage
+- Auto-update when new transactions complete
+
+Goal:
+
+Add social proof and platform credibility.
+
+-------------------------------------
+
+After implementation:
+
+Provide:
+
+- Screenshots of each feature
+- Where each feature was added
+- Any schema changes required
