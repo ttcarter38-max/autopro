@@ -64,6 +64,7 @@
   "trust": {
     "escrowProtected": "Escrow Protected",
     "escrowProtectedSub": "Funds released only on delivery",
+    "escrowBadge": "Escrow protected",
     "inspectionBacked": "Inspection Backed",
     "inspectionBackedSub": "Independent pre-purchase report",
     "verifiedSellers": "Verified Sellers",

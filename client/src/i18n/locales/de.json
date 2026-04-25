@@ -64,6 +64,7 @@
   "trust": {
     "escrowProtected": "Treuhandgeschützt",
     "escrowProtectedSub": "Auszahlung erst bei Lieferung",
+    "escrowBadge": "Treuhand-geschützt",
     "inspectionBacked": "Inspektion inklusive",
     "inspectionBackedSub": "Unabhängiger Vorab-Bericht",
     "verifiedSellers": "Geprüfte Verkäufer",

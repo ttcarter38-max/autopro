@@ -64,6 +64,7 @@
   "trust": {
     "escrowProtected": "Protégé par séquestre",
     "escrowProtectedSub": "Fonds libérés uniquement à la livraison",
+    "escrowBadge": "Protégé par séquestre",
     "inspectionBacked": "Avec inspection",
     "inspectionBackedSub": "Rapport indépendant avant achat",
     "verifiedSellers": "Vendeurs vérifiés",

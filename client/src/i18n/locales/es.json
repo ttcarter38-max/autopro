@@ -64,6 +64,7 @@
   "trust": {
     "escrowProtected": "Protegido por depósito",
     "escrowProtectedSub": "Fondos liberados solo en la entrega",
+    "escrowBadge": "Protegido por escrow",
     "inspectionBacked": "Con inspección",
     "inspectionBackedSub": "Informe independiente previo a la compra",
     "verifiedSellers": "Vendedores verificados",

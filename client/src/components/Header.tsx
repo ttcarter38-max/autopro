@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Menu, X, User, LogOut, LayoutDashboard, Car, Caravan, Sailboat, Bike, Tractor, ChevronDown } from 'lucide-react';
+import { Menu, X, User, LogOut, LayoutDashboard, Car, Caravan, Sailboat, Bike, Tractor, ChevronDown, ShieldCheck } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -51,11 +51,23 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
-            <Link href="/">
-              <h1 className="text-2xl font-heading font-bold tracking-wider cursor-pointer" data-testid="text-logo">
-                AUTOPRO
-              </h1>
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link href="/">
+                <h1 className="text-2xl font-heading font-bold tracking-wider cursor-pointer" data-testid="text-logo">
+                  AUTOPRO
+                </h1>
+              </Link>
+              <Link href="/escrow">
+                <span
+                  className="hidden md:inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md border border-emerald-400/40 bg-emerald-400/10 text-emerald-300 hover-elevate cursor-pointer"
+                  data-testid="badge-escrow-protected"
+                  title={t('trust.escrowProtectedSub')}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  {t('trust.escrowBadge')}
+                </span>
+              </Link>
+            </div>
 
             <nav className="hidden md:flex items-center gap-6">
               <Link href="/">
