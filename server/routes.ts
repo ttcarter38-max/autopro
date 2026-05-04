@@ -1080,12 +1080,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
               id: transaction.id,
               buyerName: transaction.buyerName,
               buyerEmail: transaction.buyerEmail,
+              buyerPhone: transaction.buyerPhone,
               guestToken: transaction.guestToken,
               amount: transaction.amount,
               paymentMethod: transaction.paymentMethod || 'bank',
               bankInfo: transaction.bankInfo,
               cryptoAddress: transaction.cryptoAddress,
               cryptoCoin: transaction.cryptoCoin,
+              customVehicleDescription: transaction.customVehicleDescription,
+              sellerName: transaction.sellerName,
+              inspectionDays: transaction.inspectionDays,
+              createdAt: transaction.createdAt,
             });
             // Seller notified that payment details were sent
             if (transaction.sellerEmail) {

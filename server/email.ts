@@ -211,56 +211,202 @@ export async function sendSellerTransactionNotification(transaction: {
   });
 }
 
-// ── 3. Buyer: payment instructions (bank or crypto) ──────────────────────────
+// ── 3. Buyer: payment instructions (invoice-style email) ─────────────────────
 export async function sendBuyerPaymentInstructions(transaction: {
-  id: number; buyerName: string; buyerEmail: string; guestToken: string | null;
+  id: number; buyerName: string; buyerEmail: string; buyerPhone?: string | null;
+  guestToken: string | null;
   amount: string; paymentMethod: string; bankInfo?: string | null;
   cryptoAddress?: string | null; cryptoCoin?: string | null;
+  customVehicleDescription?: string | null; sellerName?: string | null;
+  inspectionDays?: number; createdAt?: Date | string | null;
 }) {
   const base = getBaseUrl();
   const trackUrl = transaction.guestToken ? `${base}/track/${transaction.guestToken}` : `${base}/track/${transaction.id}`;
+  const amount = parseFloat(transaction.amount).toLocaleString('en-US', { minimumFractionDigits: 2 });
+  const invoiceDate = transaction.createdAt ? new Date(transaction.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const vehicle = transaction.customVehicleDescription || 'Vehicle from AutoPro';
 
-  let paymentSection = '';
+  let paymentBlock = '';
   if (transaction.paymentMethod === 'crypto' && transaction.cryptoAddress) {
-    paymentSection = `
-      <div style="background:#fff8e1;border:2px solid #f59e0b;padding:20px;border-radius:8px;margin:20px 0;">
-        <h3 style="color:#92400e;margin-top:0;">Crypto Payment Instructions</h3>
-        <p style="margin:6px 0;"><strong>Coin:</strong> ${transaction.cryptoCoin || 'See tracking page'}</p>
-        <p style="margin:6px 0;"><strong>Amount:</strong> $${parseFloat(transaction.amount).toLocaleString()} (pay equivalent in ${transaction.cryptoCoin || 'crypto'})</p>
-        <p style="margin:6px 0;"><strong>Wallet Address:</strong></p>
-        <div style="background:#fff;padding:10px;border-radius:4px;font-family:monospace;word-break:break-all;font-size:13px;border:1px solid #e5e7eb;">${transaction.cryptoAddress}</div>
-        <p style="margin:12px 0 0;font-size:12px;color:#92400e;"><strong>Important:</strong> After sending, upload your transaction screenshot as payment proof.</p>
-      </div>`;
+    paymentBlock = `
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;">
+        <tr><td style="background:#fef9e7;border:2px solid #f0c040;border-radius:8px;padding:20px;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr><td style="font-size:15px;font-weight:bold;color:#92400e;padding-bottom:12px;">CRYPTOCURRENCY PAYMENT</td></tr>
+            <tr><td>
+              <table width="100%" cellpadding="6" cellspacing="0" style="font-size:14px;">
+                <tr><td style="color:#666;width:130px;">Coin:</td><td style="font-weight:bold;">${transaction.cryptoCoin || 'See tracking page'}</td></tr>
+                <tr><td style="color:#666;">Amount Due:</td><td style="font-weight:bold;">$${amount} equivalent in ${transaction.cryptoCoin || 'crypto'}</td></tr>
+                <tr><td style="color:#666;vertical-align:top;">Wallet Address:</td><td><div style="background:#fff;padding:10px;border-radius:4px;font-family:'Courier New',monospace;word-break:break-all;font-size:12px;border:1px solid #ddd;color:#333;">${transaction.cryptoAddress}</div></td></tr>
+              </table>
+            </td></tr>
+          </table>
+        </td></tr>
+      </table>`;
   } else if (transaction.bankInfo) {
     const bankLines = transaction.bankInfo.split('\n').map((l: string) =>
-      `<p style="margin:6px 0;">${l}</p>`).join('');
-    paymentSection = `
-      <div style="background:#fff8e1;border:2px solid #f59e0b;padding:20px;border-radius:8px;margin:20px 0;">
-        <h3 style="color:#92400e;margin-top:0;">Bank Transfer Instructions</h3>
-        <p style="margin:0 0 12px;"><strong>Please transfer $${parseFloat(transaction.amount).toLocaleString()} to the following account:</strong></p>
-        <div style="background:#fff;padding:16px;border-radius:6px;border:1px solid #e5e7eb;font-size:14px;line-height:1.8;">
-          ${bankLines}
-        </div>
-        <p style="margin:12px 0 0;font-size:12px;color:#92400e;"><strong>Important:</strong> Use your Transaction ID <strong>#${transaction.id}</strong> as the payment reference. After transferring, upload your receipt as payment proof on your tracking page.</p>
-      </div>`;
+      `<tr><td style="padding:4px 0;font-size:14px;color:#333;">${l}</td></tr>`).join('');
+    paymentBlock = `
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;">
+        <tr><td style="background:#f0f7ff;border:2px solid #3b82f6;border-radius:8px;padding:20px;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr><td style="font-size:15px;font-weight:bold;color:#1e40af;padding-bottom:12px;">BANK TRANSFER DETAILS</td></tr>
+            <tr><td>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff;padding:16px;border-radius:6px;border:1px solid #dbeafe;">
+                ${bankLines}
+              </table>
+            </td></tr>
+            <tr><td style="padding-top:12px;font-size:12px;color:#1e40af;">Use reference: <strong>AUTOPRO-${transaction.id}</strong></td></tr>
+          </table>
+        </td></tr>
+      </table>`;
   }
 
-  const html = emailWrapper(`
-    <h2 style="color:#111;margin-top:0;">Payment Instructions Ready</h2>
-    <p>Dear ${transaction.buyerName},</p>
-    <p>Your escrow transaction has been approved. Payment instructions are now available.</p>
-    ${infoBox([
-      ['Transaction ID', `#${transaction.id}`],
-      ['Amount Due', `$${parseFloat(transaction.amount).toLocaleString()}`],
-      ['Payment Method', transaction.paymentMethod === 'crypto' ? `Cryptocurrency (${transaction.cryptoCoin || ''})` : 'Bank Transfer'],
-    ])}
-    ${paymentSection}
-    ${ctaButton('View Full Payment Details', trackUrl)}
-    <p style="font-size:13px;color:#555;">After making payment, use the tracking page to upload your payment proof (screenshot or receipt).</p>`);
+  const html = `
+    <div style="font-family:Arial,Helvetica,sans-serif;max-width:650px;margin:0 auto;color:#1a1a1a;background:#fff;">
+      <!-- Header -->
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#111;border-radius:8px 8px 0 0;">
+        <tr>
+          <td style="padding:28px 32px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td><span style="color:#fff;font-size:24px;font-weight:bold;letter-spacing:2px;">AUTOPRO</span><span style="color:#c0392b;font-size:14px;font-weight:bold;letter-spacing:1px;margin-left:8px;">ESCROW</span></td>
+                <td style="text-align:right;color:#999;font-size:12px;">Secure Vehicle Transactions</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Invoice body -->
+      <div style="border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;padding:0;">
+
+        <!-- Invoice title bar -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#c0392b;">
+          <tr>
+            <td style="padding:14px 32px;color:#fff;font-size:18px;font-weight:bold;letter-spacing:1px;">PAYMENT INVOICE</td>
+            <td style="padding:14px 32px;text-align:right;color:rgba(255,255,255,0.9);font-size:13px;">Invoice #AP-${String(transaction.id).padStart(5, '0')}</td>
+          </tr>
+        </table>
+
+        <div style="padding:32px;position:relative;">
+
+          <!-- Invoice meta row -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+            <tr>
+              <td style="vertical-align:top;width:50%;">
+                <p style="margin:0 0 4px;font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;">Bill To</p>
+                <p style="margin:0 0 2px;font-size:15px;font-weight:bold;">${transaction.buyerName}</p>
+                <p style="margin:0 0 2px;font-size:13px;color:#555;">${transaction.buyerEmail}</p>
+                ${transaction.buyerPhone ? `<p style="margin:0;font-size:13px;color:#555;">${transaction.buyerPhone}</p>` : ''}
+              </td>
+              <td style="vertical-align:top;text-align:right;width:50%;">
+                <table cellpadding="4" cellspacing="0" style="margin-left:auto;font-size:13px;">
+                  <tr><td style="color:#999;text-align:right;">Invoice Date:</td><td style="font-weight:bold;text-align:right;">${invoiceDate}</td></tr>
+                  <tr><td style="color:#999;text-align:right;">Due Date:</td><td style="font-weight:bold;text-align:right;color:#c0392b;">${dueDate}</td></tr>
+                  <tr><td style="color:#999;text-align:right;">Transaction ID:</td><td style="font-weight:bold;text-align:right;">#${transaction.id}</td></tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Line items table -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:4px;">
+            <tr style="background:#f5f5f5;">
+              <td style="padding:10px 14px;font-size:12px;font-weight:bold;color:#555;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #ddd;">Description</td>
+              <td style="padding:10px 14px;font-size:12px;font-weight:bold;color:#555;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #ddd;text-align:center;">Details</td>
+              <td style="padding:10px 14px;font-size:12px;font-weight:bold;color:#555;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #ddd;text-align:right;">Amount</td>
+            </tr>
+            <tr>
+              <td style="padding:14px;font-size:14px;border-bottom:1px solid #eee;vertical-align:top;">
+                <strong>Escrow Vehicle Purchase</strong><br>
+                <span style="font-size:12px;color:#666;">${vehicle}</span>
+              </td>
+              <td style="padding:14px;font-size:13px;border-bottom:1px solid #eee;text-align:center;color:#555;vertical-align:top;">
+                ${transaction.sellerName ? `Seller: ${transaction.sellerName}<br>` : ''}
+                ${transaction.inspectionDays ? `Inspection: ${transaction.inspectionDays} day${transaction.inspectionDays !== 1 ? 's' : ''}` : ''}
+              </td>
+              <td style="padding:14px;font-size:14px;border-bottom:1px solid #eee;text-align:right;vertical-align:top;">$${amount}</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 14px;font-size:12px;color:#666;border-bottom:1px solid #eee;">AutoPro Escrow Protection</td>
+              <td style="padding:10px 14px;font-size:12px;color:#666;border-bottom:1px solid #eee;text-align:center;">Funds held until delivery confirmed</td>
+              <td style="padding:10px 14px;font-size:12px;color:#16a34a;border-bottom:1px solid #eee;text-align:right;">Included</td>
+            </tr>
+          </table>
+
+          <!-- Total -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+            <tr>
+              <td style="width:60%;"></td>
+              <td style="width:40%;">
+                <table width="100%" cellpadding="6" cellspacing="0">
+                  <tr><td style="font-size:13px;color:#666;">Subtotal:</td><td style="text-align:right;font-size:13px;">$${amount}</td></tr>
+                  <tr><td style="font-size:13px;color:#666;">Escrow Fee:</td><td style="text-align:right;font-size:13px;color:#16a34a;">$0.00</td></tr>
+                  <tr style="border-top:2px solid #111;">
+                    <td style="font-size:16px;font-weight:bold;padding-top:10px;">TOTAL DUE:</td>
+                    <td style="text-align:right;font-size:18px;font-weight:bold;color:#c0392b;padding-top:10px;">$${amount}</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Payment method -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
+            <tr>
+              <td style="font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px;padding-bottom:4px;">Payment Method</td>
+            </tr>
+            <tr>
+              <td style="font-size:14px;font-weight:bold;">${transaction.paymentMethod === 'crypto' ? `Cryptocurrency (${transaction.cryptoCoin || 'Crypto'})` : 'Bank Wire Transfer'}</td>
+            </tr>
+          </table>
+
+          ${paymentBlock}
+
+          <!-- Stamp overlay -->
+          <div style="text-align:right;margin-top:24px;margin-bottom:8px;">
+            <div style="display:inline-block;border:3px solid #c0392b;border-radius:50%;width:120px;height:120px;text-align:center;transform:rotate(-15deg);-webkit-transform:rotate(-15deg);opacity:0.85;">
+              <div style="margin-top:22px;font-size:10px;font-weight:bold;color:#c0392b;letter-spacing:2px;text-transform:uppercase;">AUTOPRO</div>
+              <div style="font-size:8px;color:#c0392b;letter-spacing:1px;margin-top:2px;">&#9733; ESCROW &#9733;</div>
+              <div style="width:80px;height:1px;background:#c0392b;margin:6px auto;"></div>
+              <div style="font-size:9px;font-weight:bold;color:#c0392b;letter-spacing:1px;">VERIFIED</div>
+              <div style="font-size:7px;color:#c0392b;margin-top:2px;">SECURE TRANSACTION</div>
+            </div>
+          </div>
+
+          <!-- Important notes -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;">
+            <tr><td style="background:#fef3c7;border-left:4px solid #f59e0b;padding:14px 18px;border-radius:4px;">
+              <p style="margin:0 0 6px;font-weight:bold;font-size:13px;color:#92400e;">Important Notes:</p>
+              <ul style="margin:0;padding-left:18px;font-size:12px;color:#92400e;line-height:1.8;">
+                <li>Payment must be completed within 7 days of this invoice.</li>
+                <li>After payment, upload your receipt or screenshot on the tracking page.</li>
+                <li>Funds are held securely in escrow until you confirm vehicle delivery.</li>
+                <li>Your ${transaction.inspectionDays || 3}-day inspection period begins upon delivery.</li>
+              </ul>
+            </td></tr>
+          </table>
+
+          <!-- CTA button -->
+          <div style="text-align:center;margin:28px 0 8px;">
+            <a href="${trackUrl}" style="background:#c0392b;color:#fff;padding:14px 40px;text-decoration:none;border-radius:6px;display:inline-block;font-weight:bold;font-size:15px;">View Invoice &amp; Upload Proof</a>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="border-top:1px solid #e0e0e0;padding:20px 32px;background:#fafafa;border-radius:0 0 8px 8px;">
+          <p style="margin:0 0 8px;font-size:13px;color:#555;">Questions about this invoice? Contact us:</p>
+          <p style="margin:0 0 4px;font-size:13px;"><strong>Phone:</strong> 1-800-CAR-DEAL &nbsp;|&nbsp; <strong>Email:</strong> escrow@autopro.com</p>
+          <p style="color:#999;font-size:11px;margin-top:16px;">This is an automated invoice from AutoPro Escrow Service. Transaction #${transaction.id}.</p>
+        </div>
+      </div>
+    </div>`;
 
   return sendEmail({
     to: transaction.buyerEmail,
-    subject: `Payment Instructions for Transaction #${transaction.id} — AutoPro`,
+    subject: `Invoice #AP-${String(transaction.id).padStart(5, '0')} — Payment Instructions — AutoPro Escrow`,
     html,
   });
 }
