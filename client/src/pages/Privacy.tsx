@@ -56,7 +56,7 @@ const SECTIONS: { id: string; title: string; body: React.ReactNode }[] = [
           </li>
           <li>
             <strong>Communications.</strong> Messages you send through our contact forms,
-            WhatsApp, email, or in-app chat with our team.
+            live chat, email, or in-app chat with our team.
           </li>
           <li>
             <strong>Uploaded content.</strong> Photos of vehicles, identity or ownership documents,

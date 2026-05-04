@@ -14,6 +14,7 @@ import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminVehicles from "@/pages/admin/Vehicles";
 import VehicleForm from "@/pages/admin/VehicleForm";
 import AdminTransactions from "@/pages/admin/Transactions";
+import AdminChat from "@/pages/admin/Chat";
 import AdminTestimonials from "@/pages/admin/Testimonials";
 import Contact from "@/pages/Contact";
 import About from "@/pages/About";
@@ -26,29 +27,8 @@ import Refunds from "@/pages/Refunds";
 import FAQ from "@/pages/FAQ";
 import NotFound from "@/pages/not-found";
 import CookieBanner from "@/components/CookieBanner";
+import LiveChat from "@/components/LiveChat";
 import { ThemeProvider } from "@/hooks/useTheme";
-import { SiWhatsapp } from "react-icons/si";
-
-// ── Change this to your real WhatsApp number (international format, no + or spaces) ──
-const WHATSAPP_NUMBER = "1234567890";
-const WHATSAPP_MESSAGE = "Hello! I'm interested in your vehicles.";
-
-function WhatsAppButton() {
-  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
-  return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Chat on WhatsApp"
-      data-testid="button-whatsapp"
-      className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-transform hover:scale-110 active:scale-95"
-      style={{ backgroundColor: '#25D366' }}
-    >
-      <SiWhatsapp className="w-7 h-7 text-white" />
-    </a>
-  );
-}
 
 function Router() {
   return (
@@ -65,6 +45,7 @@ function Router() {
       <Route path="/admin/vehicles/new" component={VehicleForm}/>
       <Route path="/admin/vehicles/:id/edit" component={VehicleForm}/>
       <Route path="/admin/transactions" component={AdminTransactions}/>
+      <Route path="/admin/chat" component={AdminChat}/>
       <Route path="/admin/testimonials" component={AdminTestimonials}/>
       <Route path="/contact" component={Contact}/>
       <Route path="/about" component={About}/>
@@ -87,7 +68,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router />
-          <WhatsAppButton />
+          <LiveChat />
           <CookieBanner />
         </TooltipProvider>
       </ThemeProvider>

@@ -513,7 +513,7 @@
     "send": "Send Message",
     "sending": "Sending...",
     "errorTitle": "Error",
-    "errorText": "Failed to send your message. Please try again or reach us via WhatsApp.",
+    "errorText": "Failed to send your message. Please try again or use our Live Chat.",
     "errors": {
       "name": "Name must be at least 2 characters",
       "email": "Please enter a valid email address",

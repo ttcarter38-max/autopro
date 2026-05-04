@@ -6,7 +6,8 @@ import {
   Receipt, 
   LogOut,
   Menu,
-  MessageSquareQuote
+  MessageSquareQuote,
+  MessageCircle
 } from 'lucide-react';
 import {
   Sidebar,
@@ -47,6 +48,11 @@ const menuItems = [
     title: 'Testimonials',
     url: '/admin/testimonials',
     icon: MessageSquareQuote,
+  },
+  {
+    title: 'Live Chat',
+    url: '/admin/chat',
+    icon: MessageCircle,
   },
 ];
 

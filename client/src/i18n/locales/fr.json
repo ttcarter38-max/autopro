@@ -519,7 +519,7 @@
     "send": "Envoyer le message",
     "sending": "Envoi…",
     "errorTitle": "Erreur",
-    "errorText": "Impossible d'envoyer votre message. Veuillez réessayer ou nous joindre via WhatsApp.",
+    "errorText": "Impossible d'envoyer votre message. Veuillez réessayer ou utilisez notre Chat en Direct.",
     "errors": {
       "name": "Le nom doit contenir au moins 2 caractères",
       "email": "Veuillez saisir une adresse e-mail valide",

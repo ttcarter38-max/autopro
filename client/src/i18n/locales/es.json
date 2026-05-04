@@ -519,7 +519,7 @@
     "send": "Enviar mensaje",
     "sending": "Enviando…",
     "errorTitle": "Error",
-    "errorText": "No se pudo enviar su mensaje. Inténtelo de nuevo o contáctenos por WhatsApp.",
+    "errorText": "No se pudo enviar su mensaje. Inténtelo de nuevo o use nuestro Chat en Vivo.",
     "errors": {
       "name": "El nombre debe tener al menos 2 caracteres",
       "email": "Por favor introduzca un correo válido",

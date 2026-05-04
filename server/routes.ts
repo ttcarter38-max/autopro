@@ -14,6 +14,8 @@ import {
   contactLimiter,
   transactionLimiter,
   sellerActionLimiter,
+  chatLimiter,
+  chatPollLimiter,
 } from "./middleware/rateLimit";
 import { escapeHtml } from "./lib/escape";
 import { validateTransition, ALLOWED_TRANSITIONS, type TxStatus } from "./lib/transitions";
@@ -1273,6 +1275,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (e: any) {
       console.error('[proof] serve error:', e?.message);
       return res.status(500).send('Server error');
+    }
+  });
+
+  // ── Live Chat API ─────────────────────────────────────────────────────────
+  const chatMessageSchema = z.object({
+    sessionId: z.string().trim().min(8).max(80),
+    message: z.string().trim().min(1).max(2000),
+    visitorName: z.string().trim().max(120).optional(),
+    visitorEmail: z.string().trim().email().max(160).optional().or(z.literal('')),
+  });
+
+  app.post('/api/chat/messages', chatLimiter, async (req, res) => {
+    try {
+      const data = chatMessageSchema.parse(req.body);
+      const msg = await storage.createChatMessage({
+        sessionId: data.sessionId,
+        senderType: 'visitor',
+        message: data.message,
+        visitorName: data.visitorName || null,
+        visitorEmail: data.visitorEmail || null,
+        read: false,
+      });
+      return res.json(msg);
+    } catch (e: any) {
+      return res.status(400).json({ error: e.message });
+    }
+  });
+
+  app.get('/api/chat/messages/:sessionId', chatPollLimiter, async (req, res) => {
+    try {
+      const sessionId = req.params.sessionId;
+      if (!sessionId || sessionId.length < 8) return res.status(400).json({ error: 'Invalid session' });
+      const messages = await storage.getChatMessages(sessionId);
+      await storage.markSessionRead(sessionId, 'visitor');
+      return res.json({ messages });
+    } catch (e: any) {
+      return res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.get('/api/chat/unread/:sessionId', chatPollLimiter, async (req, res) => {
+    try {
+      const count = await storage.getUnreadCountForSession(req.params.sessionId, 'visitor');
+      return res.json({ unread: count });
+    } catch (e: any) {
+      return res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.post('/api/chat/read/:sessionId', chatPollLimiter, async (req, res) => {
+    try {
+      const sessionId = req.params.sessionId;
+      await storage.markSessionRead(sessionId, 'visitor');
+      return res.json({ ok: true });
+    } catch (e: any) {
+      return res.status(500).json({ error: e.message });
+    }
+  });
+
+  // Admin chat endpoints
+  app.get('/api/admin/chat/sessions', isAdmin, async (_req, res) => {
+    try {
+      const sessions = await storage.getChatSessions();
+      return res.json({ sessions });
+    } catch (e: any) {
+      return res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.get('/api/admin/chat/messages/:sessionId', isAdmin, async (req, res) => {
+    try {
+      const messages = await storage.getChatMessages(req.params.sessionId);
+      await storage.markSessionRead(req.params.sessionId, 'admin');
+      return res.json({ messages });
+    } catch (e: any) {
+      return res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.post('/api/admin/chat/reply', isAdmin, async (req, res) => {
+    try {
+      const data = z.object({
+        sessionId: z.string().trim().min(8).max(80),
+        message: z.string().trim().min(1).max(2000),
+      }).parse(req.body);
+      const msg = await storage.createChatMessage({
+        sessionId: data.sessionId,
+        senderType: 'admin',
+        message: data.message,
+        visitorName: null,
+        visitorEmail: null,
+        read: false,
+      });
+      return res.json(msg);
+    } catch (e: any) {
+      return res.status(400).json({ error: e.message });
     }
   });
 

@@ -190,3 +190,23 @@ export const testimonials = pgTable('testimonials', {
 export const insertTestimonialSchema = createInsertSchema(testimonials).omit({ id: true, createdAt: true });
 export type InsertTestimonial = z.infer<typeof insertTestimonialSchema>;
 export type Testimonial = typeof testimonials.$inferSelect;
+
+export const chatSenderEnum = pgEnum('chat_sender', ['visitor', 'admin']);
+
+export const chatMessages = pgTable('chat_messages', {
+  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+  sessionId: text('session_id').notNull(),
+  senderType: chatSenderEnum('sender_type').notNull(),
+  visitorName: text('visitor_name'),
+  visitorEmail: text('visitor_email'),
+  message: text('message').notNull(),
+  read: boolean('read').default(false).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  sessionIdx: index('chat_messages_session_idx').on(table.sessionId),
+  createdAtIdx: index('chat_messages_created_at_idx').on(table.createdAt),
+}));
+
+export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({ id: true, createdAt: true });
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type ChatMessage = typeof chatMessages.$inferSelect;

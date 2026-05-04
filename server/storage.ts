@@ -1,15 +1,16 @@
 import { db } from './db';
 import { 
-  users, vehicles, vehicleImages, vehicleOffers, transactions, transactionEvents, testimonials,
+  users, vehicles, vehicleImages, vehicleOffers, transactions, transactionEvents, testimonials, chatMessages,
   type User, type InsertUser,
   type Vehicle, type InsertVehicle,
   type VehicleImage, type InsertVehicleImage,
   type VehicleOffer, type InsertVehicleOffer,
   type Transaction, type InsertTransaction,
   type TransactionEvent, type InsertTransactionEvent,
-  type Testimonial, type InsertTestimonial
+  type Testimonial, type InsertTestimonial,
+  type ChatMessage, type InsertChatMessage
 } from '@shared/schema';
-import { eq, and, desc, inArray } from 'drizzle-orm';
+import { eq, and, desc, inArray, sql, ne } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
 export type VehicleWithImage = Vehicle & { image: string | null };
@@ -68,6 +69,13 @@ export interface IStorage {
   createTestimonial(t: InsertTestimonial): Promise<Testimonial>;
   updateTestimonial(id: number, t: Partial<InsertTestimonial>): Promise<Testimonial | undefined>;
   deleteTestimonial(id: number): Promise<boolean>;
+
+  // Chat operations
+  getChatMessages(sessionId: string): Promise<ChatMessage[]>;
+  createChatMessage(msg: InsertChatMessage): Promise<ChatMessage>;
+  getChatSessions(): Promise<{ sessionId: string; visitorName: string | null; visitorEmail: string | null; lastMessage: string; lastAt: Date; unread: number }[]>;
+  markSessionRead(sessionId: string, readerType?: 'admin' | 'visitor'): Promise<void>;
+  getUnreadCountForSession(sessionId: string, senderType: 'visitor' | 'admin'): Promise<number>;
 }
 
 export class PostgresStorage implements IStorage {
@@ -395,6 +403,56 @@ export class PostgresStorage implements IStorage {
   async deleteTestimonial(id: number): Promise<boolean> {
     const r = await db.delete(testimonials).where(eq(testimonials.id, id)).returning();
     return r.length > 0;
+  }
+
+  // Chat operations
+  async getChatMessages(sessionId: string): Promise<ChatMessage[]> {
+    return await db.select().from(chatMessages)
+      .where(eq(chatMessages.sessionId, sessionId))
+      .orderBy(chatMessages.createdAt);
+  }
+
+  async createChatMessage(msg: InsertChatMessage): Promise<ChatMessage> {
+    const r = await db.insert(chatMessages).values(msg).returning();
+    if (r[0]) return r[0];
+    const [latest] = await db.select().from(chatMessages)
+      .where(eq(chatMessages.sessionId, msg.sessionId))
+      .orderBy(desc(chatMessages.id)).limit(1);
+    return latest;
+  }
+
+  async getChatSessions(): Promise<{ sessionId: string; visitorName: string | null; visitorEmail: string | null; lastMessage: string; lastAt: Date; unread: number }[]> {
+    const rows = await db.execute(sql`
+      SELECT
+        cm.session_id AS "sessionId",
+        (SELECT visitor_name FROM chat_messages WHERE session_id = cm.session_id AND visitor_name IS NOT NULL ORDER BY id DESC LIMIT 1) AS "visitorName",
+        (SELECT visitor_email FROM chat_messages WHERE session_id = cm.session_id AND visitor_email IS NOT NULL ORDER BY id DESC LIMIT 1) AS "visitorEmail",
+        (SELECT message FROM chat_messages WHERE session_id = cm.session_id ORDER BY id DESC LIMIT 1) AS "lastMessage",
+        MAX(cm.created_at) AS "lastAt",
+        COUNT(*) FILTER (WHERE cm.sender_type = 'visitor' AND cm.read = false)::int AS "unread"
+      FROM chat_messages cm
+      GROUP BY cm.session_id
+      ORDER BY MAX(cm.created_at) DESC
+    `);
+    return (rows.rows || []) as any;
+  }
+
+  async markSessionRead(sessionId: string, readerType: 'admin' | 'visitor' = 'admin'): Promise<void> {
+    const markSenderType = readerType === 'admin' ? 'visitor' : 'admin';
+    await db.update(chatMessages)
+      .set({ read: true })
+      .where(and(eq(chatMessages.sessionId, sessionId), eq(chatMessages.senderType, markSenderType)));
+  }
+
+  async getUnreadCountForSession(sessionId: string, senderType: 'visitor' | 'admin'): Promise<number> {
+    const opposite = senderType === 'visitor' ? 'admin' : 'visitor';
+    const r = await db.select({ count: sql<number>`count(*)::int` }).from(chatMessages)
+      .where(and(
+        eq(chatMessages.sessionId, sessionId),
+        eq(chatMessages.senderType, opposite),
+        eq(chatMessages.read, false)
+      ));
+    return r[0]?.count || 0;
   }
 }
 

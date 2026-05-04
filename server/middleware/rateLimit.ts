@@ -43,3 +43,19 @@ export const sellerActionLimiter = rateLimit({
   legacyHeaders: false,
   message: message('seller action'),
 });
+
+export const chatLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: message('chat message'),
+});
+
+export const chatPollLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: message('chat poll'),
+});

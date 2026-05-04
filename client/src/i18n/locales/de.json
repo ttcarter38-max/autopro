@@ -519,7 +519,7 @@
     "send": "Nachricht senden",
     "sending": "Wird gesendet…",
     "errorTitle": "Fehler",
-    "errorText": "Ihre Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es erneut oder erreichen Sie uns über WhatsApp.",
+    "errorText": "Ihre Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es erneut oder nutzen Sie unseren Live-Chat.",
     "errors": {
       "name": "Name muss mindestens 2 Zeichen haben",
       "email": "Bitte eine gültige E-Mail-Adresse eingeben",

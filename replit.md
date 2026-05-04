@@ -31,6 +31,7 @@ A full-featured car dealership and escrow platform. Includes an admin backend fo
 - `/admin/vehicles/new` — Add vehicle (FormData upload with multer)
 - `/admin/vehicles/:id/edit` — Edit vehicle + manage images
 - `/admin/transactions` — Manage escrow transactions (set bank/crypto payment, update status)
+- `/admin/chat` — Live Chat inbox (view/reply to visitor conversations)
 
 ## Database Schema
 - **users**: Admin and customer accounts
@@ -39,6 +40,7 @@ A full-featured car dealership and escrow platform. Includes an admin backend fo
 - **vehicle_offers**: Promotional pricing/discounts
 - **transactions**: Escrow purchases (guest checkout, seller info, payment fields)
 - **transaction_events**: Audit trail for status changes
+- **chat_messages**: Live chat messages (sessionId, senderType visitor/admin, visitorName, visitorEmail, message, read)
 
 ## Escrow Process (7 Steps)
 1. **Initiated** — Customer submits purchase form
@@ -96,9 +98,11 @@ client/src/
       Vehicles.tsx
       VehicleForm.tsx     # Add/edit vehicle (FormData submission)
       Transactions.tsx    # Admin transaction management
+      Chat.tsx            # Admin live chat inbox + reply panel
   components/
     Header.tsx            # Nav: HOME, VEHICLES (/inventory), ESCROW, CONTACT
     Footer.tsx
+    LiveChat.tsx          # Floating live chat widget (replaces WhatsApp)
     HeroSlider.tsx
     FeaturedVehicles.tsx  # Shows featured vehicles, "VIEW ALL" → /inventory
     VehicleCard.tsx       # Links to /vehicle/:id
