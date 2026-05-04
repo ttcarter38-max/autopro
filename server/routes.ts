@@ -73,6 +73,19 @@ const adminUpdateTransactionSchema = z.object({
   overrideReason: z.string().trim().max(500).optional(),
 });
 
+const adminCreateTransactionSchema = z.object({
+  customVehicleDescription: z.string().trim().min(3).max(1000),
+  amount: z.coerce.number().positive().max(100_000_000),
+  buyerName: z.string().trim().min(1).max(120),
+  buyerEmail: z.string().trim().email().max(160),
+  buyerPhone: z.string().trim().max(40).optional().or(z.literal('')),
+  shippingAddress: z.string().trim().max(500).optional().or(z.literal('')),
+  inspectionDays: z.coerce.number().int().min(1).max(30).default(3),
+  sellerEmail: z.string().trim().email().max(160),
+  sellerName: z.string().trim().min(1).max(120),
+  sellerPhone: z.string().trim().max(40).optional().or(z.literal('')),
+});
+
 const sellerActionSchema = z.object({
   nonce: z.string().min(8).max(80),
   reason: z.string().trim().max(500).optional(),
@@ -909,6 +922,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ transactions });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin creates a new transaction (on behalf of buyer + seller)
+  app.post('/api/admin/transactions', isAdmin, async (req, res) => {
+    try {
+      const input = adminCreateTransactionSchema.parse(req.body);
+      const {
+        customVehicleDescription, amount, buyerName, buyerEmail, buyerPhone,
+        shippingAddress, inspectionDays, sellerEmail, sellerName, sellerPhone,
+      } = input;
+
+      const guestToken = randomUUID();
+      const sellerToken = randomUUID();
+
+      const transactionData: any = {
+        guestToken,
+        sellerToken,
+        sellerStatus: 'pending',
+        status: 'initiated',
+        buyerName,
+        buyerEmail,
+        buyerPhone: buyerPhone || null,
+        shippingAddress: shippingAddress || null,
+        amount: amount.toFixed(2),
+        inspectionDays,
+        customVehicleDescription,
+        sellerEmail,
+        sellerName,
+        sellerPhone: sellerPhone || null,
+        notes: 'Transaction initiated by admin',
+      };
+
+      const transaction = await storage.createTransaction(transactionData);
+
+      await storage.addTransactionEvent({
+        transactionId: transaction.id,
+        status: 'initiated',
+        notes: 'Transaction created by admin',
+        createdBy: (req.user as any).id,
+      });
+
+      try {
+        await sendBuyerTransactionInitiated({
+          id: transaction.id,
+          buyerName: transaction.buyerName,
+          buyerEmail: transaction.buyerEmail,
+          guestToken: transaction.guestToken!,
+          customVehicleDescription: transaction.customVehicleDescription,
+          amount: transaction.amount,
+          inspectionDays: transaction.inspectionDays,
+        });
+        await sendSellerTransactionNotification({
+          id: transaction.id,
+          sellerName: transaction.sellerName,
+          sellerEmail: transaction.sellerEmail!,
+          sellerToken: transaction.sellerToken!,
+          buyerName: transaction.buyerName,
+          customVehicleDescription: transaction.customVehicleDescription,
+          amount: transaction.amount,
+        });
+      } catch (emailError) {
+        console.error('Email notification error (admin-created tx):', emailError);
+      }
+
+      res.json({
+        id: transaction.id,
+        message: 'Transaction created successfully. Emails sent to buyer and seller.',
+      });
+    } catch (error: any) {
+      console.error('Admin create transaction error:', error);
+      res.status(400).json({ error: error.message || 'Failed to create transaction' });
     }
   });
 

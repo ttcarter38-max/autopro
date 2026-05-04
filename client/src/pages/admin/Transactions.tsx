@@ -19,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import AdminLayout from '@/components/admin/AdminLayout';
 import StatusTimeline from '@/components/StatusTimeline';
-import { FileText, ExternalLink, Bitcoin, Building2, CheckCircle, XCircle, Clock, Trash2, AlertTriangle } from 'lucide-react';
+import { FileText, ExternalLink, Bitcoin, Building2, CheckCircle, XCircle, Clock, Trash2, AlertTriangle, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { formatDistanceToNowI18n } from '@/lib/dateLocale';
 
@@ -58,8 +58,35 @@ export default function AdminTransactions() {
   const { i18n } = useTranslation();
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const [createForm, setCreateForm] = useState({
+    customVehicleDescription: '',
+    amount: '',
+    buyerName: '',
+    buyerEmail: '',
+    buyerPhone: '',
+    shippingAddress: '',
+    inspectionDays: '3',
+    sellerName: '',
+    sellerEmail: '',
+    sellerPhone: '',
+  });
+
+  const resetCreateForm = () => setCreateForm({
+    customVehicleDescription: '',
+    amount: '',
+    buyerName: '',
+    buyerEmail: '',
+    buyerPhone: '',
+    shippingAddress: '',
+    inspectionDays: '3',
+    sellerName: '',
+    sellerEmail: '',
+    sellerPhone: '',
+  });
   const [newStatus, setNewStatus] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('bank');
   const [bankInfo, setBankInfo] = useState('');
@@ -120,6 +147,33 @@ export default function AdminTransactions() {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     },
   });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: typeof createForm) => {
+      return await apiRequest('POST', '/api/admin/transactions', {
+        ...data,
+        amount: parseFloat(data.amount),
+        inspectionDays: parseInt(data.inspectionDays),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/transactions'] });
+      toast({ title: 'Transaction created', description: 'Emails sent to buyer and seller.' });
+      setCreateDialogOpen(false);
+      resetCreateForm();
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const handleCreateTransaction = () => {
+    if (!createForm.buyerName || !createForm.buyerEmail || !createForm.sellerName || !createForm.sellerEmail || !createForm.customVehicleDescription || !createForm.amount) {
+      toast({ title: 'Missing fields', description: 'Please fill in all required fields.', variant: 'destructive' });
+      return;
+    }
+    createMutation.mutate(createForm);
+  };
 
   const currentStatus = selectedTransaction?.status as string | undefined;
   const allowedNext = currentStatus ? ALLOWED_NEXT[currentStatus] || [] : [];
@@ -204,9 +258,14 @@ export default function AdminTransactions() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-heading font-bold">Transactions</h2>
-          <p className="text-muted-foreground">Manage escrow transactions and payment details</p>
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h2 className="text-3xl font-heading font-bold">Transactions</h2>
+            <p className="text-muted-foreground">Manage escrow transactions and payment details</p>
+          </div>
+          <Button onClick={() => setCreateDialogOpen(true)} data-testid="button-create-transaction">
+            <Plus className="w-4 h-4 mr-2" /> New Transaction
+          </Button>
         </div>
 
         <Card>
@@ -594,6 +653,142 @@ export default function AdminTransactions() {
             </Button>
             <Button onClick={handleUpdateTransaction} disabled={updateMutation.isPending} data-testid="button-update">
               {updateMutation.isPending ? 'Updating...' : 'Update Transaction'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Transaction Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={(open) => { setCreateDialogOpen(open); if (!open) resetCreateForm(); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Transaction</DialogTitle>
+            <DialogDescription>
+              Fill in buyer and seller details. Both will receive email notifications.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <Label>Vehicle / Item Description *</Label>
+              <Textarea
+                value={createForm.customVehicleDescription}
+                onChange={(e) => setCreateForm(f => ({ ...f, customVehicleDescription: e.target.value }))}
+                placeholder="e.g. 2022 Toyota Camry SE, VIN: 1234..."
+                data-testid="input-create-vehicle"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Amount (USD) *</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  step="0.01"
+                  value={createForm.amount}
+                  onChange={(e) => setCreateForm(f => ({ ...f, amount: e.target.value }))}
+                  placeholder="25000"
+                  data-testid="input-create-amount"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Inspection Days</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="30"
+                  value={createForm.inspectionDays}
+                  onChange={(e) => setCreateForm(f => ({ ...f, inspectionDays: e.target.value }))}
+                  data-testid="input-create-inspection"
+                />
+              </div>
+            </div>
+
+            <div className="border-t pt-4">
+              <p className="text-sm font-semibold mb-3">Buyer Information</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Buyer Name *</Label>
+                  <Input
+                    value={createForm.buyerName}
+                    onChange={(e) => setCreateForm(f => ({ ...f, buyerName: e.target.value }))}
+                    placeholder="John Smith"
+                    data-testid="input-create-buyer-name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Buyer Email *</Label>
+                  <Input
+                    type="email"
+                    value={createForm.buyerEmail}
+                    onChange={(e) => setCreateForm(f => ({ ...f, buyerEmail: e.target.value }))}
+                    placeholder="buyer@example.com"
+                    data-testid="input-create-buyer-email"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Buyer Phone</Label>
+                  <Input
+                    value={createForm.buyerPhone}
+                    onChange={(e) => setCreateForm(f => ({ ...f, buyerPhone: e.target.value }))}
+                    placeholder="+1 555-0123"
+                    data-testid="input-create-buyer-phone"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Shipping Address</Label>
+                  <Input
+                    value={createForm.shippingAddress}
+                    onChange={(e) => setCreateForm(f => ({ ...f, shippingAddress: e.target.value }))}
+                    placeholder="123 Main St, City, State"
+                    data-testid="input-create-shipping"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t pt-4">
+              <p className="text-sm font-semibold mb-3">Seller Information</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Seller Name *</Label>
+                  <Input
+                    value={createForm.sellerName}
+                    onChange={(e) => setCreateForm(f => ({ ...f, sellerName: e.target.value }))}
+                    placeholder="Jane Doe"
+                    data-testid="input-create-seller-name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Seller Email *</Label>
+                  <Input
+                    type="email"
+                    value={createForm.sellerEmail}
+                    onChange={(e) => setCreateForm(f => ({ ...f, sellerEmail: e.target.value }))}
+                    placeholder="seller@example.com"
+                    data-testid="input-create-seller-email"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Seller Phone</Label>
+                  <Input
+                    value={createForm.sellerPhone}
+                    onChange={(e) => setCreateForm(f => ({ ...f, sellerPhone: e.target.value }))}
+                    placeholder="+1 555-0456"
+                    data-testid="input-create-seller-phone"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setCreateDialogOpen(false); resetCreateForm(); }} data-testid="button-cancel-create">
+              Cancel
+            </Button>
+            <Button onClick={handleCreateTransaction} disabled={createMutation.isPending} data-testid="button-submit-create">
+              {createMutation.isPending ? 'Creating...' : 'Create Transaction'}
             </Button>
           </DialogFooter>
         </DialogContent>
