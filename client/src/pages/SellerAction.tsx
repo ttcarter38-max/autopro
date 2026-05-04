@@ -2,10 +2,9 @@ import { useState } from 'react';
 import { useRoute } from 'wouter';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle, XCircle, Lock, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { CheckCircle, XCircle, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +25,6 @@ export default function SellerAction() {
   const initialAction = (urlParams.get('action') as ActionType) || null;
 
   const [action, setAction] = useState<ActionType>(initialAction);
-  const [password, setPassword] = useState('');
   const [reason, setReason] = useState('');
   const [done, setDone] = useState(false);
   const [doneMessage, setDoneMessage] = useState('');
@@ -43,7 +41,7 @@ export default function SellerAction() {
 
   const acceptMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('POST', `/api/seller/${token}/accept`, { password, nonce: data?.nonce });
+      return apiRequest('POST', `/api/seller/${token}/accept`, { nonce: data?.nonce });
     },
     onSuccess: () => {
       setDone(true);
@@ -57,7 +55,7 @@ export default function SellerAction() {
 
   const rejectMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('POST', `/api/seller/${token}/reject`, { password, reason, nonce: data?.nonce });
+      return apiRequest('POST', `/api/seller/${token}/reject`, { reason, nonce: data?.nonce });
     },
     onSuccess: () => {
       setDone(true);
@@ -70,10 +68,6 @@ export default function SellerAction() {
   });
 
   const handleSubmit = () => {
-    if (!password) {
-      toast({ title: t('seller.passwordRequiredTitle'), description: t('seller.passwordRequiredDesc'), variant: 'destructive' });
-      return;
-    }
     if (action === 'accept') acceptMutation.mutate();
     else if (action === 'reject') rejectMutation.mutate();
   };
@@ -205,7 +199,7 @@ export default function SellerAction() {
               <Card className={action === 'accept' ? 'border-green-400' : 'border-destructive'}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Lock className="w-5 h-5" />
+                    <ShieldCheck className="w-5 h-5" />
                     {action === 'accept' ? t('seller.confirmAcceptTitle') : t('seller.confirmRejectTitle')}
                   </CardTitle>
                   <CardDescription>
@@ -213,18 +207,6 @@ export default function SellerAction() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="password">{t('seller.passwordLabel')}</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder={t('seller.passwordPh')}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      data-testid="input-seller-password"
-                    />
-                  </div>
-
                   {action === 'reject' && (
                     <div className="space-y-2">
                       <Label htmlFor="reason">{t('seller.reasonLabel')}</Label>

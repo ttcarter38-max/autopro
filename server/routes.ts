@@ -75,7 +75,6 @@ const adminUpdateTransactionSchema = z.object({
 
 const sellerActionSchema = z.object({
   nonce: z.string().min(8).max(80),
-  password: z.string().max(200).optional(),
   reason: z.string().trim().max(500).optional(),
 });
 
@@ -95,9 +94,6 @@ import {
   sendContactFormEmail,
   sendWelcomeEmail,
 } from "./email";
-
-// Seller action password (configurable via env var)
-const SELLER_PASSWORD = process.env.SELLER_PASSWORD || 'escrow2024';
 
 // HTML page returned after seller clicks Accept/Reject in email
 function sellerResponsePage(type: 'success' | 'rejected' | 'info' | 'error', title: string, message: string): string {
@@ -645,7 +641,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ===== SELLER ACTION ROUTES (no auth — protected by password + token) =====
+  // ===== SELLER ACTION ROUTES (no auth — protected by unique token + nonce) =====
 
   // Get transaction info for seller (public, by seller token).
   // Also issues a single-use nonce required to POST accept/reject — protects
@@ -689,13 +685,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const parsed = sellerActionSchema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json({ error: 'Invalid request' });
-      const { nonce, password } = parsed.data;
+      const { nonce } = parsed.data;
 
-      // Validate everything we can BEFORE consuming the nonce, so a recoverable
-      // failure (wrong password, already-responded) doesn't burn the user's nonce.
-      if (process.env.SELLER_PASSWORD && password !== process.env.SELLER_PASSWORD) {
-        return res.status(401).json({ error: 'Invalid seller password' });
-      }
       const transaction = await storage.getTransactionBySellerToken(req.params.token);
       if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
       if (transaction.sellerStatus !== 'pending') {
@@ -739,12 +730,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const parsed = sellerActionSchema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json({ error: 'Invalid request' });
-      const { nonce, password, reason } = parsed.data;
+      const { nonce, reason } = parsed.data;
 
-      // Validate before consuming nonce (see /accept for rationale)
-      if (process.env.SELLER_PASSWORD && password !== process.env.SELLER_PASSWORD) {
-        return res.status(401).json({ error: 'Invalid seller password' });
-      }
       const transaction = await storage.getTransactionBySellerToken(req.params.token);
       if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
       if (transaction.sellerStatus !== 'pending') {
