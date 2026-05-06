@@ -1344,6 +1344,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete('/api/admin/chat/sessions/:sessionId', isAdmin, async (req, res) => {
+    try {
+      await storage.deleteChatSession(req.params.sessionId);
+      return res.json({ ok: true });
+    } catch (e: any) {
+      return res.status(500).json({ error: e.message });
+    }
+  });
+
   app.get('/api/admin/chat/messages/:sessionId', isAdmin, async (req, res) => {
     try {
       const messages = await storage.getChatMessages(req.params.sessionId);

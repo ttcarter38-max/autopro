@@ -76,6 +76,7 @@ export interface IStorage {
   getChatSessions(): Promise<{ sessionId: string; visitorName: string | null; visitorEmail: string | null; lastMessage: string; lastAt: Date; unread: number }[]>;
   markSessionRead(sessionId: string, readerType?: 'admin' | 'visitor'): Promise<void>;
   getUnreadCountForSession(sessionId: string, senderType: 'visitor' | 'admin'): Promise<number>;
+  deleteChatSession(sessionId: string): Promise<void>;
 }
 
 export class PostgresStorage implements IStorage {
@@ -442,6 +443,10 @@ export class PostgresStorage implements IStorage {
     await db.update(chatMessages)
       .set({ read: true })
       .where(and(eq(chatMessages.sessionId, sessionId), eq(chatMessages.senderType, markSenderType)));
+  }
+
+  async deleteChatSession(sessionId: string): Promise<void> {
+    await db.delete(chatMessages).where(eq(chatMessages.sessionId, sessionId));
   }
 
   async getUnreadCountForSession(sessionId: string, senderType: 'visitor' | 'admin'): Promise<number> {

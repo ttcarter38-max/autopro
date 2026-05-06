@@ -5,9 +5,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MessageCircle, Send, User, ArrowLeft, RefreshCw } from 'lucide-react';
+import { MessageCircle, Send, User, ArrowLeft, RefreshCw, Trash2 } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface ChatSession {
   sessionId: string;
@@ -101,6 +112,19 @@ export default function AdminChat() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/chat/sessions'] });
     },
     onError: () => {},
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (sid: string) => {
+      await apiRequest('DELETE', `/api/admin/chat/sessions/${sid}`);
+    },
+    onSuccess: (_data, sid) => {
+      if (selectedSession === sid) {
+        setSelectedSession(null);
+        setMsgs([]);
+      }
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/chat/sessions'] });
+    },
   });
 
   const sendReply = () => {
@@ -211,12 +235,42 @@ export default function AdminChat() {
                   >
                     <ArrowLeft className="w-4 h-4" />
                   </Button>
-                  <div>
+                  <div className="flex-1">
                     <p className="font-semibold text-sm">{activeSession?.visitorName || 'Anonymous'}</p>
                     {activeSession?.visitorEmail && (
                       <p className="text-xs text-muted-foreground">{activeSession.visitorEmail}</p>
                     )}
                   </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        disabled={deleteMutation.isPending}
+                        data-testid="button-delete-conversation"
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete this conversation?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          All messages with {activeSession?.visitorName || 'this visitor'} will be permanently removed. This cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => selectedSession && deleteMutation.mutate(selectedSession)}
+                          data-testid="button-confirm-delete"
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
 
                 {/* Messages */}
