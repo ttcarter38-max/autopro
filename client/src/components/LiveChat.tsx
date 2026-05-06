@@ -115,6 +115,8 @@ export default function LiveChat() {
     setSending(true);
     setSendError(false);
     try {
+      const trimmedEmail = email.trim();
+      const looksLikeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
       const res = await fetch('/api/chat/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -122,16 +124,19 @@ export default function LiveChat() {
           sessionId: sessionId.current,
           message: text.trim(),
           visitorName: name.trim() || undefined,
-          visitorEmail: email.trim() || undefined,
+          visitorEmail: looksLikeEmail ? trimmedEmail : undefined,
         }),
       });
       if (res.ok) {
         setText('');
         await fetchMessages();
       } else {
+        const errBody = await res.text().catch(() => '');
+        console.error('Chat send failed:', res.status, errBody);
         setSendError(true);
       }
-    } catch {
+    } catch (err) {
+      console.error('Chat send error:', err);
       setSendError(true);
     } finally {
       setSending(false);
