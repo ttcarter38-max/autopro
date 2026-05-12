@@ -1,14 +1,15 @@
-import { Car, Users, Wrench, ShieldCheck, MessageCircle, Sparkles } from 'lucide-react';
+import { Car, Caravan, Sailboat, Bike, Tractor, MessageCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import conciergeAvatar from '@assets/generated_images/chat_concierge.png';
 
 export default function StatisticsSection() {
-  const stats = [
-    { icon: Car, value: '1,886', label: 'NEW VEHICLES IN STOCK' },
-    { icon: ShieldCheck, value: '1,248', label: 'ESCROW-PROTECTED DEALS' },
-    { icon: Users, value: '12,481', label: 'HAPPY CLIENTS' },
-    { icon: Wrench, value: '28,681', label: 'DELIVERIES NATIONWIDE' },
+  const categories = [
+    { icon: Car, label: 'CARS' },
+    { icon: Caravan, label: 'RVS' },
+    { icon: Sailboat, label: 'BOATS' },
+    { icon: Bike, label: 'MOTORCYCLES' },
+    { icon: Tractor, label: 'TRACTORS' },
   ];
 
   const header = useScrollReveal<HTMLDivElement>();
@@ -36,7 +37,7 @@ export default function StatisticsSection() {
             The AutoPro Way
           </p>
           <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-extrabold tracking-display leading-[1.05] mb-6" data-testid="text-about-title">
-            Your dream car,
+            Whatever moves you,
             <br className="hidden sm:block" />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-primary/70"> delivered home.</span>
           </h2>
@@ -46,27 +47,29 @@ export default function StatisticsSection() {
           </p>
         </div>
 
-        {/* Stats */}
+        {/* Categories — icons only, no numbers */}
         <div
           ref={grid.ref}
-          className={`grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 mb-16 sm:mb-20 stagger`}
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 sm:gap-8 mb-16 sm:mb-20 stagger"
         >
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
+          {categories.map((cat, index) => {
+            const Icon = cat.icon;
             return (
               <div
                 key={index}
-                className={`text-center reveal ${grid.visible ? 'is-visible' : ''}`}
-                data-testid={`stat-${index}`}
+                className={`group flex flex-col items-center text-center reveal ${grid.visible ? 'is-visible' : ''}`}
+                data-testid={`category-${cat.label.toLowerCase()}`}
               >
-                <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary/10 border border-primary/20 mb-4">
-                  <Icon className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
+                <div className="relative mb-4">
+                  {/* glow */}
+                  <div className="absolute inset-0 rounded-full bg-primary/30 blur-xl scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
+                  {/* icon plate */}
+                  <div className="relative inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-card to-background border border-card-border shadow-[0_15px_40px_-12px_rgba(0,0,0,0.25)] transition-transform duration-500 group-hover:-translate-y-1">
+                    <Icon className="w-9 h-9 sm:w-10 sm:h-10 text-primary" strokeWidth={1.5} />
+                  </div>
                 </div>
-                <div className="text-4xl sm:text-5xl md:text-6xl font-heading font-extrabold tracking-display mb-2 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/60" data-testid={`text-stat-value-${index}`}>
-                  {stat.value}
-                </div>
-                <div className="text-[10px] sm:text-xs font-semibold text-muted-foreground tracking-[0.18em]" data-testid={`text-stat-label-${index}`}>
-                  {stat.label}
+                <div className="text-[11px] sm:text-xs font-semibold text-foreground tracking-[0.22em]" data-testid={`text-category-label-${index}`}>
+                  {cat.label}
                 </div>
               </div>
             );
