@@ -10,14 +10,15 @@ import {
   Award,
   Truck,
   Users,
-  Car,
-  Caravan,
-  Sailboat,
-  Bike,
-  Tractor,
   ArrowRight,
   Quote,
+  MessageCircle,
 } from 'lucide-react';
+import iconCar from '@assets/generated_images/cat_car.png';
+import iconRv from '@assets/generated_images/cat_rv.png';
+import iconBoat from '@assets/generated_images/cat_boat.png';
+import iconBike from '@assets/generated_images/cat_bike.png';
+import iconTractor from '@assets/generated_images/cat_tractor.png';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -61,11 +62,11 @@ const STEPS_META = [
 ];
 
 const CATEGORIES = [
-  { Icon: Car, key: 'car', slug: 'car' },
-  { Icon: Caravan, key: 'rv', slug: 'rv' },
-  { Icon: Sailboat, key: 'boat', slug: 'boat' },
-  { Icon: Bike, key: 'bike', slug: 'bike' },
-  { Icon: Tractor, key: 'tractor', slug: 'tractor' },
+  { img: iconCar, key: 'car', slug: 'car' },
+  { img: iconRv, key: 'rv', slug: 'rv' },
+  { img: iconBoat, key: 'boat', slug: 'boat' },
+  { img: iconBike, key: 'bike', slug: 'bike' },
+  { img: iconTractor, key: 'tractor', slug: 'tractor' },
 ];
 
 const STORY_BADGES = [
@@ -153,15 +154,21 @@ export default function About() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             {STORY_BADGES.map((b) => (
-              <Card key={b.key}>
-                <CardContent className="p-6">
-                  <b.Icon className="w-8 h-8 text-primary mb-3" />
-                  <div className="font-heading font-semibold mb-1" data-testid={`badge-${b.key}`}>
-                    {t(`about.story.badges.${b.key}Title`)}
+              <div
+                key={b.key}
+                className="group relative rounded-md border border-card-border bg-gradient-to-br from-card via-card to-background p-6 shadow-[0_15px_40px_-20px_rgba(0,0,0,0.4)] transition-transform duration-500 hover:-translate-y-1 overflow-hidden"
+              >
+                <div className="relative mb-4">
+                  <div className="absolute inset-0 rounded-full bg-primary/30 blur-2xl scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
+                  <div className="relative inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-primary/15 via-primary/5 to-background border border-primary/20 shadow-[0_15px_35px_-12px_hsl(var(--primary)/0.5)] transition-transform duration-500 group-hover:scale-105">
+                    <b.Icon className="w-6 h-6 text-primary" strokeWidth={1.6} />
                   </div>
-                  <p className="text-sm text-muted-foreground">{t(`about.story.badges.${b.key}Text`)}</p>
-                </CardContent>
-              </Card>
+                </div>
+                <div className="font-heading font-semibold mb-1 tracking-display" data-testid={`badge-${b.key}`}>
+                  {t(`about.story.badges.${b.key}Title`)}
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">{t(`about.story.badges.${b.key}Text`)}</p>
+              </div>
             ))}
           </div>
         </div>
@@ -245,17 +252,22 @@ export default function About() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {VALUES_META.map((v) => (
-              <Card key={v.key} className="hover-elevate">
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center mb-4">
-                    <v.Icon className="w-6 h-6 text-primary" />
+              <div
+                key={v.key}
+                className="group relative rounded-md border border-card-border bg-gradient-to-br from-card via-card to-background p-7 shadow-[0_20px_50px_-22px_rgba(0,0,0,0.45)] transition-transform duration-500 hover:-translate-y-1.5 overflow-hidden"
+              >
+                <div className="pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full bg-primary/10 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" aria-hidden="true" />
+                <div className="relative mb-5">
+                  <div className="absolute inset-0 rounded-full bg-primary/30 blur-2xl scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
+                  <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary/15 via-primary/5 to-background border border-primary/20 shadow-[0_15px_35px_-12px_hsl(var(--primary)/0.5)] transition-transform duration-500 group-hover:scale-105">
+                    <v.Icon className="w-7 h-7 text-primary" strokeWidth={1.6} />
                   </div>
-                  <h3 className="font-heading font-semibold text-lg mb-2" data-testid={`value-${v.key}`}>
-                    {t(`about.values.${v.key}Title`)}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">{t(`about.values.${v.key}Text`)}</p>
-                </CardContent>
-              </Card>
+                </div>
+                <h3 className="font-heading font-semibold text-lg mb-2 tracking-display" data-testid={`value-${v.key}`}>
+                  {t(`about.values.${v.key}Title`)}
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{t(`about.values.${v.key}Text`)}</p>
+              </div>
             ))}
           </div>
         </div>
@@ -271,15 +283,22 @@ export default function About() {
         </div>
         <div className="grid md:grid-cols-3 gap-6">
           {STEPS_META.map((s) => (
-            <Card key={s.n}>
-              <CardContent className="p-8">
-                <div className="text-5xl font-heading font-bold text-primary/30 mb-4">{s.n}</div>
-                <h3 className="font-heading font-semibold text-xl mb-3" data-testid={`step-${s.n}`}>
-                  {t(`about.how.${s.key}Title`)}
-                </h3>
-                <p className="text-muted-foreground">{t(`about.how.${s.key}Text`)}</p>
-              </CardContent>
-            </Card>
+            <div
+              key={s.n}
+              className="group relative rounded-md border border-card-border bg-gradient-to-br from-card via-card to-background p-8 shadow-[0_25px_60px_-25px_rgba(0,0,0,0.45)] transition-transform duration-500 hover:-translate-y-2 overflow-hidden"
+            >
+              <div className="pointer-events-none absolute -top-12 -right-12 w-40 h-40 rounded-full bg-primary/10 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" aria-hidden="true" />
+              <div className="relative mb-5">
+                <div className="absolute inset-0 rounded-full bg-primary/30 blur-2xl scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
+                <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 via-primary/5 to-background border border-primary/25 shadow-[0_20px_40px_-12px_hsl(var(--primary)/0.55)] transition-transform duration-500 group-hover:scale-105">
+                  <span className="text-2xl font-heading font-bold bg-gradient-to-br from-primary to-primary/60 bg-clip-text text-transparent">{s.n}</span>
+                </div>
+              </div>
+              <h3 className="font-heading font-semibold text-xl mb-3 tracking-display" data-testid={`step-${s.n}`}>
+                {t(`about.how.${s.key}Title`)}
+              </h3>
+              <p className="text-muted-foreground leading-relaxed">{t(`about.how.${s.key}Text`)}</p>
+            </div>
           ))}
         </div>
         <div className="text-center mt-10">
@@ -304,17 +323,28 @@ export default function About() {
               {t('about.categories.sub')}
             </p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {CATEGORIES.map(({ Icon, key, slug }) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+            {CATEGORIES.map(({ img, key, slug }) => (
               <Link key={slug} href={`/inventory?category=${slug}`}>
-                <Card className="hover-elevate cursor-pointer h-full">
-                  <CardContent className="p-6 flex flex-col items-center text-center">
-                    <Icon className="w-10 h-10 text-primary mb-3" />
-                    <div className="font-heading font-semibold" data-testid={`about-cat-${slug}`}>
-                      {t(`inventory.categories.${key}`)}
+                <div
+                  className="group relative h-full rounded-md border border-card-border bg-gradient-to-br from-card via-card to-background p-6 shadow-[0_20px_50px_-22px_rgba(0,0,0,0.45)] transition-transform duration-500 hover:-translate-y-1.5 overflow-hidden cursor-pointer flex flex-col items-center text-center"
+                  data-testid={`about-cat-${slug}`}
+                >
+                  <div className="relative mb-4">
+                    <div className="absolute inset-0 rounded-full bg-primary/30 blur-2xl scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
+                    <div className="relative inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-card via-card to-background border border-card-border shadow-[0_15px_40px_-12px_rgba(0,0,0,0.35)] transition-transform duration-500 group-hover:-translate-y-1 overflow-hidden">
+                      <img
+                        src={img}
+                        alt={key}
+                        className="w-[78%] h-[78%] object-contain drop-shadow-md transition-transform duration-700 group-hover:scale-110"
+                        loading="lazy"
+                      />
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                  <div className="font-heading font-semibold text-sm tracking-[0.18em] uppercase">
+                    {t(`inventory.categories.${key}`)}
+                  </div>
+                </div>
               </Link>
             ))}
           </div>
@@ -335,13 +365,14 @@ export default function About() {
               <Link href="/inventory">{t('about.cta.browse')}</Link>
             </Button>
             <Button
-              asChild
               size="lg"
               variant="outline"
               className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20"
+              onClick={() => window.dispatchEvent(new CustomEvent('autopro:open-chat'))}
               data-testid="button-cta-contact"
             >
-              <Link href="/contact">{t('about.cta.contact')}</Link>
+              <MessageCircle className="w-5 h-5 mr-2" />
+              {t('about.cta.contact')}
             </Button>
           </div>
         </div>
