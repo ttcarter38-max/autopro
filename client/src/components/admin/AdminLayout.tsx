@@ -7,7 +7,9 @@ import {
   LogOut,
   Menu,
   MessageSquareQuote,
-  MessageCircle
+  MessageCircle,
+  ExternalLink,
+  Home
 } from 'lucide-react';
 import {
   Sidebar,
@@ -134,11 +136,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            <div className="mt-auto p-4 border-t">
+            <div className="mt-auto p-4 border-t space-y-2">
               <div className="mb-3 text-sm">
                 <p className="font-semibold">{user.name}</p>
                 <p className="text-muted-foreground text-xs">{user.email}</p>
               </div>
+              <Button
+                asChild
+                variant="outline"
+                className="w-full"
+                data-testid="button-view-site"
+              >
+                <a href="/" target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  View Site
+                </a>
+              </Button>
               <Button
                 variant="outline"
                 className="w-full"
@@ -153,9 +166,20 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </Sidebar>
 
         <div className="flex flex-col flex-1">
-          <header className="flex items-center justify-between p-4 border-b bg-background">
+          <header className="flex items-center justify-between gap-3 p-4 border-b bg-background">
             <SidebarTrigger data-testid="button-sidebar-toggle" />
             <h1 className="text-xl font-heading font-bold">AutoPro Dealership</h1>
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              data-testid="button-back-to-site"
+            >
+              <a href="/">
+                <Home className="w-4 h-4 mr-2" />
+                Back to Site
+              </a>
+            </Button>
           </header>
           <main className="flex-1 overflow-auto p-6 bg-muted">
             {children}
