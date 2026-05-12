@@ -139,7 +139,8 @@
     },
     "emptyTitle": "Aún no hay nada aquí",
     "emptyDesc": "Esta categoría no tiene anuncios en este momento. Vuelva pronto o explore la selección completa.",
-    "viewAll": "Ver todos"
+    "viewAll": "Ver todos",
+    "resetFilters": "Restablecer filtros"
   },
   "vehicleCard": {
     "description": "Vehículo de lujo premium con rendimiento y comodidad excepcionales.",

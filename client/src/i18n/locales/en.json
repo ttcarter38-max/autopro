@@ -133,7 +133,8 @@
     },
     "emptyTitle": "Nothing here yet",
     "emptyDesc": "This category doesn't have any listings right now. Check back soon, or browse the full selection.",
-    "viewAll": "View All"
+    "viewAll": "View All",
+    "resetFilters": "Reset filters"
   },
   "vehicleCard": {
     "description": "Premium luxury vehicle with exceptional performance and comfort.",

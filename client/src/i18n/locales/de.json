@@ -139,7 +139,8 @@
     },
     "emptyTitle": "Hier ist noch nichts",
     "emptyDesc": "In dieser Kategorie gibt es derzeit keine Inserate. Schauen Sie bald wieder vorbei oder durchsuchen Sie das gesamte Angebot.",
-    "viewAll": "Alle ansehen"
+    "viewAll": "Alle ansehen",
+    "resetFilters": "Filter zurücksetzen"
   },
   "vehicleCard": {
     "description": "Premium-Luxusfahrzeug mit außergewöhnlicher Leistung und Komfort.",

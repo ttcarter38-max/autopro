@@ -2,8 +2,9 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearch, useLocation, Link } from 'wouter';
 import { useTranslation } from 'react-i18next';
-import { Car, Caravan, Sailboat, Bike, Tractor, LayoutGrid, ShieldCheck } from 'lucide-react';
+import { Car, Caravan, Sailboat, Bike, Tractor, LayoutGrid, ShieldCheck, SearchX, RotateCcw } from 'lucide-react';
 import VehicleCard from '@/components/VehicleCard';
+import VehicleCardSkeleton from '@/components/VehicleCardSkeleton';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useSeo } from '@/hooks/useSeo';
@@ -101,24 +102,47 @@ export default function Inventory() {
 
         {/* Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            role="status"
+            aria-busy="true"
+            aria-live="polite"
+          >
+            <span className="sr-only">{t('vehicleDetail.loading')}</span>
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="animate-pulse bg-muted rounded-md aspect-[3/4]" />
+              <VehicleCardSkeleton key={i} />
             ))}
           </div>
         ) : filteredVehicles.length === 0 ? (
-          <div className="text-center py-24">
-            <p className="text-2xl font-semibold mb-3">{t('inventory.emptyTitle')}</p>
-            <p className="text-muted-foreground mb-6">
+          <div className="relative max-w-xl mx-auto text-center py-20 px-6 rounded-md border border-card-border bg-gradient-to-br from-card via-card to-background shadow-[0_25px_60px_-25px_rgba(0,0,0,0.45)] overflow-hidden" data-testid="state-inventory-empty">
+            <div className="pointer-events-none absolute -top-16 -right-16 w-48 h-48 rounded-full bg-primary/15 blur-3xl" aria-hidden="true" />
+            <div className="pointer-events-none absolute -bottom-20 -left-16 w-56 h-56 rounded-full bg-primary/10 blur-3xl" aria-hidden="true" />
+            <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary/15 via-primary/5 to-background border border-primary/20 shadow-[0_15px_35px_-12px_hsl(var(--primary)/0.5)] mb-6 mx-auto">
+              <SearchX className="w-9 h-9 text-primary" strokeWidth={1.6} />
+            </div>
+            <p className="text-2xl font-heading font-bold mb-2 tracking-display">{t('inventory.emptyTitle')}</p>
+            <p className="text-muted-foreground mb-7 leading-relaxed">
               {t('inventory.emptyDesc')}
             </p>
-            <Link
-              href="/inventory"
-              className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold hover-elevate active-elevate-2"
-              data-testid="button-view-all"
-            >
-              {t('inventory.viewAll')}
-            </Link>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              {categoryParam && (
+                <button
+                  onClick={() => goTo(null)}
+                  className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold hover-elevate active-elevate-2"
+                  data-testid="button-reset-filters"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  {t('inventory.resetFilters')}
+                </button>
+              )}
+              <Link
+                href="/inventory"
+                className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold hover-elevate active-elevate-2"
+                data-testid="button-view-all"
+              >
+                {t('inventory.viewAll')}
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

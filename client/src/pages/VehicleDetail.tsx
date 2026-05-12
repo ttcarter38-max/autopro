@@ -159,9 +159,51 @@ export default function VehicleDetail() {
     return (
       <div className="min-h-screen">
         <Header />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <p className="text-muted-foreground">{t('vehicleDetail.loading')}</p>
-        </div>
+        <main
+          className="container mx-auto px-4 py-10"
+          data-testid="skeleton-vehicle-detail"
+          role="status"
+          aria-busy="true"
+          aria-live="polite"
+        >
+          <span className="sr-only">{t('vehicleDetail.loading')}</span>
+          <div className="h-4 w-40 rounded-sm bg-muted/60 shimmer-block mb-8" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <div className="space-y-4">
+              <div className="aspect-[4/3] w-full rounded-md bg-muted/60 shimmer-block" />
+              <div className="grid grid-cols-5 gap-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="aspect-square rounded-md bg-muted/50 shimmer-block" />
+                ))}
+              </div>
+            </div>
+            <div className="space-y-6">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-20 rounded-md bg-muted/60 shimmer-block" />
+                <div className="h-6 w-28 rounded-md bg-muted/60 shimmer-block" />
+              </div>
+              <div className="space-y-3">
+                <div className="h-9 w-3/4 rounded-sm bg-muted/70 shimmer-block" />
+                <div className="h-5 w-1/2 rounded-sm bg-muted/50 shimmer-block" />
+              </div>
+              <div className="border-t border-border pt-5 space-y-3">
+                <div className="h-10 w-1/3 rounded-sm bg-muted/70 shimmer-block" />
+                <div className="grid grid-cols-3 gap-2 pt-2">
+                  <div className="h-12 rounded-md bg-muted/50 shimmer-block" />
+                  <div className="h-12 rounded-md bg-muted/50 shimmer-block" />
+                  <div className="h-12 rounded-md bg-muted/50 shimmer-block" />
+                </div>
+              </div>
+              <div className="rounded-md border border-border p-6 space-y-3">
+                <div className="h-4 w-1/3 rounded-sm bg-muted/60 shimmer-block" />
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-3 w-full rounded-sm bg-muted/40 shimmer-block" />
+                ))}
+              </div>
+              <div className="h-12 w-full rounded-md bg-muted/60 shimmer-block" />
+            </div>
+          </div>
+        </main>
         <Footer />
       </div>
     );
@@ -327,6 +369,25 @@ export default function VehicleDetail() {
                   ${displayedPrice.toLocaleString()}
                 </p>
               )}
+              {/* Trust badges right under price */}
+              <div className="mt-5 grid grid-cols-3 gap-2" data-testid="trust-badges-price">
+                {[
+                  { Icon: ShieldCheck, label: t('vehicleDetail.reassurance.escrow') },
+                  { Icon: ClipboardCheck, label: t('vehicleDetail.reassurance.inspection') },
+                  { Icon: Truck, label: t('vehicleDetail.reassurance.transport') },
+                ].map(({ Icon, label }) => (
+                  <div
+                    key={label}
+                    className="group relative flex flex-col items-center gap-2 rounded-md border border-primary/15 bg-gradient-to-br from-primary/5 via-card to-card px-2 py-3 text-center transition-all duration-300 hover:border-primary/40 hover:shadow-[0_15px_30px_-15px_hsl(var(--primary)/0.5)]"
+                  >
+                    <div className="absolute inset-0 rounded-md bg-primary/10 opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-100" aria-hidden="true" />
+                    <div className="relative inline-flex w-8 h-8 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 via-primary/5 to-background border border-primary/30">
+                      <Icon className="w-4 h-4 text-primary" strokeWidth={2} />
+                    </div>
+                    <span className="relative text-[11px] font-semibold leading-tight">{label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Spec table */}
@@ -361,22 +422,6 @@ export default function VehicleDetail() {
               </Card>
             )}
 
-            {/* Reassurance row */}
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { Icon: ShieldCheck, label: t('vehicleDetail.reassurance.escrow') },
-                { Icon: ClipboardCheck, label: t('vehicleDetail.reassurance.inspection') },
-                { Icon: Truck, label: t('vehicleDetail.reassurance.transport') },
-              ].map(({ Icon, label }) => (
-                <div
-                  key={label}
-                  className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2"
-                >
-                  <Icon className="w-4 h-4 text-primary shrink-0" />
-                  <span className="text-xs font-medium leading-tight">{label}</span>
-                </div>
-              ))}
-            </div>
 
             <div className="flex gap-3">
               <Button
