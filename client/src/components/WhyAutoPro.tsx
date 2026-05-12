@@ -45,16 +45,26 @@ export default function WhyAutoPro() {
           {pillars.map((p) => (
             <Card
               key={p.key}
-              className="p-8 flex flex-col items-start gap-4"
+              className="group relative overflow-hidden p-8 flex flex-col items-start gap-5 border-card-border bg-gradient-to-br from-card via-card to-background transition-all duration-500 hover:border-primary/30 hover:shadow-[0_30px_60px_-25px_hsl(var(--primary)/0.45)] hover:-translate-y-1"
               data-testid={`card-why-${p.key}`}
             >
-              <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center">
-                <p.icon className="w-6 h-6 text-primary" />
+              <div
+                className="pointer-events-none absolute -top-20 -right-20 w-56 h-56 rounded-full bg-primary/10 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+                aria-hidden="true"
+              />
+              <div className="relative">
+                <div
+                  className="absolute inset-0 rounded-full bg-primary/30 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  aria-hidden="true"
+                />
+                <div className="relative inline-flex w-16 h-16 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 via-primary/5 to-background border border-primary/25 shadow-[0_15px_35px_-12px_hsl(var(--primary)/0.5)] transition-transform duration-500 group-hover:scale-110">
+                  <p.icon className="w-7 h-7 text-primary" strokeWidth={1.6} />
+                </div>
               </div>
-              <h3 className="text-xl font-heading font-bold" data-testid={`text-why-title-${p.key}`}>
+              <h3 className="relative text-xl font-heading font-bold tracking-display" data-testid={`text-why-title-${p.key}`}>
                 {p.title}
               </h3>
-              <p className="text-muted-foreground text-sm leading-relaxed" data-testid={`text-why-body-${p.key}`}>
+              <p className="relative text-muted-foreground text-sm leading-relaxed" data-testid={`text-why-body-${p.key}`}>
                 {p.body}
               </p>
             </Card>
