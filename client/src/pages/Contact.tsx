@@ -92,62 +92,57 @@ export default function Contact() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
 
             {/* Contact Info */}
-            <div className="space-y-6">
+            <div className="space-y-5">
               <div>
-                <h2 className="text-2xl font-heading font-bold mb-6">{t('contact.infoTitle')}</h2>
+                <h2 className="text-2xl font-heading font-bold mb-6 tracking-display">{t('contact.infoTitle')}</h2>
               </div>
 
-              <Card>
-                <CardContent className="pt-6 flex gap-4 items-start">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-5 h-5 text-primary" />
+              {[
+                {
+                  Icon: MapPin,
+                  title: t('contact.locationTitle'),
+                  lines: [t('contact.locationText')],
+                  testid: 'card-contact-location',
+                },
+                {
+                  Icon: Phone,
+                  title: t('contact.phoneTitle'),
+                  lines: [t('contact.phoneNumber'), t('contact.phoneHours')],
+                  testid: 'card-contact-phone',
+                },
+                {
+                  Icon: Mail,
+                  title: t('contact.emailTitle'),
+                  lines: ['info@autopro.com', 'support@autopro.com'],
+                  testid: 'card-contact-email',
+                },
+                {
+                  Icon: Clock,
+                  title: t('contact.hoursTitle'),
+                  lines: [t('contact.hoursWeekdays'), t('contact.hoursSaturday'), t('contact.hoursSunday')],
+                  testid: 'card-contact-hours',
+                },
+              ].map(({ Icon, title, lines, testid }) => (
+                <div
+                  key={testid}
+                  className="group relative rounded-md border border-card-border bg-gradient-to-br from-card via-card to-background p-6 shadow-[0_15px_40px_-20px_rgba(0,0,0,0.4)] transition-transform duration-500 hover:-translate-y-1 overflow-hidden flex gap-5 items-start"
+                  data-testid={testid}
+                >
+                  <div className="pointer-events-none absolute -top-10 -right-10 w-28 h-28 rounded-full bg-primary/10 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" aria-hidden="true" />
+                  <div className="relative flex-shrink-0">
+                    <div className="absolute inset-0 rounded-full bg-primary/30 blur-2xl scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
+                    <div className="relative inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-primary/15 via-primary/5 to-background border border-primary/20 shadow-[0_15px_35px_-12px_hsl(var(--primary)/0.5)] transition-transform duration-500 group-hover:scale-105">
+                      <Icon className="w-6 h-6 text-primary" strokeWidth={1.6} />
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">{t('contact.locationTitle')}</h3>
-                    <p className="text-sm text-muted-foreground whitespace-pre-line">{t('contact.locationText')}</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-heading font-semibold mb-1.5 tracking-display">{title}</h3>
+                    {lines.map((line, i) => (
+                      <p key={i} className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">{line}</p>
+                    ))}
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="pt-6 flex gap-4 items-start">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Phone className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">{t('contact.phoneTitle')}</h3>
-                    <p className="text-sm text-muted-foreground">{t('contact.phoneNumber')}</p>
-                    <p className="text-sm text-muted-foreground">{t('contact.phoneHours')}</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="pt-6 flex gap-4 items-start">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Mail className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">{t('contact.emailTitle')}</h3>
-                    <p className="text-sm text-muted-foreground">info@autopro.com</p>
-                    <p className="text-sm text-muted-foreground">support@autopro.com</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="pt-6 flex gap-4 items-start">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Clock className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">{t('contact.hoursTitle')}</h3>
-                    <p className="text-sm text-muted-foreground">{t('contact.hoursWeekdays')}</p>
-                    <p className="text-sm text-muted-foreground">{t('contact.hoursSaturday')}</p>
-                    <p className="text-sm text-muted-foreground">{t('contact.hoursSunday')}</p>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+              ))}
             </div>
 
             {/* Contact Form */}
