@@ -1,15 +1,20 @@
-import { Car, Caravan, Sailboat, Bike, Tractor, MessageCircle, Sparkles } from 'lucide-react';
+import { MessageCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import conciergeAvatar from '@assets/generated_images/chat_concierge.png';
+import iconCar from '@assets/generated_images/cat_car.png';
+import iconRv from '@assets/generated_images/cat_rv.png';
+import iconBoat from '@assets/generated_images/cat_boat.png';
+import iconBike from '@assets/generated_images/cat_bike.png';
+import iconTractor from '@assets/generated_images/cat_tractor.png';
 
 export default function StatisticsSection() {
   const categories = [
-    { icon: Car, label: 'CARS' },
-    { icon: Caravan, label: 'RVS' },
-    { icon: Sailboat, label: 'BOATS' },
-    { icon: Bike, label: 'MOTORCYCLES' },
-    { icon: Tractor, label: 'TRACTORS' },
+    { img: iconCar, label: 'CARS' },
+    { img: iconRv, label: 'RVS' },
+    { img: iconBoat, label: 'BOATS' },
+    { img: iconBike, label: 'MOTORCYCLES' },
+    { img: iconTractor, label: 'TRACTORS' },
   ];
 
   const header = useScrollReveal<HTMLDivElement>();
@@ -52,28 +57,31 @@ export default function StatisticsSection() {
           ref={grid.ref}
           className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 sm:gap-8 mb-16 sm:mb-20 stagger"
         >
-          {categories.map((cat, index) => {
-            const Icon = cat.icon;
-            return (
-              <div
-                key={index}
-                className={`group flex flex-col items-center text-center reveal ${grid.visible ? 'is-visible' : ''}`}
-                data-testid={`category-${cat.label.toLowerCase()}`}
-              >
-                <div className="relative mb-4">
-                  {/* glow */}
-                  <div className="absolute inset-0 rounded-full bg-primary/30 blur-xl scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
-                  {/* icon plate */}
-                  <div className="relative inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-card to-background border border-card-border shadow-[0_15px_40px_-12px_rgba(0,0,0,0.25)] transition-transform duration-500 group-hover:-translate-y-1">
-                    <Icon className="w-9 h-9 sm:w-10 sm:h-10 text-primary" strokeWidth={1.5} />
-                  </div>
-                </div>
-                <div className="text-[11px] sm:text-xs font-semibold text-foreground tracking-[0.22em]" data-testid={`text-category-label-${index}`}>
-                  {cat.label}
+          {categories.map((cat, index) => (
+            <div
+              key={index}
+              className={`group flex flex-col items-center text-center reveal ${grid.visible ? 'is-visible' : ''}`}
+              data-testid={`category-${cat.label.toLowerCase()}`}
+            >
+              <div className="relative mb-5">
+                {/* glow */}
+                <div className="absolute inset-0 rounded-full bg-primary/30 blur-2xl scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
+                {/* icon plate */}
+                <div className="relative inline-flex items-center justify-center w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-card via-card to-background border border-card-border shadow-[0_20px_50px_-15px_rgba(0,0,0,0.35)] transition-transform duration-500 group-hover:-translate-y-1.5 overflow-hidden">
+                  <img
+                    src={cat.img}
+                    alt={cat.label}
+                    className="w-[78%] h-[78%] object-contain drop-shadow-md transition-transform duration-700 group-hover:scale-110"
+                    loading="lazy"
+                    data-testid={`img-category-${index}`}
+                  />
                 </div>
               </div>
-            );
-          })}
+              <div className="text-[11px] sm:text-xs font-semibold text-foreground tracking-[0.22em]" data-testid={`text-category-label-${index}`}>
+                {cat.label}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Premium chat CTA card */}
@@ -107,10 +115,6 @@ export default function StatisticsSection() {
 
               {/* Copy */}
               <div className="flex-1 text-center md:text-left">
-                <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.22em] uppercase text-emerald-600 dark:text-emerald-400 mb-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  Concierge Online
-                </p>
                 <h3 className="text-2xl sm:text-3xl md:text-4xl font-heading font-bold tracking-display mb-2" data-testid="text-chat-cta-title">
                   Talk to a real human, instantly.
                 </h3>

@@ -18,6 +18,36 @@ uri = "file://attached_assets/generated_images/chat_concierge.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "B6MFSoGiyN_0RHEFJqSju"
+uri = "file://attached_assets/generated_images/cat_car.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "k8GuPiRJb8XZD1B5s9FU6"
+uri = "file://attached_assets/generated_images/cat_rv.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "w-ICrqRncogJd-IRa46VF"
+uri = "file://attached_assets/generated_images/cat_boat.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "pvRMax4lvcWOVl7JpcB92"
+uri = "file://attached_assets/generated_images/cat_bike.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "T6ShhBDRlR2eYfZnQB1s7"
+uri = "file://attached_assets/generated_images/cat_tractor.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "K3saQmT5_FNkCX_4DhfY2"
 uri = "file://REBUILD_PROMPT.md"
