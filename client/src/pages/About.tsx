@@ -13,6 +13,10 @@ import {
   ArrowRight,
   Quote,
   MessageCircle,
+  TrendingUp,
+  MapPin,
+  Banknote,
+  Smile,
 } from 'lucide-react';
 import iconCar from '@assets/generated_images/cat_car.png';
 import iconRv from '@assets/generated_images/cat_rv.png';
@@ -49,10 +53,10 @@ const VALUES_META = [
 ];
 
 const STATS_META = [
-  { value: '10K+', key: 'transactions' },
-  { value: '50+', key: 'countries' },
-  { value: '$250M+', key: 'volume' },
-  { value: '99.8%', key: 'satisfaction' },
+  { Icon: TrendingUp, value: '10K+', key: 'transactions' },
+  { Icon: MapPin, value: '50+', key: 'countries' },
+  { Icon: Banknote, value: '$250M+', key: 'volume' },
+  { Icon: Smile, value: '99.8%', key: 'satisfaction' },
 ];
 
 const STEPS_META = [
@@ -125,13 +129,29 @@ export default function About() {
       </section>
 
       {/* Stats */}
-      <section className="border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {STATS_META.map((s) => (
-              <div key={s.key} className="text-center" data-testid={`stat-${s.key}`}>
-                <div className="text-3xl md:text-4xl font-heading font-bold text-primary mb-1">{s.value}</div>
-                <div className="text-sm text-muted-foreground">{t(`about.stats.${s.key}`)}</div>
+      <section className="relative border-b bg-gradient-to-b from-background via-background to-muted/30 overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 premium-halo opacity-30" aria-hidden="true" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5 sm:gap-6">
+            {STATS_META.map(({ Icon, value, key }) => (
+              <div
+                key={key}
+                className="group relative rounded-md border border-card-border bg-gradient-to-br from-card via-card to-background p-6 sm:p-7 shadow-[0_20px_50px_-22px_rgba(0,0,0,0.4)] transition-transform duration-500 hover:-translate-y-1.5 overflow-hidden text-center sm:text-left"
+                data-testid={`stat-${key}`}
+              >
+                <div className="pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full bg-primary/15 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" aria-hidden="true" />
+                <div className="relative inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-primary/15 via-primary/5 to-background border border-primary/20 shadow-[0_15px_30px_-12px_hsl(var(--primary)/0.5)] mb-4 mx-auto sm:mx-0">
+                  <Icon className="w-5 h-5 text-primary" strokeWidth={1.6} />
+                </div>
+                <div
+                  className="text-3xl sm:text-4xl md:text-5xl font-heading font-extrabold tracking-display mb-1 bg-clip-text text-transparent bg-gradient-to-br from-primary via-primary to-primary/60"
+                  data-testid={`stat-value-${key}`}
+                >
+                  {value}
+                </div>
+                <div className="text-xs sm:text-sm font-semibold text-muted-foreground tracking-[0.14em] uppercase">
+                  {t(`about.stats.${key}`)}
+                </div>
               </div>
             ))}
           </div>
