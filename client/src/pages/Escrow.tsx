@@ -1,6 +1,28 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Shield, CheckCircle, Clock, Lock, FileText, Search, Plus } from 'lucide-react';
+import {
+  Shield,
+  ShieldCheck,
+  CheckCircle,
+  CheckCircle2,
+  Clock,
+  Lock,
+  FileText,
+  Search,
+  Plus,
+  ClipboardList,
+  ClipboardEdit,
+  CreditCard,
+  Truck,
+  Eye,
+  KeyRound,
+  BellRing,
+  Wallet,
+  Sparkles,
+  Timer,
+  MessageCircle,
+} from 'lucide-react';
+import conciergeAvatar from '@assets/generated_images/chat_concierge.png';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -119,16 +141,31 @@ export default function Escrow() {
     createCustomEscrowMutation.mutate(data);
   };
 
-  const buyerSteps = [
-    { num: '1', titleKey: 's1t', descKey: 's1d' },
-    { num: '2', titleKey: 's2t', descKey: 's2d' },
-    { num: '3', titleKey: 's3t', descKey: 's3d' },
-    { num: '4', titleKey: 's4t', descKey: 's4d' },
-    { num: '5', titleKey: 's5t', descKey: 's5d' },
-    { num: '6', titleKey: 's6t', descKey: 's6d' },
-    { num: 'check', titleKey: 's7t', descKey: 's7d' },
-    { num: 'lock', titleKey: 's8t', descKey: 's8d' },
+  const buyerSteps: { Icon: typeof Shield; titleKey: string; descKey: string }[] = [
+    { Icon: Search, titleKey: 's1t', descKey: 's1d' },
+    { Icon: ClipboardEdit, titleKey: 's2t', descKey: 's2d' },
+    { Icon: ShieldCheck, titleKey: 's3t', descKey: 's3d' },
+    { Icon: CreditCard, titleKey: 's4t', descKey: 's4d' },
+    { Icon: Truck, titleKey: 's5t', descKey: 's5d' },
+    { Icon: Eye, titleKey: 's6t', descKey: 's6d' },
+    { Icon: CheckCircle2, titleKey: 's7t', descKey: 's7d' },
+    { Icon: KeyRound, titleKey: 's8t', descKey: 's8d' },
   ];
+
+  const sellerSteps: { Icon: typeof Shield; key: string }[] = [
+    { Icon: ClipboardList, key: 's1' },
+    { Icon: BellRing, key: 's2' },
+    { Icon: Eye, key: 's3' },
+    { Icon: Wallet, key: 's4' },
+  ];
+
+  const whyItems: { Icon: typeof Shield; key: string }[] = [
+    { Icon: ShieldCheck, key: 'secure' },
+    { Icon: Timer, key: 'flex' },
+    { Icon: Sparkles, key: 'simple' },
+  ];
+
+  const openChat = () => window.dispatchEvent(new CustomEvent('autopro:open-chat'));
 
   return (
     <div className="min-h-screen bg-background">
@@ -178,55 +215,65 @@ export default function Escrow() {
             </TabsList>
 
             <TabsContent value="buyer">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                {buyerSteps.map((step) => (
-                  <Card key={step.titleKey}>
-                    <CardContent className="pt-6">
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                        {step.num === 'check' ? (
-                          <CheckCircle className="w-6 h-6 text-primary" />
-                        ) : step.num === 'lock' ? (
-                          <Lock className="w-6 h-6 text-primary" />
-                        ) : (
-                          <span className="text-xl font-bold text-primary">{step.num}</span>
-                        )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                {buyerSteps.map((step, idx) => {
+                  const { Icon } = step;
+                  return (
+                    <div
+                      key={step.titleKey}
+                      className="group relative rounded-md border border-card-border bg-gradient-to-br from-card via-card to-background p-6 shadow-[0_15px_40px_-20px_rgba(0,0,0,0.4)] transition-transform duration-500 hover:-translate-y-1.5 overflow-hidden"
+                      data-testid={`buyer-step-${idx + 1}`}
+                    >
+                      <span className="absolute top-3 right-4 text-[11px] font-semibold tracking-[0.22em] text-muted-foreground/70">
+                        {String(idx + 1).padStart(2, '0')}
+                      </span>
+                      <div className="relative mb-5">
+                        <div className="absolute inset-0 rounded-full bg-primary/30 blur-2xl scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
+                        <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary/15 via-primary/5 to-background border border-primary/20 shadow-[0_15px_35px_-12px_hsl(var(--primary)/0.5)] transition-transform duration-500 group-hover:scale-105">
+                          <Icon className="w-7 h-7 text-primary" strokeWidth={1.6} />
+                        </div>
                       </div>
-                      <h3 className="font-semibold mb-2">{t(`escrow.buyer.${step.titleKey}`)}</h3>
-                      <p className="text-sm text-muted-foreground">
+                      <h3 className="font-heading font-bold text-lg mb-2 tracking-display">
+                        {t(`escrow.buyer.${step.titleKey}`)}
+                      </h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
                         {t(`escrow.buyer.${step.descKey}`)}
                       </p>
-                    </CardContent>
-                  </Card>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
             </TabsContent>
 
             <TabsContent value="seller">
-              <div className="max-w-3xl mx-auto">
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="space-y-6">
-                      {([
-                        { Icon: FileText, key: 's1' },
-                        { Icon: Clock, key: 's2' },
-                        { Icon: Shield, key: 's3' },
-                        { Icon: CheckCircle, key: 's4' },
-                      ]).map(({ Icon, key }) => (
-                        <div key={key} className="flex gap-4">
-                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <Icon className="w-6 h-6 text-primary" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold mb-2">{t(`escrow.seller.${key}t`)}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {t(`escrow.seller.${key}d`)}
-                            </p>
-                          </div>
+              <div className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {sellerSteps.map(({ Icon, key }, idx) => (
+                  <div
+                    key={key}
+                    className="group relative rounded-md border border-card-border bg-gradient-to-br from-card via-card to-background p-6 shadow-[0_15px_40px_-20px_rgba(0,0,0,0.4)] transition-transform duration-500 hover:-translate-y-1.5 overflow-hidden"
+                    data-testid={`seller-step-${idx + 1}`}
+                  >
+                    <span className="absolute top-3 right-4 text-[11px] font-semibold tracking-[0.22em] text-muted-foreground/70">
+                      {String(idx + 1).padStart(2, '0')}
+                    </span>
+                    <div className="flex gap-5 items-start">
+                      <div className="relative flex-shrink-0">
+                        <div className="absolute inset-0 rounded-full bg-primary/30 blur-2xl scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
+                        <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary/15 via-primary/5 to-background border border-primary/20 shadow-[0_15px_35px_-12px_hsl(var(--primary)/0.5)] transition-transform duration-500 group-hover:scale-105">
+                          <Icon className="w-7 h-7 text-primary" strokeWidth={1.6} />
                         </div>
-                      ))}
+                      </div>
+                      <div>
+                        <h3 className="font-heading font-bold text-lg mb-2 tracking-display">
+                          {t(`escrow.seller.${key}t`)}
+                        </h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {t(`escrow.seller.${key}d`)}
+                        </p>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                ))}
               </div>
             </TabsContent>
           </Tabs>
@@ -500,22 +547,26 @@ export default function Escrow() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {([
-              { Icon: Shield, key: 'secure' },
-              { Icon: Clock, key: 'flex' },
-              { Icon: CheckCircle, key: 'simple' },
-            ]).map(({ Icon, key }) => (
-              <Card key={key}>
-                <CardHeader>
-                  <Icon className="w-12 h-12 text-primary mb-4" />
-                  <CardTitle>{t(`escrow.why.${key}Title`)}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    {t(`escrow.why.${key}Desc`)}
-                  </p>
-                </CardContent>
-              </Card>
+            {whyItems.map(({ Icon, key }) => (
+              <div
+                key={key}
+                className="group relative rounded-md border border-card-border bg-gradient-to-br from-card via-card to-background p-8 shadow-[0_25px_60px_-25px_rgba(0,0,0,0.45)] transition-transform duration-500 hover:-translate-y-2 overflow-hidden"
+                data-testid={`why-${key}`}
+              >
+                <div className="pointer-events-none absolute -top-12 -right-12 w-40 h-40 rounded-full bg-primary/10 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" aria-hidden="true" />
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 rounded-full bg-primary/30 blur-2xl scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
+                  <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 via-primary/5 to-background border border-primary/25 shadow-[0_20px_40px_-12px_hsl(var(--primary)/0.55)] transition-transform duration-500 group-hover:scale-105">
+                    <Icon className="w-9 h-9 text-primary" strokeWidth={1.5} />
+                  </div>
+                </div>
+                <h3 className="font-heading font-bold text-2xl mb-3 tracking-display">
+                  {t(`escrow.why.${key}Title`)}
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  {t(`escrow.why.${key}Desc`)}
+                </p>
+              </div>
             ))}
           </div>
         </div>
@@ -565,22 +616,51 @@ export default function Escrow() {
         </div>
       </div>
 
-      {/* Contact Section */}
-      <div className="py-12 bg-muted">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h3 className="text-2xl font-heading font-bold mb-4">
-            {t('escrow.contact.title')}
-          </h3>
-          <p className="text-muted-foreground mb-6">
-            {t('escrow.contact.sub')}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="outline" size="lg">
-              {t('escrow.contact.call')}
-            </Button>
-            <Button variant="outline" size="lg">
-              {t('escrow.contact.email')}
-            </Button>
+      {/* Contact / Chat CTA */}
+      <div className="py-16 sm:py-20 bg-muted">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative overflow-hidden rounded-md border border-card-border bg-gradient-to-br from-card via-card to-background p-6 sm:p-10 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.5)]">
+            <div className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-primary/15 blur-3xl" aria-hidden="true" />
+            <div className="relative flex flex-col md:flex-row items-center gap-6 sm:gap-10">
+              {/* Concierge avatar */}
+              <div className="relative flex-shrink-0">
+                <div className="absolute inset-0 rounded-full bg-primary/30 blur-2xl scale-110" aria-hidden="true" />
+                <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden border-2 border-primary/30 shadow-[0_20px_50px_-15px_hsl(var(--primary)/0.6)]">
+                  <img
+                    src={conciergeAvatar}
+                    alt="AutoPro concierge"
+                    className="w-full h-full object-cover"
+                    data-testid="img-escrow-concierge"
+                  />
+                </div>
+                <div className="absolute -bottom-1 -right-1 flex items-center justify-center w-8 h-8 rounded-full bg-card border border-card-border shadow-md">
+                  <span className="relative w-3 h-3 rounded-full bg-emerald-500 border-2 border-card" />
+                </div>
+              </div>
+
+              {/* Copy */}
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-2xl sm:text-3xl md:text-4xl font-heading font-bold tracking-display mb-2" data-testid="text-escrow-chat-title">
+                  {t('escrow.contact.title')}
+                </h3>
+                <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto md:mx-0">
+                  {t('escrow.contact.sub')}
+                </p>
+              </div>
+
+              {/* CTA */}
+              <div className="flex-shrink-0 w-full md:w-auto">
+                <Button
+                  size="lg"
+                  onClick={openChat}
+                  className="w-full md:w-auto shadow-[0_15px_40px_-12px_hsl(var(--primary)/0.6)]"
+                  data-testid="button-escrow-open-chat"
+                >
+                  <MessageCircle className="w-5 h-5 mr-2" />
+                  Start a Chat
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
