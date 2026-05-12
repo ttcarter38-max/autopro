@@ -286,6 +286,89 @@
   .tracking-display {
     letter-spacing: -0.02em;
   }
+
+  /* ===== Premium 2026 motion system ===== */
+
+  /* Scroll-reveal base + state */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
+                transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-zoom {
+    opacity: 0;
+    transform: scale(0.96);
+    transition: opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
+                transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .reveal-zoom.is-visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .reveal-fade {
+    opacity: 0;
+    transition: opacity 1200ms ease-out;
+  }
+  .reveal-fade.is-visible {
+    opacity: 1;
+  }
+  /* Stagger helpers — apply to children of a stagger container */
+  .stagger > *:nth-child(1) { transition-delay: 60ms; }
+  .stagger > *:nth-child(2) { transition-delay: 140ms; }
+  .stagger > *:nth-child(3) { transition-delay: 220ms; }
+  .stagger > *:nth-child(4) { transition-delay: 300ms; }
+  .stagger > *:nth-child(5) { transition-delay: 380ms; }
+  .stagger > *:nth-child(6) { transition-delay: 460ms; }
+  .stagger > *:nth-child(7) { transition-delay: 540ms; }
+  .stagger > *:nth-child(8) { transition-delay: 620ms; }
+
+  /* Ken Burns slow zoom for hero imagery */
+  @keyframes ken-burns {
+    0%   { transform: scale(1.05) translate(0, 0); }
+    50%  { transform: scale(1.13) translate(-1.5%, -1%); }
+    100% { transform: scale(1.05) translate(0, 0); }
+  }
+  .ken-burns {
+    animation: ken-burns 18s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  /* Soft floating glow for accent badges */
+  @keyframes float-soft {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-3px); }
+  }
+  .float-soft { animation: float-soft 4s ease-in-out infinite; }
+
+  /* Shimmer underline for CTAs */
+  @keyframes shimmer-x {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .shimmer-text {
+    background: linear-gradient(90deg, currentColor 0%, currentColor 40%, hsl(var(--primary)) 50%, currentColor 60%, currentColor 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer-x 6s linear infinite;
+  }
+
+  /* Respect reduced-motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    .ken-burns, .float-soft, .shimmer-text { animation: none !important; }
+    .reveal, .reveal-zoom, .reveal-fade {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+  }
 }
 
 /**

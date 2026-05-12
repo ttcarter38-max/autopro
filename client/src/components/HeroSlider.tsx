@@ -10,18 +10,8 @@ export default function HeroSlider() {
   const { t } = useTranslation();
 
   const slides = [
-    {
-      id: 1,
-      image: truckBanner,
-      key: 'slide1',
-      ctaHref: '/escrow',
-    },
-    {
-      id: 2,
-      image: escrowBanner,
-      key: 'slide2',
-      ctaHref: '/escrow',
-    },
+    { id: 1, image: truckBanner, key: 'slide1', ctaHref: '/escrow' },
+    { id: 2, image: escrowBanner, key: 'slide2', ctaHref: '/escrow' },
     {
       id: 3,
       image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1920&q=80',
@@ -33,67 +23,89 @@ export default function HeroSlider() {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
+    }, 6000);
     return () => clearInterval(timer);
   }, []);
 
-  const goToSlide = (index: number) => {
-    setCurrentSlide(index);
-  };
-
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-  };
+  const goToSlide = (index: number) => setCurrentSlide(index);
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
+  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
 
   return (
-    <div className="relative h-[600px] md:h-[700px] overflow-hidden">
-      {slides.map((slide, index) => (
-        <div
-          key={slide.id}
-          className={`absolute inset-0 transition-opacity duration-700 ${
-            index === currentSlide ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}
-        >
+    <div className="relative h-[640px] sm:h-[720px] md:h-[780px] overflow-hidden bg-black">
+      {slides.map((slide, index) => {
+        const overlay =
+          index === 0
+            ? 'linear-gradient(100deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0.15) 80%, rgba(0,0,0,0) 100%)'
+            : index === 1
+            ? 'linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.50) 50%, rgba(0,0,0,0.65) 100%)'
+            : 'linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.30) 45%, rgba(0,0,0,0.75) 100%)';
+        const isActive = index === currentSlide;
+        return (
           <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{
-              backgroundImage: index === 0
-                ? `linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.1) 100%), url(${slide.image})`
-                : index === 1
-                ? `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url(${slide.image})`
-                : `linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.65) 100%), url(${slide.image})`,
-              backgroundPosition: 'center center',
-            }}
+            key={slide.id}
+            className={`absolute inset-0 transition-opacity duration-[1100ms] ease-out ${
+              isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
           >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
-              <div className="text-white max-w-2xl">
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 backdrop-blur-sm px-3 py-1 mb-5" data-testid={`badge-exclusive-${index}`}>
+            {/* Image layer with Ken Burns zoom */}
+            <div
+              className={`absolute inset-0 bg-cover bg-center ${isActive ? 'ken-burns' : ''}`}
+              style={{
+                backgroundImage: `url(${slide.image})`,
+                backgroundPosition: 'center center',
+              }}
+              aria-hidden="true"
+            />
+            {/* Cinematic overlay */}
+            <div
+              className="absolute inset-0"
+              style={{ backgroundImage: overlay }}
+              aria-hidden="true"
+            />
+            {/* Bottom fade-to-bg for seamless transition into next section */}
+            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-background" aria-hidden="true" />
+
+            {/* Content */}
+            <div className="relative max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 h-full flex items-center">
+              <div
+                className={`text-white max-w-2xl transition-all duration-[1100ms] ease-out ${
+                  isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+                }`}
+              >
+                <div
+                  className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 backdrop-blur-md px-3.5 py-1.5 mb-5 float-soft"
+                  data-testid={`badge-exclusive-${index}`}
+                >
                   <Sparkles className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-white">
+                  <span className="text-[11px] font-semibold tracking-[0.22em] uppercase text-white">
                     {t('hero.badge')}
                   </span>
                 </div>
-                <p className="text-xs font-bold tracking-[0.25em] mb-4 text-primary uppercase" data-testid={`text-eyebrow-${index}`}>
+                <p
+                  className="text-[11px] sm:text-xs font-bold tracking-[0.32em] mb-4 text-primary uppercase"
+                  data-testid={`text-eyebrow-${index}`}
+                >
                   {t(`hero.${slide.key}.eyebrow`)}
                 </p>
                 <h2
-                  className="text-5xl md:text-7xl font-heading font-extrabold tracking-wide mb-4 leading-tight bg-clip-text text-transparent bg-gradient-to-br from-white via-white to-primary drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]"
+                  className="text-[2.75rem] leading-[1.02] sm:text-6xl md:text-7xl lg:text-[5.5rem] font-heading font-extrabold tracking-display mb-5 bg-clip-text text-transparent bg-gradient-to-br from-white via-white to-primary drop-shadow-[0_2px_20px_rgba(0,0,0,0.55)]"
                   data-testid={`text-heading-${index}`}
                 >
                   {t(`hero.${slide.key}.heading`)}
                 </h2>
-                <p className="text-lg md:text-xl text-white/85 mb-8 max-w-xl leading-relaxed" data-testid={`text-sub-${index}`}>
+                <p
+                  className="text-base sm:text-lg md:text-xl text-white/85 mb-8 max-w-xl leading-relaxed"
+                  data-testid={`text-sub-${index}`}
+                >
                   {t(`hero.${slide.key}.sub`)}
                 </p>
-                <div className="flex gap-4 flex-wrap">
+                <div className="flex gap-3 sm:gap-4 flex-wrap">
                   <Button
                     variant="default"
                     size="lg"
                     asChild
+                    className="shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.8)]"
                     data-testid={`button-cta-${index}`}
                   >
                     <a href={slide.ctaHref}>{t(`hero.${slide.key}.cta`)}</a>
@@ -101,7 +113,7 @@ export default function HeroSlider() {
                   <Button
                     variant="outline"
                     size="lg"
-                    className="bg-white/10 backdrop-blur-sm border-white/40 text-white"
+                    className="bg-white/10 backdrop-blur-md border-white/40 text-white hover:bg-white/20"
                     asChild
                     data-testid={`button-inventory-${index}`}
                   >
@@ -111,34 +123,38 @@ export default function HeroSlider() {
               </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
+      {/* Side controls — hidden on small mobile to keep hero clean */}
       <button
         onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-sm p-3 rounded-full hover-elevate text-white"
+        className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-md p-3 rounded-full hover-elevate text-white border border-white/20"
         data-testid="button-prev-slide"
+        aria-label="Previous slide"
       >
         <ChevronLeft className="w-6 h-6" />
       </button>
-
       <button
         onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-sm p-3 rounded-full hover-elevate text-white"
+        className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-md p-3 rounded-full hover-elevate text-white border border-white/20"
         data-testid="button-next-slide"
+        aria-label="Next slide"
       >
         <ChevronRight className="w-6 h-6" />
       </button>
 
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3">
+      {/* Pagination dots */}
+      <div className="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 flex gap-2.5 z-10">
         {slides.map((_, index) => (
           <button
             key={index}
             onClick={() => goToSlide(index)}
-            className={`w-3 h-3 rounded-full transition-all ${
-              index === currentSlide ? 'bg-primary w-8' : 'bg-white/50 hover:bg-white/80'
+            className={`h-1.5 rounded-full transition-all duration-500 ${
+              index === currentSlide ? 'bg-primary w-10' : 'bg-white/40 hover:bg-white/70 w-5'
             }`}
             data-testid={`button-dot-${index}`}
+            aria-label={`Go to slide ${index + 1}`}
           />
         ))}
       </div>
