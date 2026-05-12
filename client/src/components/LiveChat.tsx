@@ -98,6 +98,13 @@ export default function LiveChat() {
     }
   }, [open, fetchUnread]);
 
+  // Allow any component on the page to open the chat by dispatching `autopro:open-chat`
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener('autopro:open-chat', handler);
+    return () => window.removeEventListener('autopro:open-chat', handler);
+  }, []);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, open]);

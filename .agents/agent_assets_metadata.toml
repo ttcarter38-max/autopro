@@ -12,6 +12,12 @@ uri = "file://attached_assets/generated_images/hero_delivery_v1.png"
 type = "image"
 title = "hero delivery v1"
 
+[[generated]]
+id = "phtdl9UDVOK0p2H6ifggY"
+uri = "file://attached_assets/generated_images/chat_concierge.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "K3saQmT5_FNkCX_4DhfY2"
 uri = "file://REBUILD_PROMPT.md"
