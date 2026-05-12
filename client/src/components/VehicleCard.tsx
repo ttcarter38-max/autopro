@@ -43,20 +43,21 @@ export default function VehicleCard({
     ? formatDistanceToNowI18n(new Date(createdAt), i18n.language)
     : null;
   return (
-    <Card className="overflow-hidden hover-elevate transition-all hover:shadow-xl" data-testid={`card-vehicle-${id}`}>
+    <Card className="group overflow-hidden hover-elevate transition-all duration-500 hover:shadow-2xl hover:-translate-y-1" data-testid={`card-vehicle-${id}`}>
       <Link href={`/vehicle/${id}`} className="block">
-        <div className="relative aspect-square bg-white p-8">
+        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-white via-zinc-50 to-zinc-100 dark:from-zinc-900 dark:via-zinc-950 dark:to-black p-8">
           <img
             src={image}
             alt={name}
-            className="w-full h-full object-contain"
+            className="w-full h-full object-contain img-zoom"
             data-testid={`img-vehicle-${id}`}
           />
           {originalPrice && (
-            <Badge variant="destructive" className="absolute top-4 right-4" data-testid={`badge-sale-${id}`}>
+            <Badge variant="destructive" className="absolute top-4 right-4 shadow-lg" data-testid={`badge-sale-${id}`}>
               {t('vehicleCard.sale')}
             </Badge>
           )}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent dark:from-black/30" />
         </div>
 
         <CardContent className="p-6">
@@ -72,17 +73,17 @@ export default function VehicleCard({
             </span>
           </div>
 
-          <h3 className="text-xl font-heading font-bold mb-3" data-testid={`text-name-${id}`}>
+          <h3 className="text-xl font-heading font-bold mb-3 tracking-display" data-testid={`text-name-${id}`}>
             {name}
           </h3>
 
-          <div className="mb-4">
+          <div className="mb-4 flex items-baseline gap-2 flex-wrap">
             {originalPrice && (
-              <span className="text-lg text-muted-foreground line-through mr-2" data-testid={`text-original-price-${id}`}>
+              <span className="text-base text-muted-foreground line-through" data-testid={`text-original-price-${id}`}>
                 ${originalPrice.toLocaleString()}
               </span>
             )}
-            <span className="text-2xl font-bold text-primary" data-testid={`text-price-${id}`}>
+            <span className="text-2xl font-bold tracking-display bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70" data-testid={`text-price-${id}`}>
               ${price.toLocaleString()}
             </span>
           </div>

@@ -240,6 +240,51 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  /* Glassmorphic surfaces for premium feel */
+  .glass-dark {
+    background-color: rgba(8, 8, 10, 0.72);
+    backdrop-filter: saturate(180%) blur(14px);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .glass-light {
+    background-color: rgba(255, 255, 255, 0.65);
+    backdrop-filter: saturate(180%) blur(14px);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+  .glass-panel {
+    background-color: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+  }
+  /* Premium accent gradient (subtle, modern) */
+  .premium-gradient {
+    background-image: linear-gradient(135deg, hsl(var(--primary) / 0.95) 0%, hsl(0 65% 38%) 100%);
+  }
+  /* Soft radial halo for hero accents */
+  .premium-halo {
+    background-image: radial-gradient(60% 80% at 50% 0%, hsl(var(--primary) / 0.18) 0%, transparent 70%);
+  }
+  /* Smooth zoom for product imagery */
+  .img-zoom {
+    transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+  }
+  .group:hover .img-zoom,
+  .img-zoom:hover {
+    transform: scale(1.045);
+  }
+  /* Refined letter-spacing helper */
+  .tracking-display {
+    letter-spacing: -0.02em;
   }
 }
 

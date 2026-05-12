@@ -47,13 +47,13 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-black text-white">
+    <header className="sticky top-0 z-50 glass-dark text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-3">
               <Link href="/">
-                <h1 className="text-2xl font-heading font-bold tracking-wider cursor-pointer" data-testid="text-logo">
+                <h1 className="text-2xl font-heading font-bold tracking-[0.18em] cursor-pointer bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-primary/80" data-testid="text-logo">
                   AUTOPRO
                 </h1>
               </Link>
@@ -183,7 +183,7 @@ export default function Header() {
       </div>
 
       {mobileMenuOpen && (
-        <div className="md:hidden bg-black border-t border-gray-800">
+        <div className="md:hidden glass-dark border-t border-white/5">
           <nav className="px-4 py-4 space-y-2">
             <Link href="/">
               <span
