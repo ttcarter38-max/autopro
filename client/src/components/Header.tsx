@@ -172,6 +172,7 @@ export default function Header() {
 
           <div className="flex items-center gap-2 md:hidden">
             <LanguageSwitcher variant="header" />
+            <ThemeToggle />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               data-testid="button-mobile-menu"
